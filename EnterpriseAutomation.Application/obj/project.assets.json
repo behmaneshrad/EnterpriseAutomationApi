@@ -1,0 +1,103 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0": {
+      "EnterpriseAutomation.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/EnterpriseAutomation.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/EnterpriseAutomation.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "EnterpriseAutomation.Domain/1.0.0": {
+      "type": "project",
+      "path": "../EnterpriseAutomation.Domain/EnterpriseAutomation.Domain.csproj",
+      "msbuildProject": "../EnterpriseAutomation.Domain/EnterpriseAutomation.Domain.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "EnterpriseAutomation.Domain >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Acer\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj",
+      "projectName": "EnterpriseAutomation.Application",
+      "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj",
+      "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
+      "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "projectReferences": {
+            "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
+              "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.100"
+    },
+    "frameworks": {
+      "net8.0": {
+        "targetAlias": "net8.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

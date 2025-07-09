@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "wOdtfIBwA/iA7lSQpSnyoGGl8Kchzx26frZqHIyH00Y=",
+  "Source": "EnterpriseAutomation.Api",
+  "BasePath": "_content/EnterpriseAutomation.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "EnterpriseAutomation.Application/1.0.0": {
+        "dependencies": {
+          "EnterpriseAutomation.Domain": "1.0.0"
+        },
+        "runtime": {
+          "EnterpriseAutomation.Application.dll": {}
+        }
+      },
+      "EnterpriseAutomation.Domain/1.0.0": {
+        "runtime": {
+          "EnterpriseAutomation.Domain.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "EnterpriseAutomation.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "EnterpriseAutomation.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

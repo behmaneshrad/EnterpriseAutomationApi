@@ -1,0 +1,17 @@
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\bin\Debug\net8.0\EnterpriseAutomation.Infrastructure.deps.json
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\bin\Debug\net8.0\EnterpriseAutomation.Infrastructure.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\bin\Debug\net8.0\EnterpriseAutomation.Infrastructure.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.AssemblyInfoInputs.cache
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.AssemblyInfo.cs
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.csproj.CoreCompileInputs.cache
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\refint\EnterpriseAutomation.Infrastructure.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\ref\EnterpriseAutomation.Infrastructure.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\bin\Debug\net8.0\EnterpriseAutomation.Infrastructure.runtimeconfig.json
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\bin\Debug\net8.0\EnterpriseAutomation.Domain.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\bin\Debug\net8.0\EnterpriseAutomation.Domain.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.csproj.AssemblyReference.cache
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\Enterpri.9F4F583E.Up2Date
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.genruntimeconfig.cache

@@ -1,0 +1,15 @@
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\bin\Debug\net8.0\EnterpriseAutomation.Application.deps.json
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\bin\Debug\net8.0\EnterpriseAutomation.Application.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\bin\Debug\net8.0\EnterpriseAutomation.Application.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.AssemblyInfoInputs.cache
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.AssemblyInfo.cs
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.csproj.CoreCompileInputs.cache
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\refint\EnterpriseAutomation.Application.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\ref\EnterpriseAutomation.Application.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\bin\Debug\net8.0\EnterpriseAutomation.Domain.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\bin\Debug\net8.0\EnterpriseAutomation.Domain.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\EnterpriseAutomation.Application.csproj.AssemblyReference.cache
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Application\obj\Debug\net8.0\Enterpri.53E13CD7.Up2Date
