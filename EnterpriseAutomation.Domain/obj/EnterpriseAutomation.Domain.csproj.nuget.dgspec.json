@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {}
+    "C:\\Users\\IT\\Desktop\\EnterpriseAutomationApi\\EnterpriseAutomationApi\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {}
   },
   "projects": {
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
+    "C:\\Users\\IT\\Desktop\\EnterpriseAutomationApi\\EnterpriseAutomationApi\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\IT\\Desktop\\EnterpriseAutomationApi\\EnterpriseAutomationApi\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
         "projectName": "EnterpriseAutomation.Domain",
-        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
-        "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\obj\\",
+        "projectPath": "C:\\Users\\IT\\Desktop\\EnterpriseAutomationApi\\EnterpriseAutomationApi\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
+        "packagesPath": "C:\\Users\\IT\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\IT\\Desktop\\EnterpriseAutomationApi\\EnterpriseAutomationApi\\EnterpriseAutomation.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\IT\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -45,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -66,7 +65,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
