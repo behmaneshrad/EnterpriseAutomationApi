@@ -9,3 +9,15 @@ D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Domain\obj\Deb
 D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Domain\obj\Debug\net8.0\refint\EnterpriseAutomation.Domain.dll
 D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.pdb
 D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Domain\obj\Debug\net8.0\ref\EnterpriseAutomation.Domain.dll
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\bin\Debug\net8.0\EnterpriseAutomation.Domain.deps.json
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\bin\Debug\net8.0\EnterpriseAutomation.Domain.dll
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\bin\Debug\net8.0\EnterpriseAutomation.Domain.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.AssemblyInfoInputs.cache
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.AssemblyInfo.cs
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.csproj.CoreCompileInputs.cache
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.sourcelink.json
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.dll
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\refint\EnterpriseAutomation.Domain.dll
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\EnterpriseAutomation.Domain.pdb
+D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Domain\obj\Debug\net8.0\ref\EnterpriseAutomation.Domain.dll

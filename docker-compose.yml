@@ -1,6 +1,23 @@
-version: '3.8'
+version: "3.9"
 
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      MSSQL_SA_PASSWORD: "Entp@ProjPass01"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "14033:1433"
+    networks:
+      - backend-net
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - backend-net
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: enterprise-keycloak
@@ -10,3 +27,24 @@ services:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     command: start-dev
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=EnterpriseAutomation;User Id=sa;Password=Entp@ProjPass01;
+      - Redis__Host=redis
+      - Keycloak__Authority=http://keycloak:8080/realms/enterprise-automation
+    depends_on:
+      - sqlserver
+      - redis
+      - keycloak
+    networks:
+      - backend-net
+
+networks:
+  backend-net:
