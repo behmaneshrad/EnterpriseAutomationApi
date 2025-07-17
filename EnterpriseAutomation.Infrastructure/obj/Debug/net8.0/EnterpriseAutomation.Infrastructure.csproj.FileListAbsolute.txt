@@ -33,3 +33,4 @@ D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Infras
 D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.pdb
 D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.genruntimeconfig.cache
 D:\projects\Web\Backend\EnterpriseAutomation\backend\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\ref\EnterpriseAutomation.Infrastructure.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Infrastructure\obj\Debug\net8.0\EnterpriseAutomation.Infrastructure.sourcelink.json

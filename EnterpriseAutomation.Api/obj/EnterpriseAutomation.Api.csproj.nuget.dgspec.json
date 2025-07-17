@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj": {}
+    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj": {}
   },
   "projects": {
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj": {
+    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj",
+        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj",
         "projectName": "EnterpriseAutomation.Api",
-        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj",
+        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Api\\obj\\",
+        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -33,11 +33,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj": {
-                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj"
+              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj": {
+                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj"
               },
-              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj": {
-                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj"
+              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj": {
+                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj"
               }
             }
           }
@@ -100,14 +100,14 @@
         }
       }
     },
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj": {
+    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj",
+        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj",
         "projectName": "EnterpriseAutomation.Application",
-        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj",
+        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\EnterpriseAutomation.Application.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Application\\obj\\",
+        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -129,8 +129,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
-                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj"
+              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
+                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj"
               }
             }
           }
@@ -170,14 +170,14 @@
         }
       }
     },
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
+    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
+        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
         "projectName": "EnterpriseAutomation.Domain",
-        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
+        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\obj\\",
+        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -236,14 +236,14 @@
         }
       }
     },
-    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj": {
+    "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj",
+        "projectUniqueName": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj",
         "projectName": "EnterpriseAutomation.Infrastructure",
-        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj",
+        "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Infrastructure\\EnterpriseAutomation.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Infrastructure\\obj\\",
+        "outputPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -265,8 +265,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
-                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj"
+              "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj": {
+                "projectPath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Domain\\EnterpriseAutomation.Domain.csproj"
               }
             }
           }

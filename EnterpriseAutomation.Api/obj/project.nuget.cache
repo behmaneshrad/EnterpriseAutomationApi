@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "18aQ13RS6kY=",
+  "dgSpecHash": "ifULGYscKew=",
   "success": true,
-  "projectFilePath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\backend\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj",
+  "projectFilePath": "D:\\projects\\Web\\Backend\\EnterpriseAutomation\\EnterpriseAutomation.Api\\EnterpriseAutomation.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Acer\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Acer\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
