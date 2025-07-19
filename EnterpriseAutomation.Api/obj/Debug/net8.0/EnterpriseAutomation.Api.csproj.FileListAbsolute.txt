@@ -175,3 +175,15 @@ D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\
 D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\JWT.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.Configuration.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Binder.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.Configuration.FileExtensions.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Json.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.FileProviders.Physical.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\bin\Debug\net8.0\Newtonsoft.Json.dll
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\obj\Debug\net8.0\EnterpriseAutomation.Api.sourcelink.json
+D:\projects\Web\Backend\EnterpriseAutomation\EnterpriseAutomation.Api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
