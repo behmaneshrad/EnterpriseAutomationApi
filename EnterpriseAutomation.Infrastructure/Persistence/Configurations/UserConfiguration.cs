@@ -21,7 +21,7 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(u=>u.PasswordHash)
+            builder.Property(u => u.PasswordHash)
                 .IsRequired()
                 .HasMaxLength(100);
 
@@ -29,8 +29,14 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
 
             builder.HasMany(r => r.Requests)
                 .WithOne(u => u.User)
-                .HasForeignKey(r => r.CreatedByUserId);
+                .HasForeignKey(r => r.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            // Relation to  WorkflowDefinition
+            builder.HasMany(r => r.WorkflowDefinitions)
+                .WithOne(u => u.User)
+                .HasForeignKey(r => r.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
