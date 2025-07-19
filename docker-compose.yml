@@ -30,7 +30,6 @@ services:
       - Redis__Host=redis
       - Keycloak__Authority=http://keycloak:8080/realms/enterprise-automation
     depends_on:
-      - sqlserver
       - redis
       - keycloak
     networks:
