@@ -26,7 +26,6 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=EnterpriseAutomation;User Id=sa;Password=Entp@ProjPass01;
       - Redis__Host=redis
       - Keycloak__Authority=http://keycloak:8080/realms/enterprise-automation
     depends_on:
