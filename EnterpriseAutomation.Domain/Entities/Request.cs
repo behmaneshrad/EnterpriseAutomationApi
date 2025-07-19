@@ -18,5 +18,6 @@ namespace EnterpriseAutomation.Domain.Entities
         public string WorkflowId { get; set; } = default!;
 
         public User User { get; set; }
+        public ICollection<ApprovalStep> ApprovalSteps { get; set; }
     }
 }

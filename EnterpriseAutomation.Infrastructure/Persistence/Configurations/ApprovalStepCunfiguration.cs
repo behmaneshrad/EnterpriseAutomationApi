@@ -9,34 +9,30 @@ using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
 {
-    public class RequestConfiguration : IEntityTypeConfiguration<Request>
+    public class ApprovalStepCunfiguration : IEntityTypeConfiguration<ApprovalStep>
     {
-        public void Configure(EntityTypeBuilder<Request> builder)
+        public void Configure(EntityTypeBuilder<ApprovalStep> builder)
         {
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.Title)
-                .IsRequired()
-                .HasMaxLength(200);
-
-            builder.Property(x => x.Description)
+            builder.Property(x => x.StepId)
                 .IsRequired();
 
-            builder.Property(x => x.CurrentStatus)
+            builder.Property(x => x.Status)
                 .IsRequired();
 
-            builder.Property(x => x.CurrentStep)
+            builder.Property(x => x.ApprovedAt)
                 .IsRequired();
 
-            // Relation To user
+            // Relation to user
             builder.HasOne(x => x.User)
-                .WithMany(u => u.Requests)
-                .HasForeignKey(x => x.CreatedByUserId)
+                .WithMany(u => u.ApprovalSteps)
+                .HasForeignKey(x => x.ApproverUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relation To ApprovalStep
-            builder.HasMany(x => x.ApprovalSteps)
-                .WithOne(z => z.Request)
+            // Relation to Request
+            builder.HasOne(x => x.Request)
+                .WithMany(r => r.ApprovalSteps)
                 .HasForeignKey(x => x.RequestId)
                 .OnDelete(DeleteBehavior.Restrict);
 

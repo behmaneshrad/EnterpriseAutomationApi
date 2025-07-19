@@ -15,5 +15,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public string CreatedBy { get; set; } = default!;
 
         public User User { get; set; }
+
+        public ICollection<WorkflowStep> WorkflowSteps { get; set; }
     }
 }

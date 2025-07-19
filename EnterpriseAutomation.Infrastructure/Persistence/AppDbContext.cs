@@ -9,6 +9,12 @@ public class AppDbContext : DbContext
 
     public DbSet<Request> Requests => Set<Request>();
 
+    public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
+
+    public DbSet<WorkflowStep> WorkflowSteps { get; set; }
+
+    public DbSet<ApprovalStep> ApprovalSteps { get; set; }
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
 
