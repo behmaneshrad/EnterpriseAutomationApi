@@ -10,4 +10,15 @@ public class AppDbContext : DbContext
     public DbSet<Request> Requests => Set<Request>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>().
+            HasMany(r => r.Requests)
+            .WithOne(u => u.User)
+            .HasForeignKey(r => r.CreatedByUserId);
+    }
 }
