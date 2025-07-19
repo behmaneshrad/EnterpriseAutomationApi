@@ -16,9 +16,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<User>().
-            HasMany(r => r.Requests)
-            .WithOne(u => u.User)
-            .HasForeignKey(r => r.CreatedByUserId);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }
