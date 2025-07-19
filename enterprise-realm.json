@@ -1,0 +1,30 @@
+{
+  "id": "EnterpriseRealm",
+  "realm": "EnterpriseRealm",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "admin" },
+      { "name": "employee" },
+      { "name": "approver" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "enterprise-api",
+      "protocol": "openid-connect",
+      "secret": "Xz7pK93@vGmLwq!eD4Rt#2Fh",  
+      "enabled": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "*"
+      ],
+      "attributes": {
+        "client_secret": "Xz7pK93@vGmLwq!eD4Rt#2Fh"
+      }
+    }
+  ]
+}
