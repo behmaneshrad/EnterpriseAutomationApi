@@ -1,6 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Remote.Linq.Newtonsoft.Json" Version="7.2.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EnterpriseAutomation.Domain\EnterpriseAutomation.Domain.csproj" />
     <ProjectReference Include="..\EnterpriseAutomation.Infrastructure\EnterpriseAutomation.Infrastructure.csproj" />
   </ItemGroup>
