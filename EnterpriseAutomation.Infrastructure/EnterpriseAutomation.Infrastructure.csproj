@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EnterpriseAutomation.Domain\EnterpriseAutomation.Domain.csproj" />
-    <ProjectReference Include="..\EnterpriseAutomation.Application\EnterpriseAutomation.Application.csproj" />
+    
   </ItemGroup>
 
   <ItemGroup>
