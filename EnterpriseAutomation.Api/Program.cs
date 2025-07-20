@@ -34,7 +34,32 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = "enterprise-api"
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed= context =>
+        {
+            context.NoResult();
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnAuthenticationFailed\"}");
+        },
+        OnChallenge= context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
+            context.Response.ContentType= "application/json";
+            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnChallenge\"}");
+        },
+        OnForbidden= context =>
+        { 
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnForbidden\"}");
+        }
+    };
 });
+
+//نیاز توکن از keycloak هستیم
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
