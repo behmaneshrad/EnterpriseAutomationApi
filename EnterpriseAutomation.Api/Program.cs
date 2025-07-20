@@ -1,6 +1,7 @@
 ﻿using EnterpriseAutomation.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,8 +18,12 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.Authority = "http://localhost:8080/realms/EnterpriseRealm";
-    //options.Audience = "enterprise-api";
     options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateAudience = true,
+        ValidAudience = "enterprise-api"
+    };
 });
 
 // Configure Swagger to support Bearer token

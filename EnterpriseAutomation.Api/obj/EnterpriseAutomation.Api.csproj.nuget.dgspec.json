@@ -151,6 +151,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Remote.Linq.Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[7.2.2, )"
+            },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[8.12.1, )"

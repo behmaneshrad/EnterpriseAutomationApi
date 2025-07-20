@@ -19,6 +19,26 @@
           "EnterpriseAutomation.Api.dll": {}
         }
       },
+      "aqua-core/5.4.2": {
+        "runtime": {
+          "lib/net8.0/Aqua.dll": {
+            "assemblyVersion": "5.4.0.0",
+            "fileVersion": "5.4.0.0"
+          }
+        }
+      },
+      "aqua-core-newtonsoft-json/5.4.2": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "aqua-core": "5.4.2"
+        },
+        "runtime": {
+          "lib/net6.0/Aqua.Newtonsoft.Json.dll": {
+            "assemblyVersion": "5.4.0.0",
+            "fileVersion": "5.4.0.0"
+          }
+        }
+      },
       "Azure.Core/1.38.0": {
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "7.0.0",
@@ -858,6 +878,29 @@
           }
         }
       },
+      "Remote.Linq/7.2.2": {
+        "dependencies": {
+          "aqua-core": "5.4.2"
+        },
+        "runtime": {
+          "lib/net8.0/Remote.Linq.dll": {
+            "assemblyVersion": "7.2.0.0",
+            "fileVersion": "7.2.0.0"
+          }
+        }
+      },
+      "Remote.Linq.Newtonsoft.Json/7.2.2": {
+        "dependencies": {
+          "Remote.Linq": "7.2.2",
+          "aqua-core-newtonsoft-json": "5.4.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Remote.Linq.Newtonsoft.Json.dll": {
+            "assemblyVersion": "7.2.0.0",
+            "fileVersion": "7.2.0.0"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/6.6.2": {
         "dependencies": {
           "Microsoft.Extensions.ApiDescription.Server": "6.0.5",
@@ -1181,7 +1224,7 @@
       "EnterpriseAutomation.Application/1.0.0": {
         "dependencies": {
           "EnterpriseAutomation.Domain": "1.0.0",
-          "Newtonsoft.Json": "13.0.3",
+          "Remote.Linq.Newtonsoft.Json": "7.2.2",
           "System.IdentityModel.Tokens.Jwt": "8.12.1"
         },
         "runtime": {
@@ -1222,6 +1265,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "aqua-core/5.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-tZC9tqxpd+dHl2mjavGVvAFyEpT4Cs3J0o5I7IHSVvAOpRLhBir6C/9a0p8R3RQWoN2dwjjXgqVtLAGIHzPoIQ==",
+      "path": "aqua-core/5.4.2",
+      "hashPath": "aqua-core.5.4.2.nupkg.sha512"
+    },
+    "aqua-core-newtonsoft-json/5.4.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WvAgioKegxnIfpB9ij9oXdcTsblphZtQ1oX8hLrNF8CfQ6qFZi/pAOV69kHE7il7aLJFwdnUdCchQv8Z5sTFfg==",
+      "path": "aqua-core-newtonsoft-json/5.4.2",
+      "hashPath": "aqua-core-newtonsoft-json.5.4.2.nupkg.sha512"
     },
     "Azure.Core/1.38.0": {
       "type": "package",
@@ -1593,6 +1650,20 @@
       "sha512": "sha512-HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ==",
       "path": "newtonsoft.json/13.0.3",
       "hashPath": "newtonsoft.json.13.0.3.nupkg.sha512"
+    },
+    "Remote.Linq/7.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jEeRFPQrWxAAzSJQyGH5nzddN2w2m3YzAF5k7olWITuXbDzGwqmrwGq7d+kYmhYtN1Wg8AebCOohWYXrPhRpHg==",
+      "path": "remote.linq/7.2.2",
+      "hashPath": "remote.linq.7.2.2.nupkg.sha512"
+    },
+    "Remote.Linq.Newtonsoft.Json/7.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hoNUYokFihioiZnGj+m/VysH4aTqiPf8AOINjPWusCAkzM9BtnCFL+3SuQOI/hfP4WZV5U1O08PZuvjPQdE3sg==",
+      "path": "remote.linq.newtonsoft.json/7.2.2",
+      "hashPath": "remote.linq.newtonsoft.json.7.2.2.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/6.6.2": {
       "type": "package",
