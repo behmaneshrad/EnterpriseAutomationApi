@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using EnterpriseAutomation.Application.Users.Dtos;
 using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Application;
+
 
 namespace EnterpriseAutomation.WebApi.Controllers
 {
@@ -30,6 +32,16 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return Ok(userDto);
         }
 
+        [HttpPost("validate")]
+        public async Task<IActionResult> ValidateUser([FromBody] UserRegisterDto dto)
+        {
+            var userDto = await _userService.ValidateUserAsync(dto.Username, dto.Password);
+
+            if (userDto == null)
+                return Unauthorized("Invalid credentials");
+
+            return Ok(userDto);
+        }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {

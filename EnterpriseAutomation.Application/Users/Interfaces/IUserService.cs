@@ -11,5 +11,7 @@ namespace EnterpriseAutomation.Application.Users.Interfaces
         Task CreateUserAsync(User user);
 
         Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);
+        Task<User?> ValidateUserAsync(string username, string password);
+
     }
 }

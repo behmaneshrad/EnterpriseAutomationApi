@@ -1,10 +1,11 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using EnterpriseAutomation.Application.Users.Dtos;
 using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace EnterpriseAutomation.Application.Users.Services
 {
@@ -57,5 +58,22 @@ namespace EnterpriseAutomation.Application.Users.Services
                 // Add Email if your User entity has an Email property
             };
         }
+
+        public async Task<User?> ValidateUserAsync(string username, string password)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+                return null;
+
+            var passwordHasher = new PasswordHasher<User>();
+            var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+
+            if (result == PasswordVerificationResult.Failed)
+                return null;
+
+            return user; // فقط خود شی User را برگردان
+        }
     }
-}
+ }
