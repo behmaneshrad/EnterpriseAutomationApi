@@ -23,18 +23,14 @@ services:
       - backend-net
 
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0.3
+    image: quay.io/keycloak/keycloak:24.0.1
     container_name: enterprise-keycloak
-    command: start-dev
-    environment:
-      KC_DB: dev-mem
-      KC_HTTP_RELATIVE_PATH: /auth
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
       - "8080:8080"
-    networks:
-      - backend-net
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command: start-dev
 
 networks:
   backend-net:
