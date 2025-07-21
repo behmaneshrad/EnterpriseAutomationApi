@@ -62,9 +62,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return CreatedAtAction(nameof(GetCurrentUser), new { username = user.Username }, userDto);
         }
 
-        /// <summary>
         /// Gets users directly from Keycloak
-        /// </summary>
         [HttpGet("keycloak-users")]
         [Authorize]
         public async Task<IActionResult> GetKeycloakUsers()
@@ -73,9 +71,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return Ok(result);
         }
 
-        /// <summary>
         /// Gets roles directly from Keycloak
-        /// </summary>
         [HttpGet("keycloak-roles")]
         [Authorize]
         public async Task<IActionResult> GetKeycloakRoles()
