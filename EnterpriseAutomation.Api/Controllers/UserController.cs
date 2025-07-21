@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
@@ -6,7 +6,7 @@ using EnterpriseAutomation.Application.Users.Dtos;
 using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Application;
-
+using EnterpriseAutomation.Infrastructure.Services;
 
 namespace EnterpriseAutomation.WebApi.Controllers
 {
@@ -15,10 +15,12 @@ namespace EnterpriseAutomation.WebApi.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly KeycloakService _keycloakService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, KeycloakService keycloakService)
         {
             _userService = userService;
+            _keycloakService = keycloakService;
         }
 
         [HttpGet("current")]
@@ -42,6 +44,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
 
             return Ok(userDto);
         }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
@@ -49,7 +52,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             var user = new User
             {
                 Username = dto.Username,
-                PasswordHash = passwordHasher.HashPassword(null, dto.Password) ,
+                PasswordHash = passwordHasher.HashPassword(null, dto.Password),
                 Role = "user"
             };
 
@@ -57,6 +60,28 @@ namespace EnterpriseAutomation.WebApi.Controllers
             var userDto = new UserDto { Username = user.Username, Role = user.Role };
 
             return CreatedAtAction(nameof(GetCurrentUser), new { username = user.Username }, userDto);
+        }
+
+        /// <summary>
+        /// Gets users directly from Keycloak
+        /// </summary>
+        [HttpGet("keycloak-users")]
+        [Authorize]
+        public async Task<IActionResult> GetKeycloakUsers()
+        {
+            var result = await _keycloakService.GetUsersAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Gets roles directly from Keycloak
+        /// </summary>
+        [HttpGet("keycloak-roles")]
+        [Authorize]
+        public async Task<IActionResult> GetKeycloakRoles()
+        {
+            var result = await _keycloakService.GetRolesAsync();
+            return Ok(result);
         }
     }
 }
