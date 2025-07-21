@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using EnterpriseAutomation.Domain.Entities.Base;
 namespace EnterpriseAutomation.Domain.Entities
 {
-    public class Request:Base
+    public class Request:BaseEntity
     {
         public string Id { get; set; } = default!;
         public string Title { get; set; } = default!;
