@@ -5,12 +5,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using EnterpriseAutomation.Application.Users.Services;
+using EnterpriseAutomation.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddHttpClient<KeycloakService>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
