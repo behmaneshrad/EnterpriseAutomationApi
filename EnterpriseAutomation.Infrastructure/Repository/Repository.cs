@@ -21,9 +21,20 @@ namespace EnterpriseAutomation.Infrastructure.Repository
             _dbSet = context.Set<TEntity>();
         }
 
-        public Task DeleteEntity(TEntity entity)
+        public async Task<bool> DeletedEntity(int Id)
         {
-            throw new NotImplementedException();
+            var entity = await GetByIdAsync(Id);
+            if (entity == null)
+            {
+                return false;
+            }
+            DeleteEntity(entity);
+            return true;
+        }
+
+        public void DeleteEntity(TEntity entity)
+        {
+             _db.Remove(entity);
         }
 
         public async Task<IEnumerable<TEntity>> GetAllAsync()
@@ -51,7 +62,8 @@ namespace EnterpriseAutomation.Infrastructure.Repository
         public void UpdateEntityAsync(TEntity entity)
         {
             _dbSet.Attach(entity);
-            _db.Entry(entity).State = EntityState.Modified;
+            _db.Entry(entity).State = EntityState.Modified; 
+            //Alternatively, you can use _dbSet.Update(entity) if you prefer
         }
 
         public void UpdateEntityAsync(IEnumerable<TEntity> entities)
@@ -62,5 +74,7 @@ namespace EnterpriseAutomation.Infrastructure.Repository
                 _db.Entry(entity).State = EntityState.Modified;
             }
         }
+        //unit of work pattern, repository pattern, entity framework core, c# code snippet,
+        //enterprise automation, infrastructure repository
     }
 }

@@ -22,7 +22,9 @@ namespace EnterpriseAutomation.Application.IRepository
         public void UpdateEntityAsync(IEnumerable<TEntity> entities);
        
 
-        public Task DeleteEntity(TEntity entity);
+        public void DeleteEntity(TEntity entity);
+
+        public Task<bool> DeletedEntity(int Id);
 
     }
 }
