@@ -4,8 +4,9 @@ using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
-using EnterpriseAutomation.Application.IRepository;
+//using EnterpriseAutomation.Application.IRepository;
 using System;
+using EnterpriseAutomation.Infrastructure.Persistence;
 
 namespace EnterpriseAutomation.Application.Users.Services
 {
