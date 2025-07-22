@@ -13,15 +13,10 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<WorkflowDefinition> builder)
         {
-            builder.HasKey(t => t.Id);
-
             builder.Property(t => t.Name)
                 .IsRequired();
 
             builder.Property(t => t.Description)
-                .IsRequired();
-
-            builder.Property(t => t.CreatedAt)
                 .IsRequired();
 
             // Relation to user 

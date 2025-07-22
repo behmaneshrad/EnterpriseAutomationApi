@@ -3,16 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EnterpriseAutomation.Domain.Entities;
 
+[Display(Name = "موجودیت کاربران")]
 public class User
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public string Id { get; set; } = default!;
-    public string Username { get; set; } = default!;
-    public string Role { get; set; } = default!;
-    public string PasswordHash { get; set; } = default!;
+    public int UserId { get; set; } 
+    public string Username { get; set; } = string.Empty; 
+    public string Role { get; set; } = string.Empty; 
+    public string PasswordHash { get; set; } = string.Empty;
 
-    public ICollection <Request> Requests { get; set; }
-    public ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; }
-    public ICollection<ApprovalStep> ApprovalSteps { get; set; }
+    public virtual ICollection <Request> Requests { get; set; }
+    public virtual ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; }
+    public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; }
 }

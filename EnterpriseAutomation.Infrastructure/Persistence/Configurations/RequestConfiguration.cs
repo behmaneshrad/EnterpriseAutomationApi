@@ -13,8 +13,6 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Request> builder)
         {
-            builder.HasKey(x => x.Id);
-
             builder.Property(x => x.Title)
                 .IsRequired()
                 .HasMaxLength(200);
