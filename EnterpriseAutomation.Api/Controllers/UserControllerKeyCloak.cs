@@ -34,6 +34,7 @@ namespace EnterpriseAutomation.API.Controllers
             var token = await _keycloakService.GetAccessTokenAsync();
             var keycloakConfig = _configuration.GetSection("Keycloak");
             var url = $"{keycloakConfig["Authority"]}/admin/realms/{keycloakConfig["Realm"]}/users";
+            
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
