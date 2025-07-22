@@ -5,6 +5,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using EnterpriseAutomation.Application.Users.Dtos;
+using EnterpriseAutomation.Infrastructure.Services;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -55,7 +57,7 @@ namespace EnterpriseAutomation.API.Controllers
             var response = await client.PostAsync(url, content);
 
             if (response.IsSuccessStatusCode)
-                return Ok($"user created successfully:{error}");
+                return Ok($"user created successfully");
 
             var error = await response.Content.ReadAsStringAsync();
             return BadRequest($"User Creation was not successful:{error}");
@@ -70,3 +72,7 @@ namespace EnterpriseAutomation.API.Controllers
             var content = new StringContent(
                 $"client_id={keycloakConfig["ClientId"]}&grant_type=password&username={model.Username}&password={model.Password}",
                 En
+                );
+        }
+    }
+}
