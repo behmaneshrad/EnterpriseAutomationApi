@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnterpriseAutomation.Domain.Entities.Base;
 namespace EnterpriseAutomation.Domain.Entities
 {
-    public class Request:BaseEntity
+    [Display(Name = "موجودیت درخواست های کاربران")]
+    public class Request : BaseEntity
     {
-        public string Id { get; set; } = default!;
-        public string Title { get; set; } = default!;
-        public string Description { get; set; } = default!;
-        public string CreatedByUserId { get; set; } = default!;
+        [Key]
+        public int RequestId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int CreatedByUserId { get; set; } = default!;
         //public DateTime CreatedAt { get; set; } = default!;
-        public string CurrentStatus { get; set; } = default!;
+        public string CurrentStatus { get; set; } = string.Empty;
         public string CurrentStep { get; set; } = default!;
-        public string WorkflowId { get; set; } = default!;
+        public int WorkflowId { get; set; }
 
-        public User User { get; set; }
-        public ICollection<ApprovalStep> ApprovalSteps { get; set; }
+        public virtual User User { get; set; }
+        public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; }
     }
 }

@@ -22,6 +22,9 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+
+        // Only configures AppDbContext configurations.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
     }
 }

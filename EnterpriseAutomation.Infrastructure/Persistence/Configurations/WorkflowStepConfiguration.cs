@@ -13,8 +13,6 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<WorkflowStep> builder)
         {
-            builder.HasKey(x => x.StepId);
-
             builder.Property(x => x.StepName)
                 .IsRequired()
                 .HasMaxLength(200);

@@ -13,7 +13,6 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ApprovalStep> builder)
         {
-            builder.HasKey(x => x.Id);
 
             builder.Property(x => x.StepId)
                 .IsRequired();
