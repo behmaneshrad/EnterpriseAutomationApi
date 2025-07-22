@@ -7,6 +7,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using EnterpriseAutomation.Application.Users.Dtos;
 using EnterpriseAutomation.Infrastructure.Services;
+using Newtonsoft.Json;
+using EnterpriseAutomation.Application.Externals;
+using System.Runtime.Serialization.Json;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -51,7 +54,7 @@ namespace EnterpriseAutomation.API.Controllers
                 }
             };
 
-            var json = JsonSerializer.Serialize(userPayload);
+            var json = System.Text.Json.JsonSerializer.Serialize(userPayload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync(url, content);
@@ -70,9 +73,31 @@ namespace EnterpriseAutomation.API.Controllers
             var tokenUrl = $"{keycloakConfig["Authority"]}/protocol/openid-connect/token";
 
             var content = new StringContent(
-                $"client_id={keycloakConfig["ClientId"]}&grant_type=password&username={model.Username}&password={model.Password}",
-                En
-                );
+                $"client_id={keycloakConfig["ClientId"]}" +
+                $"&grant_type=password" +
+                $"&username={model.Username}" +
+                $"&password={model.Password}" +
+                $"&client_secret={keycloakConfig["ClientSecret"]}",
+                Encoding.UTF8,
+                "application/x-www-form-urlencoded");
+
+            using var httpClient = new HttpClient();
+            var response = await httpClient.PostAsync(tokenUrl, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return BadRequest(new { message = "Login failed", details = error });
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonConvert.DeserializeObject<TokenResponseDto>(responseContent);
+
+            return Ok(tokenResponse);
         }
+
     }
 }
+
+
+
