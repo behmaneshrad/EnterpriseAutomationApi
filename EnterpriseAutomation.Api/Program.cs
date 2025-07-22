@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using EnterpriseAutomation.Application.Users.Services;
 using EnterpriseAutomation.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,7 +102,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    //app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

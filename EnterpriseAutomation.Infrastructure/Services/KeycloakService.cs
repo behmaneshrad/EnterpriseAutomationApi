@@ -21,23 +21,30 @@ namespace EnterpriseAutomation.Infrastructure.Services
         public async Task<string> GetAccessTokenAsync()
         {
             var keycloakConfig = _configuration.GetSection("Keycloak");
-            var tokenUrl = $"{keycloakConfig["Authority"]}/protocol/openid-connect/token";
-
             var clientId = keycloakConfig["ClientId"];
             var clientSecret = keycloakConfig["ClientSecret"];
+            var realm = keycloakConfig["Realm"];
+            var tokenUrl = $"http://localhost:8080/realms/{realm}/protocol/openid-connect/token";
 
-            var content = new StringContent(
-                $"client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials",
-                Encoding.UTF8, "application/x-www-form-urlencoded");
+            var parameters = new Dictionary<string, string>
+            {
+                 { "grant_type", "client_credentials" },
+                 { "client_id", clientId },
+                { "client_secret", clientSecret }
+            };
 
+            var content = new FormUrlEncodedContent(parameters);
             var response = await _httpClient.PostAsync(tokenUrl, content);
-            response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonDocument.Parse(json);
+            var body = await response.Content.ReadAsStringAsync();
 
-            return tokenResponse.RootElement.GetProperty("access_token").GetString();
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Keycloak Token Error: {response.StatusCode} - {body}");
+
+            using var doc = JsonDocument.Parse(body);
+            return doc.RootElement.GetProperty("access_token").GetString();
         }
+
 
         public async Task<string> GetUsersAsync()
         {
