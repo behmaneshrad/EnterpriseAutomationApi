@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
-using EnterpriseAutomation.Application.Users.Dtos;
+using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Application;
@@ -27,22 +27,38 @@ namespace EnterpriseAutomation.WebApi.Controllers
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userDto = await _userService.GetCurrentUserAsync(User);
-            if (userDto == null)
-                return Unauthorized();
-
-            return Ok(userDto);
+            //var userDto = await _userService.GetCurrentUserAsync(User);
+            //if (userDto == null)
+            //    return Unauthorized();
+            return Ok("userDto");
         }
+
+        [HttpGet("Get-Current-User-Test")]
+        public async Task<IActionResult> GetCurrentUserTest(string userName)
+        {
+            var userExist = await _userService.GetUserByUserNameAsync(userName);
+            if (userExist == null)
+            {
+                return NotFound(new
+                {
+                    Title = "کاربر مورد نظر پیدا نشد",
+                    Status = 404,
+                    Message = "لطفاً مطمئن شوید نام کاربری را درست وارد کرده‌اید."
+                });
+            }
+            return Ok(userExist);
+        }
+
 
         [HttpPost("validate")]
         public async Task<IActionResult> ValidateUser([FromBody] UserRegisterDto dto)
         {
-            var userDto = await _userService.ValidateUserAsync(dto.Username, dto.Password);
+            //var userDto = await _userService.ValidateUserAsync(dto.Username, dto.Password);
 
-            if (userDto == null)
-                return Unauthorized("Invalid credentials");
+            //if (userDto == null)
+            //    return Unauthorized("Invalid credentials");
 
-            return Ok(userDto);
+            return Ok("userDto");
         }
 
         [HttpPost("register")]

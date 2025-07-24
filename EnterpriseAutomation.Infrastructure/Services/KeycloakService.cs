@@ -35,6 +35,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
             var content = new FormUrlEncodedContent(parameters);
             var response = await _httpClient.PostAsync(tokenUrl, content);
+            response.EnsureSuccessStatusCode();
 
             var body = await response.Content.ReadAsStringAsync();
 

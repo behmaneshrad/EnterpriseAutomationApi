@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using EnterpriseAutomation.Application.Users.Dtos;
+using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Infrastructure.Services;
 using Newtonsoft.Json;
 using EnterpriseAutomation.Application.Externals;

@@ -5,7 +5,7 @@ namespace EnterpriseAutomation.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
-    public DbSet<User> Users => Set<User>();
+    public DbSet<User> Users {  get; set; }
 
     public DbSet<Request> Requests => Set<Request>();
 

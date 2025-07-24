@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EnterpriseAutomation.Domain\EnterpriseAutomation.Domain.csproj" />
-    <ProjectReference Include="..\EnterpriseAutomation.Infrastructure\EnterpriseAutomation.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

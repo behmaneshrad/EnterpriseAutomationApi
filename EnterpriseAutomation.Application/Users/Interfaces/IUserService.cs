@@ -1,17 +1,19 @@
 using System.Threading.Tasks;
-using EnterpriseAutomation.Application.Users.Dtos;
+using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Domain.Entities;
 
 namespace EnterpriseAutomation.Application.Users.Interfaces
 {
     public interface IUserService
     {
-        Task<UserDto?> GetUserByUsernameAsync(string username);
+        //Task<UserDto?> GetUserByUsernameAsync(string username);
 
         Task CreateUserAsync(User user);
 
-        Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);
-        Task<User?> ValidateUserAsync(string username, string password);
+        public Task<UserDto> GetUserByUserNameAsync(string userName);
+
+        //Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);
+        //Task<User?> ValidateUserAsync(string username, string password);
 
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace EnterpriseAutomation.Application.Users.Dtos
+﻿namespace EnterpriseAutomation.Application.Users.Models
 {
     public class RoleDto
     {

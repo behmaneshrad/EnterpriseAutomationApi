@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using EnterpriseAutomation.Application.Users.Services;
+//using EnterpriseAutomation.Application.Users.Services;
 using EnterpriseAutomation.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using EnterpriseAutomation.Application.Users.Services;
+using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Infrastructure.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +19,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient<KeycloakService>();
+//builder.Services.AddScoped<KeycloakService>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
+
+// Gen Repository Service
+builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EnterpriseAutomation.Application.Users.Dtos
+namespace EnterpriseAutomation.Application.Users.Models
 {
     public class RegisterDto
     {

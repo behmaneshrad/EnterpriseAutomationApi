@@ -1,46 +1,53 @@
-﻿using EnterpriseAutomation.Application.Users.Dtos;
+﻿using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
-//using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.IRepository;
 using System;
-using EnterpriseAutomation.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
+
 
 namespace EnterpriseAutomation.Application.Users.Services
 {
     public class UserService : IUserService
     {
-        private readonly AppDbContext _context;
-
-
-        public UserService(AppDbContext context)
+        private readonly IRepository<User> _userRepository;
+        public UserService(IRepository<User> userRepository)
         {
-            _context = context;
+            _userRepository = userRepository;
         }
 
-        public async Task<UserDto?> GetUserByUsernameAsync(string username)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
-            if (user == null)
-                return null;
+        //public async Task<UserDto?> GetUserByUsernameAsync(string username)
+        //{
+        //    var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
-            return new UserDto
-            {
-                Username = user.Username,
-                Role = user.Role
-                // Add Email if needed
-            };
-        }
+        //    if (user == null)
+        //        return null;
+
+        //    return new UserDto
+        //    {
+        //        Username = user.Username,
+        //        Role = user.Role
+        //        // Add Email if needed
+        //    };
+        //}
 
         public async Task CreateUserAsync(User user)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            //_context.Users.Add(user);
+            //await _context.SaveChangesAsync();
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+            await _userRepository.InsertAsync(user);
+            await _userRepository.SaveChangesAsync();
         }
 
+        #region Get User Login
         public async Task<UserDto?> GetCurrentUserAsync(ClaimsPrincipal userClaims)
         {
             var username = userClaims.Identity?.Name;
@@ -48,7 +55,7 @@ namespace EnterpriseAutomation.Application.Users.Services
             if (string.IsNullOrEmpty(username))
                 return null;
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            var user = await _userRepository.GetFirstOrDefaultAsync(x => x.Username == username);
 
             if (user == null)
                 return null;
@@ -59,22 +66,44 @@ namespace EnterpriseAutomation.Application.Users.Services
                 Role = user.Role
             };
         }
+        #endregion
 
-        public async Task<User?> ValidateUserAsync(string username, string password)
+        #region Test Get user
+
+        public async Task<UserDto> GetUserByUserNameAsync(string userName)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == username);
+            
+            if (string.IsNullOrEmpty(userName))
+                return null;
+
+            var user = await _userRepository.GetFirstOrDefaultAsync(x => x.Username == userName);
 
             if (user == null)
                 return null;
 
-            var passwordHasher = new PasswordHasher<User>();
-            var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
-
-            if (result == PasswordVerificationResult.Failed)
-                return null;
-
-            return user;
+            return new UserDto
+            {
+                Username = user.Username,
+                Role = user.Role
+            };
         }
+        #endregion
+
+        //public async Task<User?> ValidateUserAsync(string username, string password)
+        //{
+        //    var user = await _context.Users
+        //        .FirstOrDefaultAsync(u => u.Username == username);
+
+        //    if (user == null)
+        //        return null;
+
+        //    var passwordHasher = new PasswordHasher<User>();
+        //    var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+
+        //    if (result == PasswordVerificationResult.Failed)
+        //        return null;
+
+        //    return user;
+        //}
     }
 }
