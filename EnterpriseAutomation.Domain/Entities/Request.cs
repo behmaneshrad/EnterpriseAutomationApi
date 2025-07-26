@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnterpriseAutomation.Domain.Entities.Base;
+using EnterpriseAutomation.Domain.Entities.Enums;
 namespace EnterpriseAutomation.Domain.Entities
 {
     [Display(Name = "موجودیت درخواست های کاربران")]
@@ -16,8 +17,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public string Description { get; set; } = string.Empty;
         public int CreatedByUserId { get; set; } = default!;
         //public DateTime CreatedAt { get; set; } = default!;
-        public string CurrentStatus { get; set; } = string.Empty;
-        public string CurrentStep { get; set; } = default!;
+        public RequestStatus CurrentStatus { get; set; } = RequestStatus.Pending; public string CurrentStep { get; set; } = default!;
         public int WorkflowId { get; set; }
 
         public virtual User User { get; set; }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250726095927_init")]
-    partial class init
+    [Migration("20250726130101_AddStatusEnums")]
+    partial class AddStatusEnums
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,9 +48,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int>("RequestId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<int>("StepId")
                         .HasColumnType("int");
@@ -81,9 +80,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("CurrentStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CurrentStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("CurrentStep")
                         .IsRequired()

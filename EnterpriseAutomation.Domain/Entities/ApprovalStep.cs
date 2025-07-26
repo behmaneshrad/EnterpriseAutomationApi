@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using EnterpriseAutomation.Domain.Entities.Enums;
 namespace EnterpriseAutomation.Domain.Entities
 {
     [Display(Name = "موجودیت مراحل تایید")]
@@ -19,8 +19,7 @@ namespace EnterpriseAutomation.Domain.Entities
 
         public int ApproverUserId { get; set; } = default!;
 
-        public string Status { get; set; } = String.Empty;
-
+        public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
         public DateTime ApprovedAt { get; set; } = default!;
 
         public virtual User User { get; set; }
