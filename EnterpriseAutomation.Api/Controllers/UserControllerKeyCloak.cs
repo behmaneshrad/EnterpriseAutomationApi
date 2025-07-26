@@ -31,40 +31,11 @@ namespace EnterpriseAutomation.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var token = await _keycloakService.GetAccessTokenAsync();
-            var keycloakConfig = _configuration.GetSection("Keycloak");
-            var url = $"{keycloakConfig["Authority"]}/admin/realms/{keycloakConfig["Realm"]}/users";
-            
+            var created = await _keycloakService.CreateUserAsync(model.Username, model.Email, model.Password);
+            if (created)
+                return Ok("user created successfully in Keycloak");
 
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            var userPayload = new
-            {
-                username = model.Username,
-                email = model.Email,
-                enabled = true,
-                credentials = new[]
-                {
-                    new
-                    {
-                        type = "password",
-                        value = model.Password,
-                        temporary = false
-                    }
-                }
-            };
-
-            var json = System.Text.Json.JsonSerializer.Serialize(userPayload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await client.PostAsync(url, content);
-
-            if (response.IsSuccessStatusCode)
-                return Ok($"user created successfully");
-
-            var error = await response.Content.ReadAsStringAsync();
-            return BadRequest($"User Creation was not successful:{error}");
+            return BadRequest("User Creation was not successful in Keycloak");
         }
 
         [HttpPost("login")]
@@ -96,9 +67,5 @@ namespace EnterpriseAutomation.API.Controllers
 
             return Ok(tokenResponse);
         }
-
     }
 }
-
-
-

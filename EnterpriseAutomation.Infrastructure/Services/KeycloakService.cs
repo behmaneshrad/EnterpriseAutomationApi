@@ -76,5 +76,33 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
             return await response.Content.ReadAsStringAsync();
         }
+        public async Task<bool> CreateUserAsync(string username, string email, string password)
+        {
+            var token = await GetAccessTokenAsync();
+            var keycloakConfig = _configuration.GetSection("Keycloak");
+            var url = $"{keycloakConfig["Authority"]}/admin/realms/{keycloakConfig["Realm"]}/users";
+
+            var userPayload = new
+            {
+                username = username,
+                email = email,
+                enabled = true,
+                credentials = new[]
+                {
+            new { type = "password", value = password, temporary = false }
+        }
+            };
+
+            var json = JsonSerializer.Serialize(userPayload);
+            var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
+        }
+
     }
 }
