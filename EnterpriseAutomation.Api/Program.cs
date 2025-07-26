@@ -4,29 +4,32 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-//using EnterpriseAutomation.Application.Users.Services;
 using EnterpriseAutomation.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using EnterpriseAutomation.Application.Users.Services;
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Infrastructure.Repository;
+// Request Services
+using EnterpriseAutomation.Application.Requests.Interfaces;
+using EnterpriseAutomation.Application.Requests.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddHttpClient<KeycloakService>();
-//builder.Services.AddScoped<KeycloakService>();
 
-// Register Services
-builder.Services.AddScoped<IUserService, UserService>();
+// Register User Services
+//builder.Services.AddScoped<IUserService, UserService>();
 
-// Gen Repository Service
-builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+// Register Request Services
+builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 
+// Generic Repository Service
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -49,22 +52,22 @@ builder.Services.AddAuthentication(options =>
     };
     options.Events = new JwtBearerEvents
     {
-        OnAuthenticationFailed= context =>
+        OnAuthenticationFailed = context =>
         {
             context.NoResult();
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
             return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnAuthenticationFailed\"}");
         },
-        OnChallenge= context =>
+        OnChallenge = context =>
         {
             context.HandleResponse();
             context.Response.StatusCode = 401;
-            context.Response.ContentType= "application/json";
+            context.Response.ContentType = "application/json";
             return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnChallenge\"}");
         },
-        OnForbidden= context =>
-        { 
+        OnForbidden = context =>
+        {
             context.Response.StatusCode = 403;
             context.Response.ContentType = "application/json";
             return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnForbidden\"}");
@@ -72,13 +75,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-//نیاز توکن از keycloak هستیم
-
 // Swagger
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Enterprise API", Version = "v1" });
-
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -88,7 +88,6 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Enter 'Bearer' [space] + your token"
     });
-
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -117,4 +116,5 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();

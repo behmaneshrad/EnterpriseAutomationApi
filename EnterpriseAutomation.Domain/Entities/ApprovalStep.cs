@@ -20,7 +20,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public int ApproverUserId { get; set; } = default!;
 
         public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
-        public DateTime ApprovedAt { get; set; } = default!;
+        public DateTime? ApprovedAt { get; set; } = null; // nullable
 
         public virtual User User { get; set; }
         public virtual Request Request { get; set; }

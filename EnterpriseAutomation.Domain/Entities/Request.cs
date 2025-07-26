@@ -17,7 +17,8 @@ namespace EnterpriseAutomation.Domain.Entities
         public string Description { get; set; } = string.Empty;
         public int CreatedByUserId { get; set; } = default!;
         //public DateTime CreatedAt { get; set; } = default!;
-        public RequestStatus CurrentStatus { get; set; } = RequestStatus.Pending; public string CurrentStep { get; set; } = default!;
+        public RequestStatus CurrentStatus { get; set; } = RequestStatus.Pending;
+        public string CurrentStep { get; set; } = default!;
         public int WorkflowId { get; set; }
 
         public virtual User User { get; set; }
