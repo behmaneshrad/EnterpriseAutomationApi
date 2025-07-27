@@ -48,6 +48,12 @@ namespace EnterpriseAutomation.WebApi.Controllers
             }
             return Ok(userExist);
         }
+        [HttpGet("GetAllUserFor_Test")]
+        public async Task<IActionResult> GetAllUserFor_Test()
+        {
+            var allUser = await _userService.GetAllUserAsync();
+            return Ok(allUser);
+        }
 
         [HttpPost("validate")]
         public async Task<IActionResult> ValidateUser([FromBody] UserRegisterDto dto)
@@ -60,7 +66,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return Ok("userDto");
         }
 
-        [HttpPost("register")]
+        [HttpPost("REgister")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
             //var created = await _keycloakService.CreateUserAsync(dto.Username, dto.Email, dto.Password);

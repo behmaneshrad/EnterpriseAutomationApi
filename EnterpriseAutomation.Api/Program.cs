@@ -21,12 +21,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<KeycloakService>();
 
-// Register User Services
-//builder.Services.AddScoped<IUserService, UserService>();
 
-// Register Request Services
-builder.Services.AddScoped<IRequestService, RequestService>();
+// Register and Request Services
 builder.Services.AddScoped<IRequestRepository, RequestRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
 
 // Generic Repository Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

@@ -8,6 +8,8 @@ namespace EnterpriseAutomation.Application.Users.Interfaces
     {
         //Task<UserDto?> GetUserByUsernameAsync(string username);
 
+        public Task<IEnumerable<UserDto>> GetAllUserAsync(); //Test method
+
         Task CreateUserAsync(User user);
 
         Task<UserDto> GetUserByUserNameAsync(string userName); // ✅ بازگشت به UserDto مطابق UserService فعلی

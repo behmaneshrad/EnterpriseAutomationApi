@@ -27,20 +27,36 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
         public async Task<Request?> GetByIdAsync(int id)
         {
-            return await _context.Requests
-                .Include(r => r.User)
-                .Include(r => r.ApprovalSteps)
-                    .ThenInclude(a => a.User)
-                .FirstOrDefaultAsync(r => r.RequestId == id);
+            //return await _context.Requests
+            //    .Include(r => r.User)
+            //    .Include(r => r.ApprovalSteps)
+            //        .ThenInclude(a => a.User)
+            //    .FirstOrDefaultAsync(r => r.RequestId == id);
+
+
+            return await _repository.GetFirstWithInclude(
+            r => r.RequestId==id,    // یا اگر Generic روی Request ساخته شده: r => r.RequestId == id
+            query => query
+            .Include(r => r.User)
+            .Include(r => r.ApprovalSteps)
+            .ThenInclude(a => a.User),
+            asNoTracking: true
+            );
         }
 
         public async Task<List<Request>> GetAllAsync()
         {
-            return await _context.Requests
-                .Include(r => r.User)
-                .Include(r => r.ApprovalSteps)
-                    .ThenInclude(a => a.User)
-                .ToListAsync();
+            //return await _context.Requests
+            //    .Include(r => r.User)
+            //    .Include(r => r.ApprovalSteps)
+            //        .ThenInclude(a => a.User)
+            //    .ToListAsync();
+
+            return (List<Request>)await _repository.GetAllAsync(q => q
+        .Include(r => r.User)
+        .Include(r => r.ApprovalSteps)
+            .ThenInclude(a => a.User),
+    asNoTracking: true);
         }
 
         public async Task SubmitAsync(int requestId, int employeeId)

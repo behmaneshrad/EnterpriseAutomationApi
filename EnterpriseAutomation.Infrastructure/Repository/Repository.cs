@@ -42,11 +42,31 @@ namespace EnterpriseAutomation.Infrastructure.Repository
         #endregion
 
         #region Read Entity
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        public async Task<IEnumerable<TEntity>> GetAllAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? include =null,
+            bool asNoTracking=false)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            if (include != null)
+                query = include(query);
+
+            return await query.ToListAsync();
+        }
+        public async Task<TEntity> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+        bool asNoTracking = false)
         {
             IQueryable<TEntity> query = _dbSet;
 
-            return await query.ToListAsync();
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            if (include != null)
+                query = include(query);
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
 
         public async Task<TEntity> GetByIdAsync(int Id)

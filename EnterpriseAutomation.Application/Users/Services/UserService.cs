@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using EnterpriseAutomation.Application.IRepository;
 using System;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 
 namespace EnterpriseAutomation.Application.Users.Services
@@ -86,6 +87,19 @@ namespace EnterpriseAutomation.Application.Users.Services
                 Username = user.Username,
                 Role = user.Role
             };
+        }
+        public async Task<IEnumerable<UserDto>> GetAllUserAsync()
+        {
+            var users = await _userRepository.GetAllAsync();
+
+            var res = users.Select(a => new UserDto
+            {
+                Email = "",
+                Username = a.Username,
+                Role = a.Role
+            });
+
+            return res;
         }
         #endregion
 
