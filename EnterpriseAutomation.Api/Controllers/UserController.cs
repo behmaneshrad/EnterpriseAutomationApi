@@ -33,28 +33,6 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return Ok("userDto");
         }
 
-        [HttpGet("Get-Current-User-Test")]
-        public async Task<IActionResult> GetCurrentUserTest(string userName)
-        {
-            var userExist = await _userService.GetUserByUserNameAsync(userName);
-            if (userExist == null)
-            {
-                return NotFound(new
-                {
-                    Title = "کاربر مورد نظر پیدا نشد",
-                    Status = 404,
-                    Message = "لطفاً مطمئن شوید نام کاربری را درست وارد کرده‌اید."
-                });
-            }
-            return Ok(userExist);
-        }
-        [HttpGet("GetAllUserFor_Test")]
-        public async Task<IActionResult> GetAllUserFor_Test()
-        {
-            var allUser = await _userService.GetAllUserAsync();
-            return Ok(allUser);
-        }
-
         [HttpPost("validate")]
         public async Task<IActionResult> ValidateUser([FromBody] UserRegisterDto dto)
         {
