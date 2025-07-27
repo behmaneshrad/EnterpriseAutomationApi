@@ -1,15 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Infrastructure.Services;
 using Newtonsoft.Json;
 using EnterpriseAutomation.Application.Externals;
-using System.Runtime.Serialization.Json;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -17,55 +10,97 @@ namespace EnterpriseAutomation.API.Controllers
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IConfiguration _configuration;
         private readonly KeycloakService _keycloakService;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(IHttpClientFactory httpClientFactory, IConfiguration configuration, KeycloakService keycloakService)
+        public AccountController(KeycloakService keycloakService, ILogger<AccountController> logger)
         {
-            _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
             _keycloakService = keycloakService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            var created = await _keycloakService.CreateUserAsync(model.Username, model.Email, model.Password);
-            if (created)
-                return Ok("user created successfully in Keycloak");
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            return BadRequest("User Creation was not successful in Keycloak");
+                var created = await _keycloakService.CreateUserAsync(
+                    model.Username,
+                    model.Email,
+                    model.Password,
+                    model.FirstName ?? "",
+                    model.LastName ?? ""
+                );
+
+                if (created)
+                {
+                    return Ok(new { message = "User created successfully in Keycloak" });
+                }
+
+                return BadRequest(new { message = "User creation was not successful in Keycloak" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating user in Keycloak");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+            }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            var keycloakConfig = _configuration.GetSection("Keycloak");
-            var tokenUrl = $"{keycloakConfig["Authority"]}/protocol/openid-connect/token";
-
-            var content = new StringContent(
-                $"client_id={keycloakConfig["ClientId"]}" +
-                $"&grant_type=password" +
-                $"&username={model.Username}" +
-                $"&password={model.Password}" +
-                $"&client_secret={keycloakConfig["ClientSecret"]}",
-                Encoding.UTF8,
-                "application/x-www-form-urlencoded");
-
-            using var httpClient = new HttpClient();
-            var response = await httpClient.PostAsync(tokenUrl, content);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var error = await response.Content.ReadAsStringAsync();
-                return BadRequest(new { message = "Login failed", details = error });
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var responseContent = await _keycloakService.LoginUserAsync(model.Username, model.Password);
+                var tokenResponse = JsonConvert.DeserializeObject<TokenResponseDto>(responseContent);
+
+                return Ok(tokenResponse);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login");
+                return BadRequest(new { message = "Login failed", details = ex.Message });
+            }
+        }
 
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonConvert.DeserializeObject<TokenResponseDto>(responseContent);
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUsers()
+        {
+            try
+            {
+                var users = await _keycloakService.GetUsersAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving users");
+                return StatusCode(500, new { message = "Failed to retrieve users", details = ex.Message });
+            }
+        }
 
-            return Ok(tokenResponse);
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            try
+            {
+                var roles = await _keycloakService.GetRolesAsync();
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving roles");
+                return StatusCode(500, new { message = "Failed to retrieve roles", details = ex.Message });
+            }
         }
     }
 }

@@ -4,34 +4,50 @@
   "enabled": true,
   "roles": {
     "realm": [
-      { "name": "admin" },
-      { "name": "employee" },
-      { "name": "approver" }
+      {
+        "name": "admin"
+      },
+      {
+        "name": "employee"
+      },
+      {
+        "name": "approver"
+      }
     ]
   },
-  "clientScopes": [
+  "clients": [
     {
-      "name": "aud-enterprise-api",
+      "clientId": "enterprise-api",
       "protocol": "openid-connect",
+      "secret": "Xz7pK93@vGmLwq!eD4Rt#2Fh",
+      "enabled": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "*"
+      ],
+      "defaultClientScopes": [
+        "roles-mapper",
+        "aud-enterprise-api"
+      ],
       "attributes": {
-        "display.on.consent.screen": "true",
-        "consent.screen.text": "Access enterprise-api",
-        "include.in.token.scope": "true"
-      },
-      "protocolMappers": [
-        {
-          "name": "aud-mapper",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "enterprise-api",
-            "id.token.claim": "true",
-            "access.token.claim": "true"
-          }
-        }
-      ]
+        "client_secret": "Xz7pK93@vGmLwq!eD4Rt#2Fh"
+      }
     },
+    {
+      "clientId": "realm-management",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": false
+    }
+  ],
+  "clientScopes": [
     {
       "name": "roles-mapper",
       "protocol": "openid-connect",
@@ -62,28 +78,58 @@
             "access.token.claim": "true",
             "id.token.claim": "true"
           }
+        },
+        {
+          "name": "realm-management roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "client.id": "realm-management",
+            "claim.name": "resource_access.realm-management.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aud-enterprise-api",
+      "protocol": "openid-connect",
+      "attributes": {
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Access enterprise-api",
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "aud-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "enterprise-api",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
         }
       ]
     }
   ],
-  "clients": [
+  "users": [
     {
-      "clientId": "enterprise-api",
-      "protocol": "openid-connect",
-      "secret": "Xz7pK93@vGmLwq!eD4Rt#2Fh",
+      "username": "service-account-enterprise-api",
       "enabled": true,
-      "publicClient": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
-      "standardFlowEnabled": true,
-      "redirectUris": ["*"],
-      "attributes": {
-        "client_secret": "Xz7pK93@vGmLwq!eD4Rt#2Fh"
-      },
-      "defaultClientScopes": [
-        "aud-enterprise-api",
-        "roles-mapper"
-      ]
+      "serviceAccountClientId": "enterprise-api",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-realm",
+          "query-users"
+        ]
+      }
     }
   ]
 }
