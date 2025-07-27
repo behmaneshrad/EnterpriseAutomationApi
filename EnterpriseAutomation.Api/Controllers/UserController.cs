@@ -63,9 +63,9 @@ namespace EnterpriseAutomation.WebApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
-            var created = await _keycloakService.CreateUserAsync(dto.Username, dto.Email, dto.Password);
-            if (!created)
-                return BadRequest("Failed to create user in Keycloak");
+            //var created = await _keycloakService.CreateUserAsync(dto.Username, dto.Email, dto.Password);
+            //if (!created)
+            //    return BadRequest("Failed to create user in Keycloak");
 
             var passwordHasher = new PasswordHasher<User>();
             var user = new User
