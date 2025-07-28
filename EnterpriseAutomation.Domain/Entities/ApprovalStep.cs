@@ -8,21 +8,29 @@ using System.Threading.Tasks;
 using EnterpriseAutomation.Domain.Entities.Enums;
 namespace EnterpriseAutomation.Domain.Entities
 {
-    [Display(Name = "موجودیت مراحل تایید")]
+    [Display(Name = "مراحل تایید")]
     public class ApprovalStep : BaseEntity
     {
         [Key]
+        [Display(Name ="آی دی مراحل تایید")]
         public int ApprovalStepId { get; set; }
+
+        [Display(Name = "شماره مرحله")]
         public int StepId { get; set; } = default!;
 
+        [Display(Name = "آی دی درخواست")]
         public int RequestId { get; set; } = default!;
 
+        [Display(Name = "آی دی کاربر تایید کننده")]
         public int ApproverUserId { get; set; } = default!;
 
+        [Display(Name = "وضعیت")]
         public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
+
+        [Display(Name = "تاریخ تایید")]
         public DateTime? ApprovedAt { get; set; }
 
-        public virtual User User { get; set; }
-        public virtual Request Request { get; set; }
+        public virtual User? ApproverUser { get; set; }
+        public virtual Request? Request { get; set; }
     }
 }

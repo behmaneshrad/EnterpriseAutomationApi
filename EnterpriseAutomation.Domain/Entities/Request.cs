@@ -12,20 +12,39 @@ namespace EnterpriseAutomation.Domain.Entities
     public class Request : BaseEntity
     {
         [Key]
+        [Display(Name ="آی دی درخواست")]
         public int RequestId { get; set; }
+
+        [Display(Name = "تیتر درخواست")]
         public string Title { get; set; } = string.Empty;
+
+        [Display(Name = "شرح درخواست")]
         public string Description { get; set; } = string.Empty;
+
+
+        // نقض اصل DRY 
+        [Display(Name = "آی دی کاربر سازنده")]
         public int CreatedByUserId { get; set; } = default!;
-        public int ModifiedByUserId { get; set; } = default!;
+
+        //[Display(Name = "آی دی کاربر تغییر دهنده")]
+        //public int ModifiedByUserId { get; set; } = default!;
         //public DateTime CreatedAt { get; set; } = default!;
+
+        [Display(Name = "وضعیت فعلی")]
         public RequestStatus CurrentStatus { get; set; } = RequestStatus.Pending;
+
+        [Display(Name = "مرحله فعلی")]
         public string CurrentStep { get; set; } = default!;
-        public int WorkflowStepId { get; set; }
+
+        [Display(Name = "آی دی شرح گردش کار")]
+        public int WorkflowDefinitionId { get; set; }
 
 
-        public virtual WorkflowStep? WorkflowStep { get; set; }
+        public virtual WorkflowDefinition? WorkflowDefinition { get; set; }
         public virtual User? CreatedByUser { get; set; }
-        public virtual User? ModifiedByUser { get; set; }
+        //public virtual User? ModifiedByUser { get; set; }
+
+        public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];
        
     }
 }

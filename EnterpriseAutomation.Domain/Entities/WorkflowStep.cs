@@ -11,15 +11,25 @@ namespace EnterpriseAutomation.Domain.Entities
     public class WorkflowStep
     {
         [Key]
+        [Display(Name ="آی دی مرحله گردش کار")]
         public int WorkflowStepId { get; set; }
-        public int WorkflowId { get; set; } = default!;
+
+        [Display(Name = "آی دی شرح گردش کار")]
+        public int WorkflowDefinitionId { get; set; } = default!;
+
+        [Display(Name ="مرحله ترتیب")]
         public int Order { get; set; } = default!;
+
+        [Display(Name ="نام مرحله")]
         public string StepName { get; set; } = string.Empty;
+
+        [Display(Name ="نقش")]
         public string Role { get; set; } = string.Empty;
+
+        [Display(Name ="ویرایش")]
         public bool Editable { get; set; }
 
         public virtual WorkflowDefinition? WorkflowDefinition { get; set; }
 
-        public virtual ICollection<Request> Requests { get; set; } = [];
     }
 }
