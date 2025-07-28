@@ -12,18 +12,18 @@ namespace EnterpriseAutomation.Application.IRepository
     public interface IRepository<TEntity> where TEntity : BaseEntity
     {
 
-        public Task<IEnumerable<TEntity>> GetAllAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+        public Task<IEnumerable<TEntity?>> GetAllAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
             bool asNoTracking = false);
 
-        public Task<TEntity> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,
+        public Task<TEntity?> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,
         Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
         bool asNoTracking = false);
 
-        Task<TEntity> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity?> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
 
-        Task<IEnumerable<TEntity>> GetWhereAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<IEnumerable<TEntity?>> GetWhereAsync(Expression<Func<TEntity, bool>> predicate);
 
-        public Task<TEntity> GetByIdAsync(int Id);
+        public Task<TEntity?> GetByIdAsync(int Id);
 
         public Task<EntityEntry<TEntity>> InsertAsync(TEntity entity);
         public Task InsertAsync(IEnumerable<TEntity> entities);

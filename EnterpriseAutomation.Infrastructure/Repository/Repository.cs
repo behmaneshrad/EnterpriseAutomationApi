@@ -9,6 +9,7 @@ using EnterpriseAutomation.Domain.Entities.Base;
 using EnterpriseAutomation.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.VisualBasic;
 
 namespace EnterpriseAutomation.Infrastructure.Repository
 {
@@ -42,7 +43,8 @@ namespace EnterpriseAutomation.Infrastructure.Repository
         #endregion
 
         #region Read Entity
-        public async Task<IEnumerable<TEntity>> GetAllAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? include =null,
+        public async Task<IEnumerable<TEntity?>> GetAllAsync(Func<IQueryable<TEntity>,
+            IQueryable<TEntity>>? include =null,
             bool asNoTracking=false)
         {
             IQueryable<TEntity> query = _dbSet;
@@ -54,7 +56,7 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
             return await query.ToListAsync();
         }
-        public async Task<TEntity> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,
+        public async Task<TEntity?> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,
         Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
         bool asNoTracking = false)
         {
@@ -69,20 +71,23 @@ namespace EnterpriseAutomation.Infrastructure.Repository
             return await query.FirstOrDefaultAsync(predicate);
         }
 
-        public async Task<TEntity> GetByIdAsync(int Id)
+        public async Task<TEntity?> GetByIdAsync(int Id)
         {
             return await _dbSet.FindAsync(Id);
         }
 
-        public async Task<TEntity> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<TEntity?> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
+        
             return await _dbSet.FirstOrDefaultAsync(predicate);
         }
 
-        public async Task<IEnumerable<TEntity>> GetWhereAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<IEnumerable<TEntity?>> GetWhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
             return await  _dbSet.Where(predicate).ToListAsync();
         }
+
+
         #endregion
 
         #region Add Entity

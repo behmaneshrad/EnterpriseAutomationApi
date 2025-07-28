@@ -32,7 +32,7 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Relation to User (Approver)
-            builder.HasOne(x => x.User)
+            builder.HasOne(x => x.ApproverUser)
                 .WithMany(u => u.ApprovalSteps)
                 .HasForeignKey(x => x.ApproverUserId)
                 .OnDelete(DeleteBehavior.Restrict);

@@ -23,7 +23,7 @@ builder.Services.AddHttpClient<KeycloakService>();
 
 
 // Register and Request Services
-builder.Services.AddScoped<IRequestRepository, RequestRepository>();
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 

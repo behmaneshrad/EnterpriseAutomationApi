@@ -24,22 +24,21 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
             // Relation to Requests model
 
             builder.HasMany(r => r.Requests)
-                .WithOne(u => u.User)
+                .WithOne(u => u.CreatedByUser)
                 .HasForeignKey(r => r.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Relation to  WorkflowDefinition
             builder.HasMany(r => r.WorkflowDefinitions)
                 .WithOne(u => u.User)
-                .HasForeignKey(r => r.CreatedBy)
+                .HasForeignKey(r => r.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Relation To Approval
             builder.HasMany(x=>x.ApprovalSteps)
-                .WithOne(u => u.User)
+                .WithOne(u => u.ApproverUser)
                 .HasForeignKey(x=>x.ApproverUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
 }

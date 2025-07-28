@@ -10,8 +10,8 @@ namespace EnterpriseAutomation.Application.Requests.Interfaces
 {
     public interface IRequestService
     {
-        Task<int> CreateRequestAsync(CreateRequestDto dto);
-        Task<List<Request>> GetAllRequestsAsync();
+        Task CreateRequestAsync(CreateRequestDto dto);
+        Task<IEnumerable<Request>> GetAllRequestsAsync();
         Task<Request?> GetRequestByIdAsync(int requestId);
         Task<bool> SubmitRequestAsync(SubmitRequestDto dto);
     }

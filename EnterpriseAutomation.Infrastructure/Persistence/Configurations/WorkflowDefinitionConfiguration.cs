@@ -20,15 +20,15 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             // Relation to user 
-            builder.HasOne(t=>t.User)
-                .WithMany(u=>u.WorkflowDefinitions)
-                .HasForeignKey(t=>t.CreatedBy)
+            builder.HasOne(t => t.User)
+                .WithMany(u => u.WorkflowDefinitions)
+                .HasForeignKey(t => t.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             //  Relation to WorkflowStep
-            builder.HasMany(x=>x.WorkflowSteps)
-                .WithOne(y=>y.WorkflowDefinition)
-                .HasForeignKey(x=>x.WorkflowId)
+            builder.HasMany(x => x.WorkflowSteps)
+                .WithOne(y => y.WorkflowDefinition)
+                .HasForeignKey(x => x.WorkflowStepId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

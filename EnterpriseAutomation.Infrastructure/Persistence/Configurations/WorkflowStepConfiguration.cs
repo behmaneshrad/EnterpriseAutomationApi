@@ -30,7 +30,7 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
             // Relation to WorkflowDefinition
             builder.HasOne(x => x.WorkflowDefinition)
                 .WithMany(y => y.WorkflowSteps)
-                .HasForeignKey(x => x.WorkflowId)
+                .HasForeignKey(x => x.WorkflowStepId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }
