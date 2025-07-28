@@ -23,7 +23,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 CreatedByUserId = dto.CreatedBy,
                 CurrentStatus = RequestStatus.Draft,
                 CurrentStep = "Initial Creation",
-                WorkflowId = 1, // فعلاً یک مقدار پیش‌فرض
+                WorkflowStepId = 1, // فعلاً یک مقدار پیش‌فرض
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };

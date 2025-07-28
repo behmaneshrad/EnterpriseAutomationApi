@@ -26,16 +26,16 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
             builder.Property(x => x.CurrentStep)
                 .IsRequired();
 
-            // Relation To user
-            builder.HasOne(x => x.User)
+           
+            builder.HasOne(x => x.CreatedByUser)
                 .WithMany(u => u.Requests)
                 .HasForeignKey(x => x.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relation To ApprovalStep
-            builder.HasMany(x => x.ApprovalSteps)
-                .WithOne(z => z.Request)
-                .HasForeignKey(x => x.RequestId)
+          
+            builder.HasOne(x => x.WorkflowStep)
+                .WithMany(u => u.Requests)
+                .HasForeignKey(x => x.WorkflowStepId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Infrastructure.Persistence.Configurations;
 
 namespace EnterpriseAutomation.Infrastructure.Persistence;
 
@@ -7,7 +8,7 @@ public class AppDbContext : DbContext
 {
     public DbSet<User> Users {  get; set; }
 
-    public DbSet<Request> Requests => Set<Request>();
+    public DbSet<Request> Requests { get; set; }
 
     public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
 
@@ -22,9 +23,13 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.ApplyConfiguration(new RequestConfiguration());
+        modelBuilder.ApplyConfiguration(new ApprovalStepConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkflowDefinitionConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkflowStepConfiguration());
 
-        // Only configures AppDbContext configurations.
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+       
 
     }
 }

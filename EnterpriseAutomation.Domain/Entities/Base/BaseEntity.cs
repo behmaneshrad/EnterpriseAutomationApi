@@ -2,7 +2,12 @@
 {
     public abstract class BaseEntity
     {
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        protected BaseEntity()
+        {
+                this.CreatedAt = DateTime.Now;
+        }
+
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool IsDeleted { get; set; } = false;
     }

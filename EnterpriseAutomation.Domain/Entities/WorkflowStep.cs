@@ -18,6 +18,8 @@ namespace EnterpriseAutomation.Domain.Entities
         public string Role { get; set; } = string.Empty;
         public bool Editable { get; set; }
 
-        public virtual WorkflowDefinition WorkflowDefinition { get; set; }
+        public virtual WorkflowDefinition? WorkflowDefinition { get; set; }
+
+        public virtual ICollection<Request> Requests { get; set; } = [];
     }
 }

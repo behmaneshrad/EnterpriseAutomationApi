@@ -14,7 +14,7 @@ public class User : BaseEntity
     public string Role { get; set; } = string.Empty; 
     public string PasswordHash { get; set; } = string.Empty;
 
-    public virtual ICollection<Request> Requests { get; set; }
-    public virtual ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; }
-    public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; }
+    public virtual ICollection<Request> Requests { get; set; } = [];
+    public virtual ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; } = [];
+    public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];
 }
