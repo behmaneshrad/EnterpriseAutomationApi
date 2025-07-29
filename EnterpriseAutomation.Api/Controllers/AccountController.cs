@@ -39,7 +39,14 @@ namespace EnterpriseAutomation.API.Controllers
 
                 if (created)
                 {
-                    return Ok(new { message = "User created successfully in Keycloak" });
+                    if (AddUserDataToDB())
+                    {
+                        return Ok(new { message = "User created successfully in Keycloak and Database" });
+                    }
+                    else
+                    {
+                        return Ok(new { message = "User created successfully in Keycloak but failed to add to Database !" });
+                    }
                 }
 
                 return BadRequest(new { message = "User creation was not successful in Keycloak" });
