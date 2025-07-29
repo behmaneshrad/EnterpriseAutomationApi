@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStatusEnums : Migration
+    public partial class InitialDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,13 +21,36 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    UserCreatedId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserModifyId = table.Column<int>(type: "int", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.UserId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WorkflowDefinitions",
+                columns: table => new
+                {
+                    WorkflowDefinitionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedById = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WorkflowDefinitions", x => x.WorkflowDefinitionId);
+                    table.ForeignKey(
+                        name: "FK_WorkflowDefinitions_Users_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -41,8 +64,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     CreatedByUserId = table.Column<int>(type: "int", nullable: false),
                     CurrentStatus = table.Column<int>(type: "int", nullable: false),
                     CurrentStep = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    WorkflowId = table.Column<int>(type: "int", nullable: false),
+                    WorkflowDefinitionId = table.Column<int>(type: "int", nullable: false),
+                    UserCreatedId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserModifyId = table.Column<int>(type: "int", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -55,26 +80,33 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         principalTable: "Users",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Requests_WorkflowDefinitions_WorkflowDefinitionId",
+                        column: x => x.WorkflowDefinitionId,
+                        principalTable: "WorkflowDefinitions",
+                        principalColumn: "WorkflowDefinitionId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "WorkflowDefinitions",
+                name: "WorkflowSteps",
                 columns: table => new
                 {
-                    WorkflowDefinitionId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedBy = table.Column<int>(type: "int", nullable: false)
+                    WorkflowStepId = table.Column<int>(type: "int", nullable: false),
+                    WorkflowDefinitionId = table.Column<int>(type: "int", nullable: false),
+                    Order = table.Column<int>(type: "int", nullable: false),
+                    StepName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Editable = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WorkflowDefinitions", x => x.WorkflowDefinitionId);
+                    table.PrimaryKey("PK_WorkflowSteps", x => x.WorkflowStepId);
                     table.ForeignKey(
-                        name: "FK_WorkflowDefinitions_Users_CreatedBy",
-                        column: x => x.CreatedBy,
-                        principalTable: "Users",
-                        principalColumn: "UserId",
+                        name: "FK_WorkflowSteps_WorkflowDefinitions_WorkflowStepId",
+                        column: x => x.WorkflowStepId,
+                        principalTable: "WorkflowDefinitions",
+                        principalColumn: "WorkflowDefinitionId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -88,8 +120,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     RequestId = table.Column<int>(type: "int", nullable: false),
                     ApproverUserId = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UserCreatedId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserModifyId = table.Column<int>(type: "int", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -110,29 +144,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "WorkflowSteps",
-                columns: table => new
-                {
-                    WorkflowStepId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    WorkflowId = table.Column<int>(type: "int", nullable: false),
-                    Order = table.Column<int>(type: "int", nullable: false),
-                    StepName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Editable = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WorkflowSteps", x => x.WorkflowStepId);
-                    table.ForeignKey(
-                        name: "FK_WorkflowSteps_WorkflowDefinitions_WorkflowId",
-                        column: x => x.WorkflowId,
-                        principalTable: "WorkflowDefinitions",
-                        principalColumn: "WorkflowDefinitionId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_ApprovalSteps_ApproverUserId",
                 table: "ApprovalSteps",
@@ -149,14 +160,14 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 column: "CreatedByUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkflowDefinitions_CreatedBy",
-                table: "WorkflowDefinitions",
-                column: "CreatedBy");
+                name: "IX_Requests_WorkflowDefinitionId",
+                table: "Requests",
+                column: "WorkflowDefinitionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkflowSteps_WorkflowId",
-                table: "WorkflowSteps",
-                column: "WorkflowId");
+                name: "IX_WorkflowDefinitions_CreatedById",
+                table: "WorkflowDefinitions",
+                column: "CreatedById");
         }
 
         /// <inheritdoc />

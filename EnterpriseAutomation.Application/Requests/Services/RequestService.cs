@@ -26,7 +26,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 CurrentStep = "Initial Creation",
                 WorkflowDefinitionId = 1, // فعلاً یک مقدار پیش‌فرض
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = null
             };
 
             await _repository.InsertAsync(request);

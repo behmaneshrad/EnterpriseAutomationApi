@@ -54,6 +54,12 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserModifyId")
+                        .HasColumnType("int");
+
                     b.HasKey("ApprovalStepId");
 
                     b.HasIndex("ApproverUserId");
@@ -99,12 +105,20 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("WorkflowId")
+                    b.Property<int>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserModifyId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WorkflowDefinitionId")
                         .HasColumnType("int");
 
                     b.HasKey("RequestId");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("WorkflowDefinitionId");
 
                     b.ToTable("Requests");
                 });
@@ -139,6 +153,12 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserModifyId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -157,7 +177,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkflowDefinitionId"));
 
-                    b.Property<int>("CreatedBy")
+                    b.Property<int>("CreatedById")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -170,7 +190,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("WorkflowDefinitionId");
 
-                    b.HasIndex("CreatedBy");
+                    b.HasIndex("CreatedById");
 
                     b.ToTable("WorkflowDefinitions");
                 });
@@ -178,10 +198,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowStep", b =>
                 {
                     b.Property<int>("WorkflowStepId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkflowStepId"));
 
                     b.Property<bool>("Editable")
                         .HasColumnType("bit");
@@ -199,19 +216,17 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int>("WorkflowId")
+                    b.Property<int>("WorkflowDefinitionId")
                         .HasColumnType("int");
 
                     b.HasKey("WorkflowStepId");
-
-                    b.HasIndex("WorkflowId");
 
                     b.ToTable("WorkflowSteps");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.ApprovalStep", b =>
                 {
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "User")
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "ApproverUser")
                         .WithMany("ApprovalSteps")
                         .HasForeignKey("ApproverUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -223,27 +238,35 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Request");
+                    b.Navigation("ApproverUser");
 
-                    b.Navigation("User");
+                    b.Navigation("Request");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
                 {
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "User")
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "CreatedByUser")
                         .WithMany("Requests")
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", "WorkflowDefinition")
+                        .WithMany("Requests")
+                        .HasForeignKey("WorkflowDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("WorkflowDefinition");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", b =>
                 {
                     b.HasOne("EnterpriseAutomation.Domain.Entities.User", "User")
                         .WithMany("WorkflowDefinitions")
-                        .HasForeignKey("CreatedBy")
+                        .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -254,7 +277,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 {
                     b.HasOne("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", "WorkflowDefinition")
                         .WithMany("WorkflowSteps")
-                        .HasForeignKey("WorkflowId")
+                        .HasForeignKey("WorkflowStepId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -277,6 +300,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", b =>
                 {
+                    b.Navigation("Requests");
+
                     b.Navigation("WorkflowSteps");
                 });
 #pragma warning restore 612, 618
