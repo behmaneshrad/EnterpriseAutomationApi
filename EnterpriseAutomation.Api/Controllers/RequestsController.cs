@@ -107,7 +107,7 @@ public class RequestsController : ControllerBase
             var request = await _requestService.GetRequestByIdAsync(requestId);
             if (request == null)
                 return NotFound(new { Message = "درخواست یافت نشد" });
-
+            // TODO : UserName
             var dto = new RequestDto
             {
                 RequestId = request.RequestId,
@@ -115,8 +115,7 @@ public class RequestsController : ControllerBase
                 Description = request.Description,
                 CurrentStatus = request.CurrentStatus,
                 CurrentStep = request.CurrentStep,
-                UserId = request.UserCreatedId,
-                Username = request.CreatedByUser.Username
+                UserId = request.CreatedByUserId,
             };
 
             return Ok(dto);
