@@ -22,7 +22,6 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .HasMaxLength(100);
 
             builder.Property(u => u.RefreshToken)
-                .IsRequired()
                 .HasMaxLength(2000);
 
             // Relation to Requests model

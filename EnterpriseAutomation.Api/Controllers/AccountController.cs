@@ -3,6 +3,9 @@ using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Infrastructure.Services;
 using Newtonsoft.Json;
 using EnterpriseAutomation.Application.Externals;
+using EnterpriseAutomation.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using EnterpriseAutomation.Infrastructure.Persistence;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -12,11 +15,13 @@ namespace EnterpriseAutomation.API.Controllers
     {
         private readonly KeycloakService _keycloakService;
         private readonly ILogger<AccountController> _logger;
+        private readonly AppDbContext _context; // Add DbContext dependency
 
-        public AccountController(KeycloakService keycloakService, ILogger<AccountController> logger)
+        public AccountController(KeycloakService keycloakService, ILogger<AccountController> logger, AppDbContext context)
         {
             _keycloakService = keycloakService;
             _logger = logger;
+            _context = context; // Inject DbContext
         }
 
         [HttpPost("register")]
@@ -39,13 +44,13 @@ namespace EnterpriseAutomation.API.Controllers
 
                 if (created)
                 {
-                    if (AddUserDataToDB())
+                    if (await AddUserDataToDB(model)) 
                     {
                         return Ok(new { message = "User created successfully in Keycloak and Database" });
                     }
                     else
                     {
-                        return Ok(new { message = "User created successfully in Keycloak but failed to add to Database !" });
+                        return Ok(new { message = "User created successfully in Keycloak but failed to add to Database!" });
                     }
                 }
 
@@ -107,6 +112,46 @@ namespace EnterpriseAutomation.API.Controllers
             {
                 _logger.LogError(ex, "Error retrieving roles");
                 return StatusCode(500, new { message = "Failed to retrieve roles", details = ex.Message });
+            }
+        }
+
+        private async Task<bool> AddUserDataToDB(RegisterDto model)
+        {
+            try
+            {
+                // Check if user already exists to avoid duplicates
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Username == model.Username);
+
+                if (existingUser != null)
+                {
+                    _logger.LogWarning("User with username {Username} already exists in database", model.Username);
+                    return true; // Consider this as success since user exists
+                }
+
+                // Create a new user entity with proper field mapping
+                var user = new User
+                {
+                    Username = model.Username,
+                    RefreshToken = string.Empty, 
+                    Role = "User", 
+                    PasswordHash = string.Empty, 
+                    
+                };
+
+                // Add user to DbContext
+                _context.Users.Add(user);
+
+                // Save changes to database
+                var result = await _context.SaveChangesAsync();
+
+                // Return true if at least one record was affected
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving user data to database for username: {Username}", model.Username);
+                return false;
             }
         }
     }
