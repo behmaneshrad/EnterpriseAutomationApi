@@ -91,6 +91,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
 
     options.AddPolicy("User", policy => policy.RequireUserName("user"));
+
+    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
+
 });
 
 

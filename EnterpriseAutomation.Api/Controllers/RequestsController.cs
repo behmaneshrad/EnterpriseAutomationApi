@@ -19,7 +19,7 @@ public class RequestsController : ControllerBase
     }
 
     // 3. ایجاد یک Request جدید (POST)
-    [Authorize(Policy = "Employee")]
+    [Authorize(Policy = "EmployeeOnly")]
     [HttpPost]
     public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
     {
