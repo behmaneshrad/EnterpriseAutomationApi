@@ -3,6 +3,7 @@ using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Models;
 using System.ComponentModel.DataAnnotations;
 using EnterpriseAutomation.Application.Requests.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EnterpriseAutomation.API.Controllers;
 
@@ -18,6 +19,7 @@ public class RequestsController : ControllerBase
     }
 
     // 3. ایجاد یک Request جدید (POST)
+    [Authorize(Policy = "Employee")]
     [HttpPost]
     public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
     {
@@ -38,6 +40,7 @@ public class RequestsController : ControllerBase
         }
     }
 
+    [Authorize(Policy = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAllRequests()
     {
@@ -78,6 +81,7 @@ public class RequestsController : ControllerBase
 
 
     // 4. ارسال درخواست توسط کارمند (POST)
+    [Authorize(Policy = "Employee")]
     [HttpPost("submit")]
     public async Task<IActionResult> SubmitRequest([FromBody] SubmitRequestDto dto)
     {
@@ -99,6 +103,7 @@ public class RequestsController : ControllerBase
     }
 
     // 5. دریافت اطلاعات یک درخواست خاص با جزئیات بیشتر (GET by ID)
+    [Authorize(Policy = "User")]
     [HttpGet("{requestId:int}")]
     public async Task<IActionResult> GetRequestById(int requestId)
     {

@@ -6,6 +6,7 @@ using EnterpriseAutomation.Application.Externals;
 using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using EnterpriseAutomation.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -63,6 +64,7 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -85,6 +87,7 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
+        [Authorize(Policy = "Admin")]
         [HttpGet("users")]
         public async Task<IActionResult> GetUsers()
         {
@@ -100,6 +103,7 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
+        [Authorize(Policy = "Admin")]
         [HttpGet("roles")]
         public async Task<IActionResult> GetRoles()
         {
