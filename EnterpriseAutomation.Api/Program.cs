@@ -13,6 +13,7 @@ using EnterpriseAutomation.Infrastructure.Repository;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,8 @@ builder.Services.AddScoped<IRequestService, RequestService>();
 
 // Generic Repository Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -47,7 +50,8 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateAudience = true,
-        ValidAudience = "enterprise-api"
+        ValidAudience = "enterprise-api",
+        RoleClaimType = "roles"
     };
     options.Events = new JwtBearerEvents
     {
@@ -73,6 +77,22 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
+
+    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
+
+    options.AddPolicy("Approver", policy => policy.RequireRole("approver", "admin"));
+
+    options.AddPolicy("HR", policy => policy.RequireRole("hr", "admin"));
+
+    options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
+
+    options.AddPolicy("User", policy => policy.RequireUserName("user"));
+});
+
+
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
