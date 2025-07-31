@@ -21,6 +21,9 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(u => u.RefreshToken)
+                .HasMaxLength(2000);
+
             // Relation to Requests model
 
             builder.HasMany(r => r.Requests)
@@ -40,9 +43,13 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .HasForeignKey(x=>x.ApproverUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+<<<<<<< HEAD
             builder.HasMany(x => x.Roles)
                 .WithMany(x => x.Users)
                 .UsingEntity("UserRole");
+=======
+
+>>>>>>> 06e2938bd873d2bf251770acca449cafc84c2ced
         }
     }
 }

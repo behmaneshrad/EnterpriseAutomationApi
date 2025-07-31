@@ -3,28 +3,49 @@ using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Models;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Domain.Entities.Enums;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace EnterpriseAutomation.Application.Requests.Services
 {
     public class RequestService : IRequestService
     {
         private readonly IRepository<Request> _repository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public RequestService(IRepository<Request> repository)
+        public RequestService(IRepository<Request> repository, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task CreateRequestAsync(CreateRequestDto dto)
         {
+            var user = _httpContextAccessor.HttpContext?.User;
+
+            if (user == null || !user.Identity!.IsAuthenticated)
+                throw new UnauthorizedAccessException("توکن معتبر نیست یا کاربر لاگین نشده است.");
+
+            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole != "employee")
+                throw new UnauthorizedAccessException("شما اجازه ثبت درخواست ندارید.");
+
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+                throw new UnauthorizedAccessException("شناسه کاربر در توکن یافت نشد.");
+
+            //  تبدیل به int
+            if (!int.TryParse(userIdClaim, out int userId))
+                throw new UnauthorizedAccessException("شناسه کاربر در توکن معتبر نیست یا عددی نیست.");
+
             var request = new Request
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CreatedByUserId = dto.CreatedBy,
+                CreatedByUserId = userId, 
                 CurrentStatus = RequestStatus.Draft,
                 CurrentStep = "Initial Creation",
-                WorkflowDefinitionId = 1, // فعلاً یک مقدار پیش‌فرض
+                WorkflowDefinitionId = 1,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null
             };
@@ -47,7 +68,6 @@ namespace EnterpriseAutomation.Application.Requests.Services
         {
             try
             {
-                //await _requestRepository.SubmitAsync(dto.RequestId, dto.EmployeeId);
                 return true;
             }
             catch

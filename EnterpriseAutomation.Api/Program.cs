@@ -13,6 +13,7 @@ using EnterpriseAutomation.Infrastructure.Repository;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,8 @@ builder.Services.AddScoped<IRequestService, RequestService>();
 
 // Generic Repository Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -47,7 +50,8 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateAudience = true,
-        ValidAudience = "enterprise-api"
+        ValidAudience = "enterprise-api",
+        RoleClaimType = "roles"
     };
     options.Events = new JwtBearerEvents
     {
@@ -56,23 +60,43 @@ builder.Services.AddAuthentication(options =>
             context.NoResult();
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnAuthenticationFailed\"}");
+            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"توکن نامعتبر یا منقضی شده است.\"}");
         },
         OnChallenge = context =>
         {
             context.HandleResponse();
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnChallenge\"}");
+            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"ابتدا وارد سیستم شوید.\"}");
         },
         OnForbidden = context =>
         {
             context.Response.StatusCode = 403;
             context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"OnForbidden\"}");
+            return context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما به این بخش دسترسی ندارید.\"}");
         }
     };
+
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
+
+    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
+
+    options.AddPolicy("Approver", policy => policy.RequireRole("approver", "admin"));
+
+    options.AddPolicy("HR", policy => policy.RequireRole("hr", "admin"));
+
+    options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
+
+    options.AddPolicy("User", policy => policy.RequireUserName("user"));
+
+    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
+
+});
+
+
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
@@ -110,6 +134,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+//  401 ,403 errors
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode == 401 && !context.Response.HasStarted)
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
+    }
+    else if (context.Response.StatusCode == 403 && !context.Response.HasStarted)
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
+    }
+});
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

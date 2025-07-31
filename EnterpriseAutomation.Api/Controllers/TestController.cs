@@ -15,7 +15,7 @@ namespace Api.Controllers
         [HttpGet("private")]
         public IActionResult Private() => Ok("خصوصی: نیاز به توکن");
 
-        [Authorize(Roles = "admin")]
+        [Authorize(Policy = "Admin")]
         [HttpGet("admin-only")]
         public IActionResult AdminOnly() => Ok("فقط ادمین!");
 

@@ -33,6 +33,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return Ok("userDto");
         }
 
+        [AllowAnonymous]
         [HttpPost("validate")]
         public async Task<IActionResult> ValidateUser([FromBody] UserRegisterDto dto)
         {
@@ -44,7 +45,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             return Ok("userDto");
         }
 
-        [HttpPost("REgister")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto dto)
         {
             //var created = await _keycloakService.CreateUserAsync(dto.Username, dto.Email, dto.Password);
@@ -66,8 +67,8 @@ namespace EnterpriseAutomation.WebApi.Controllers
         }
 
         /// Gets users directly from Keycloak
+        [Authorize(Policy = "Admin")]
         [HttpGet("keycloak-users")]
-        [Authorize]
         public async Task<IActionResult> GetKeycloakUsers()
         {
             var result = await _keycloakService.GetUsersAsync();
@@ -75,6 +76,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
         }
 
         /// Gets roles directly from Keycloak
+        [Authorize(Policy = "Admin")]
         [HttpGet("keycloak-roles")]
         [Authorize]
         public async Task<IActionResult> GetKeycloakRoles()

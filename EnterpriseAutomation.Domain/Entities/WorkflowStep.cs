@@ -7,7 +7,11 @@ using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Domain.Entities
 {
+<<<<<<< HEAD
     [Display(Name = "مرحله گردش کار")]
+=======
+    [Display(Name = " مرحله گردش کار")]
+>>>>>>> 06e2938bd873d2bf251770acca449cafc84c2ced
     public class WorkflowStep
     {
         [Key]
@@ -26,7 +30,7 @@ namespace EnterpriseAutomation.Domain.Entities
         [Display(Name ="نقش")]
         public string Role { get; set; } = string.Empty;
 
-        [Display(Name ="ویرایش")]
+        [Display(Name ="ویرایش پذیری")]
         public bool Editable { get; set; }
 
         public virtual WorkflowDefinition? WorkflowDefinition { get; set; }

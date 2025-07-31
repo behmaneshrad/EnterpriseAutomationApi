@@ -8,6 +8,8 @@ using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure.Repository;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace EnterpriseAutomation.API.Controllers;
 
@@ -23,12 +25,14 @@ public class RequestsController : BaseController<Request>
         _requestService = requestService;
     }
 
-    //// 3. ایجاد یک Request جدید (POST)
-    //[HttpPost]
-    //public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
-    //{
-    //    if (!ModelState.IsValid)
-    //        return BadRequest(ModelState);
+
+    // 3. ایجاد یک Request جدید (POST)
+    [Authorize(Policy = "EmployeeOnly")]
+    [HttpPost]
+    public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
     //    try
     //    {
@@ -44,12 +48,14 @@ public class RequestsController : BaseController<Request>
     //    }
     //}
 
-    //[HttpGet]
-    //public async Task<IActionResult> GetAllRequests()
-    //{
-    //    try
-    //    {
-    //        var requests = await _requestService.GetAllRequestsAsync();
+
+    [Authorize(Policy = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> GetAllRequests()
+    {
+        try
+        {
+            var requests = await _requestService.GetAllRequestsAsync();
 
     //        // تبدیل به DTO برای جلوگیری از loop و سبک‌سازی خروجی
     //        var result = requests.Select(r => new
@@ -83,12 +89,15 @@ public class RequestsController : BaseController<Request>
     //}
 
 
-    //// 4. ارسال درخواست توسط کارمند (POST)
-    //[HttpPost("submit")]
-    //public async Task<IActionResult> SubmitRequest([FromBody] SubmitRequestDto dto)
-    //{
-    //    if (!ModelState.IsValid)
-    //        return BadRequest(ModelState);
+
+    // 4. ارسال درخواست توسط کارمند (POST)
+    [Authorize(Policy = "Employee")]
+    [HttpPost("submit")]
+    public async Task<IActionResult> SubmitRequest([FromBody] SubmitRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
 
     //    try
     //    {
@@ -104,26 +113,34 @@ public class RequestsController : BaseController<Request>
     //    }
     //}
 
-    //// 5. دریافت اطلاعات یک درخواست خاص با جزئیات بیشتر (GET by ID)
-    //[HttpGet("{requestId:int}")]
-    //public async Task<IActionResult> GetRequestById(int requestId)
-    //{
-    //    try
-    //    {
-    //        var request = await _requestService.GetRequestByIdAsync(requestId);
-    //        if (request == null)
-    //            return NotFound(new { Message = "درخواست یافت نشد" });
+    // 5. دریافت اطلاعات یک درخواست خاص با جزئیات بیشتر (GET by ID)
+    [Authorize(Policy = "User")]
+    [HttpGet("{requestId:int}")]
+    public async Task<IActionResult> GetRequestById(int requestId)
+    {
+        try
+        {
+            var request = await _requestService.GetRequestByIdAsync(requestId);
+            if (request == null)
+                return NotFound(new { Message = "درخواست یافت نشد" });
+            // TODO : UserName
+            var dto = new RequestDto
+            {
+                RequestId = request.RequestId,
+                Title = request.Title,
+                Description = request.Description,
+                CurrentStatus = request.CurrentStatus,
+                CurrentStep = request.CurrentStep,
+                UserId = request.CreatedByUserId,
+            };
 
-    //        var dto = new RequestDto
-    //        {
-    //            RequestId = request.RequestId,
-    //            Title = request.Title,
-    //            Description = request.Description,
-    //            CurrentStatus = request.CurrentStatus,
-    //            CurrentStep = request.CurrentStep,
-    //            UserId = request.UserCreatedId,
-    //            Username = request.CreatedByUser.Username
-    //        };
+            return Ok(dto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "خطا در دریافت درخواست", Error = ex.Message });
+        }
+    }
 
     //        return Ok(dto);
     //    }
