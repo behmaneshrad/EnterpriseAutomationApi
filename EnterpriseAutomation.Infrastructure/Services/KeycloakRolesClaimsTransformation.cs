@@ -7,8 +7,9 @@ public class KeycloakRolesClaimsTransformation : IClaimsTransformation
     public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
         var identity = (ClaimsIdentity)principal.Identity!;
-        var realmAccessClaim = principal.FindFirst("realm_access");
 
+        //  استخراج نقش‌ها از realm_access.roles
+        var realmAccessClaim = principal.FindFirst("realm_access");
         if (realmAccessClaim != null)
         {
             using var doc = JsonDocument.Parse(realmAccessClaim.Value);
@@ -19,6 +20,15 @@ public class KeycloakRolesClaimsTransformation : IClaimsTransformation
                     identity.AddClaim(new Claim(ClaimTypes.Role, role.GetString()!));
                 }
             }
+        }
+
+        var userIdClaim = principal.FindFirst("user_id")?.Value;
+        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int numericUserId))
+        {
+            identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, numericUserId.ToString()));
+        }
+        else
+        {
         }
 
         return Task.FromResult(principal);

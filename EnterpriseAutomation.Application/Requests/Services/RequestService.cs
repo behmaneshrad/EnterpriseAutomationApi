@@ -11,8 +11,8 @@ namespace EnterpriseAutomation.Application.Requests.Services
     public class RequestService : IRequestService
     {
         private readonly IRepository<Request> _repository;
-
         private readonly IHttpContextAccessor _httpContextAccessor;
+
         public RequestService(IRepository<Request> repository, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
@@ -34,16 +34,15 @@ namespace EnterpriseAutomation.Application.Requests.Services
             if (string.IsNullOrEmpty(userIdClaim))
                 throw new UnauthorizedAccessException("شناسه کاربر در توکن یافت نشد.");
 
+            //  تبدیل به int
             if (!int.TryParse(userIdClaim, out int userId))
-                throw new UnauthorizedAccessException("شناسه کاربر در توکن معتبر نیست.");
-
-
+                throw new UnauthorizedAccessException("شناسه کاربر در توکن معتبر نیست یا عددی نیست.");
 
             var request = new Request
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CreatedByUserId = userId, // ✅ از توکن گرفته شده
+                CreatedByUserId = userId, 
                 CurrentStatus = RequestStatus.Draft,
                 CurrentStep = "Initial Creation",
                 WorkflowDefinitionId = 1,
@@ -54,7 +53,6 @@ namespace EnterpriseAutomation.Application.Requests.Services
             await _repository.InsertAsync(request);
             await _repository.SaveChangesAsync();
         }
-
 
         public async Task<IEnumerable<Request>> GetAllRequestsAsync()
         {
@@ -70,7 +68,6 @@ namespace EnterpriseAutomation.Application.Requests.Services
         {
             try
             {
-                //await _requestRepository.SubmitAsync(dto.RequestId, dto.EmployeeId);
                 return true;
             }
             catch
