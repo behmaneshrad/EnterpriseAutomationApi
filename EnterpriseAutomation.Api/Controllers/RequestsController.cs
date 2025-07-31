@@ -19,8 +19,8 @@ public class RequestsController : BaseController<Request>
 {
     private readonly IRequestService _requestService;
 
-    public RequestsController(IRequestService requestService,IRepository<Request> repository)
-        :base(repository)
+    public RequestsController(IRequestService requestService, IRepository<Request> repository)
+        : base(repository)
     {
         _requestService = requestService;
     }
@@ -34,19 +34,19 @@ public class RequestsController : BaseController<Request>
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-    //    try
-    //    {
-    //        await _requestService.CreateRequestAsync(dto);
-    //        return StatusCode(201, new
-    //        {
-    //            Message="باموفقیت درخواست شما ثبت شد"
-    //        });
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return StatusCode(500, new { Message = "خطا در ایجاد درخواست", Error = ex.Message });
-    //    }
-    //}
+        try
+        {
+            await _requestService.CreateRequestAsync(dto);
+            return StatusCode(201, new
+            {
+                Message = "باموفقیت درخواست شما ثبت شد"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "خطا در ایجاد درخواست", Error = ex.Message });
+        }
+    }
 
 
     [Authorize(Policy = "Admin")]
@@ -57,36 +57,36 @@ public class RequestsController : BaseController<Request>
         {
             var requests = await _requestService.GetAllRequestsAsync();
 
-    //        // تبدیل به DTO برای جلوگیری از loop و سبک‌سازی خروجی
-    //        var result = requests.Select(r => new
-    //        {
-    //            r.RequestId,
-    //            r.Title,
-    //            r.Description,
-    //            r.CreatedByUserId,
-    //            r.CurrentStatus,
-    //            r.CurrentStep,
-    //            r.WorkflowDefinitionId,
-    //            User = new
-    //            {
-    //                r.CreatedByUser.UserId,
-    //                r.CreatedByUser.Username,
-    //                r.CreatedByUser.Role
-    //            },
-    //            ApprovalSteps = r.ApprovalSteps.Select(s => new
-    //            {
-    //                s.ApprovalStepId,
-    //                s.Status
-    //            }).ToList()
-    //        });
+            // تبدیل به DTO برای جلوگیری از loop و سبک‌سازی خروجی
+            var result = requests.Select(r => new
+            {
+                r.RequestId,
+                r.Title,
+                r.Description,
+                r.CreatedByUserId,
+                r.CurrentStatus,
+                r.CurrentStep,
+                r.WorkflowDefinitionId,
+                User = new
+                {
+                    r.CreatedByUser.UserId,
+                    r.CreatedByUser.Username,
+                    r.CreatedByUser.Role
+                },
+                ApprovalSteps = r.ApprovalSteps.Select(s => new
+                {
+                    s.ApprovalStepId,
+                    s.Status
+                }).ToList()
+            });
 
-    //        return Ok(result);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return StatusCode(500, new { Message = "خطا در دریافت درخواست‌ها", Error = ex.Message });
-    //    }
-    //}
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "خطا در دریافت درخواست‌ها", Error = ex.Message });
+        }
+    }
 
 
 
@@ -99,19 +99,19 @@ public class RequestsController : BaseController<Request>
             return BadRequest(ModelState);
 
 
-    //    try
-    //    {
-    //        var result = await _requestService.SubmitRequestAsync(dto);
-    //        if (result)
-    //            return Ok(new { Message = "درخواست با موفقیت ارسال شد" });
-    //        else
-    //            return BadRequest(new { Message = "خطا در ارسال درخواست" });
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return StatusCode(500, new { Message = "خطا در ارسال درخواست", Error = ex.Message });
-    //    }
-    //}
+        try
+        {
+            var result = await _requestService.SubmitRequestAsync(dto);
+            if (result)
+                return Ok(new { Message = "درخواست با موفقیت ارسال شد" });
+            else
+                return BadRequest(new { Message = "خطا در ارسال درخواست" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "خطا در ارسال درخواست", Error = ex.Message });
+        }
+    }
 
     // 5. دریافت اطلاعات یک درخواست خاص با جزئیات بیشتر (GET by ID)
     [Authorize(Policy = "User")]
@@ -142,11 +142,5 @@ public class RequestsController : BaseController<Request>
         }
     }
 
-    //        return Ok(dto);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        return StatusCode(500, new { Message = "خطا در دریافت درخواست", Error = ex.Message });
-    //    }
-    //}
 }
+
