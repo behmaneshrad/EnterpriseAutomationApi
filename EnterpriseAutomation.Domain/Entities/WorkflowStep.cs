@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Domain.Entities
 {
-    [Display(Name = "موجودیت مرحله گردش کار")]
+    [Display(Name = "مرحله گردش کار")]
     public class WorkflowStep
     {
         [Key]

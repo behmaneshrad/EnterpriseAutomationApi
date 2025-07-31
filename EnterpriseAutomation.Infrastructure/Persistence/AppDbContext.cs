@@ -16,6 +16,8 @@ public class AppDbContext : DbContext
 
     public DbSet<ApprovalStep> ApprovalSteps { get; set; }
 
+    public DbSet<Role> Roles { get; set; }
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
 

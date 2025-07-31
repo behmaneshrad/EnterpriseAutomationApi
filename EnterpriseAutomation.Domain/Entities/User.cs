@@ -4,7 +4,7 @@ using EnterpriseAutomation.Domain.Entities.Base;
 
 namespace EnterpriseAutomation.Domain.Entities;
 
-[Display(Name = "موجودیت کاربران")]
+[Display(Name = "کاربران")]
 public class User : BaseEntity
 {
     [Key]
@@ -26,4 +26,6 @@ public class User : BaseEntity
     public virtual ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; } = [];
     public virtual ICollection<Request> Requests { get; set; } = [];
     public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];
+
+    public virtual ICollection<Role> Roles { get; set; } = [];
 }

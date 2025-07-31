@@ -39,6 +39,10 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .WithOne(u => u.ApproverUser)
                 .HasForeignKey(x=>x.ApproverUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Roles)
+                .WithMany(x => x.Users)
+                .UsingEntity("UserRole");
         }
     }
 }
