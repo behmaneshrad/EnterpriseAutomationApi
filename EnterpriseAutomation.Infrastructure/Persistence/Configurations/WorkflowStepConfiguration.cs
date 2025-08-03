@@ -1,11 +1,6 @@
 ﻿using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
 {
@@ -27,12 +22,11 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
             builder.Property(x => x.Editable)
                 .IsRequired();
 
-            // Relation to WorkflowDefinition
+            // Relation to WorkflowDefinition (correct FK)
             builder.HasOne(x => x.WorkflowDefinition)
                 .WithMany(y => y.WorkflowSteps)
-                .HasForeignKey(x => x.WorkflowStepId)
+                .HasForeignKey(x => x.WorkflowDefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
 }

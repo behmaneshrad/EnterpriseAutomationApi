@@ -1,11 +1,6 @@
 ﻿using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
 {
@@ -25,10 +20,10 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .HasForeignKey(t => t.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //  Relation to WorkflowStep
+            // Relation to WorkflowStep (correct FK)
             builder.HasMany(x => x.WorkflowSteps)
                 .WithOne(y => y.WorkflowDefinition)
-                .HasForeignKey(x => x.WorkflowStepId)
+                .HasForeignKey(x => x.WorkflowDefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
