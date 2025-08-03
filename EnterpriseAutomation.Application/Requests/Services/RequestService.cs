@@ -12,15 +12,18 @@ namespace EnterpriseAutomation.Application.Requests.Services
     {
         private readonly IRepository<Request> _repository;
         private readonly IRepository<WorkflowStep> _workflowStepRepository;
+        private readonly IRepository<ApprovalStep> _approvalStepRepository; // اضافه شد
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public RequestService(
             IRepository<Request> repository,
             IRepository<WorkflowStep> workflowStepRepository,
+            IRepository<ApprovalStep> approvalStepRepository, // اضافه شد
             IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _workflowStepRepository = workflowStepRepository;
+            _approvalStepRepository = approvalStepRepository; // اضافه شد
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -33,6 +36,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
             var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
             if (userRole != "employee")
                 throw new UnauthorizedAccessException("شما اجازه ثبت درخواست ندارید.");
+                Console.WriteLine("test");
 
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
@@ -42,6 +46,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
             if (!int.TryParse(userIdClaim, out int userId))
                 throw new UnauthorizedAccessException("شناسه کاربر در توکن معتبر نیست یا عددی نیست.");
 
+            // ایجاد درخواست
             var request = new Request
             {
                 Title = dto.Title,
@@ -56,6 +61,43 @@ namespace EnterpriseAutomation.Application.Requests.Services
 
             await _repository.InsertAsync(request);
             await _repository.SaveChangesAsync();
+
+            // حالا ApprovalStep ها را ایجاد می‌کنیم
+            try
+            {
+                // دریافت مراحل workflow
+                var workflowSteps = await GetWorkflowStepsAsync(request.WorkflowDefinitionId);
+
+                if (workflowSteps != null && workflowSteps.Any())
+                {
+                    var approvalSteps = new List<ApprovalStep>();
+
+                    foreach (var step in workflowSteps)
+                    {
+                        var approvalStep = new ApprovalStep
+                        {
+                            StepId = step.Order, // استفاده از Order به عنوان شناسه مرحله
+                            RequestId = request.RequestId,
+                            ApproverUserId = null,
+                            Status = ApprovalStatus.Pending,
+                            ApprovedAt = null,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        approvalSteps.Add(approvalStep);
+                    }
+
+                    // ذخیره تمام ApprovalSteps
+                    await _approvalStepRepository.InsertAsync(approvalSteps);
+                    await _approvalStepRepository.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // اگر ایجاد ApprovalStep ها با خطا مواجه شد، درخواست را حذف کنیم
+                await _repository.DeleteByIdAsync(request.RequestId);
+                throw new Exception($"خطا در ایجاد مراحل تایید: {ex.Message}", ex);
+            }
         }
 
         public async Task<IEnumerable<Request>> GetAllRequestsAsync()
@@ -88,9 +130,8 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 var workflowSteps = await _workflowStepRepository
                     .GetWhereAsync(ws => ws.WorkflowDefinitionId == workflowDefinitionId);
 
-                // Alternative cleaner approach without casting:
                 return workflowSteps
-                    .OfType<WorkflowStep>() // Use OfType instead of Where + Cast
+                    .OfType<WorkflowStep>()
                     .OrderBy(ws => ws.Order)
                     .ToList();
             }

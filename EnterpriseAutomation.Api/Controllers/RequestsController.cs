@@ -25,7 +25,7 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         // 3. ایجاد یک Request جدید (POST)
-        [Authorize(Policy = "EmployeeOnly")]
+        //  [Authorize(Policy = "EmployeeOnly")]
         [HttpPost]
         public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
         {
