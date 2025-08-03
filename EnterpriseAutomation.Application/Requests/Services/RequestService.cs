@@ -43,8 +43,8 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 CreatedByUserId = userId, 
-                CurrentStatus = RequestStatus.Draft,
-                CurrentStep = "Initial Creation",
+                CurrentStatus = RequestStatus.Pending,
+                CurrentStep = "Pending",
                 WorkflowDefinitionId = 1,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null
