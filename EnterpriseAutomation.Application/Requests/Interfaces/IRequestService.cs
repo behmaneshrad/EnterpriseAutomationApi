@@ -14,5 +14,6 @@ namespace EnterpriseAutomation.Application.Requests.Interfaces
         Task<IEnumerable<Request>> GetAllRequestsAsync();
         Task<Request?> GetRequestByIdAsync(int requestId);
         Task<bool> SubmitRequestAsync(SubmitRequestDto dto);
+        Task<IEnumerable<WorkflowStep>> GetWorkflowStepsAsync(int workflowDefinitionId);
     }
 }
