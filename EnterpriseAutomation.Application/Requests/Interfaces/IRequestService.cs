@@ -1,5 +1,6 @@
 ﻿using EnterpriseAutomation.Application.Requests.Models;
 using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Domain.Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,7 @@ namespace EnterpriseAutomation.Application.Requests.Interfaces
         Task<Request?> GetRequestByIdAsync(int requestId);
         Task<bool> SubmitRequestAsync(SubmitRequestDto dto);
         Task<IEnumerable<WorkflowStep>> GetWorkflowStepsAsync(int workflowDefinitionId);
+        Task<IEnumerable<Request>> GetFilteredRequestsAsync(RequestStatus? status, string? role, int? createdBy); //گرفتن درخواست ها با فیلتر
+
     }
 }

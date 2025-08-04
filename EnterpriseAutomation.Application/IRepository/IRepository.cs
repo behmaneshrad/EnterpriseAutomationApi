@@ -38,5 +38,9 @@ namespace EnterpriseAutomation.Application.IRepository
 
         public Task SaveChangesAsync();
 
+        IQueryable<TEntity> GetQueryable(
+        Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+        bool asNoTracking = false);
+
     }
 }

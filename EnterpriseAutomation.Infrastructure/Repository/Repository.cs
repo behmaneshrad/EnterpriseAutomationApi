@@ -44,8 +44,8 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
         #region Read Entity
         public async Task<IEnumerable<TEntity?>> GetAllAsync(Func<IQueryable<TEntity>,
-            IQueryable<TEntity>>? include =null,
-            bool asNoTracking=false)
+            IQueryable<TEntity>>? include = null,
+            bool asNoTracking = false)
         {
             IQueryable<TEntity> query = _dbSet;
             if (asNoTracking)
@@ -78,13 +78,30 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
         public async Task<TEntity?> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
         {
-        
+
             return await _dbSet.FirstOrDefaultAsync(predicate);
         }
 
+        public IQueryable<TEntity> GetQueryable(
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+            bool asNoTracking = false)
+        {
+            IQueryable<TEntity> query = _dbSet;
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            // اگر include پاس داده شده باشد
+            if (include != null)
+                query = include(query);
+
+            return query;
+        }
+
+
         public async Task<IEnumerable<TEntity?>> GetWhereAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return await  _dbSet.Where(predicate).ToListAsync();
+            return await _dbSet.Where(predicate).ToListAsync();
         }
 
 
@@ -130,4 +147,5 @@ namespace EnterpriseAutomation.Infrastructure.Repository
         }
         #endregion
     }
+
 }

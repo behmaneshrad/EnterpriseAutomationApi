@@ -5,6 +5,7 @@ using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Domain.Entities.Enums;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseAutomation.Application.Requests.Services
 {
@@ -26,6 +27,43 @@ namespace EnterpriseAutomation.Application.Requests.Services
             _approvalStepRepository = approvalStepRepository; // اضافه شد
             _httpContextAccessor = httpContextAccessor;
         }
+
+        public async Task<IEnumerable<Request>> GetFilteredRequestsAsync(RequestStatus? status, string? role, int? createdBy)
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null || !user.Identity!.IsAuthenticated)
+                throw new UnauthorizedAccessException("توکن معتبر نیست یا کاربر لاگین نشده است.");
+
+            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
+            var currentUserIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(currentUserIdClaim, out int currentUserId);
+
+            //  گرفتن Query با Include کامل
+            var query = _repository.GetQueryable(
+                include: q => q.Include(r => r.CreatedByUser)
+                               .Include(r => r.ApprovalSteps),
+                asNoTracking: true
+            );
+
+            //  محدودیت دسترسی برای Employee
+            if (userRole == "employee")
+            {
+                query = query.Where(r => r.CreatedByUserId == currentUserId);
+            }
+
+            //  اعمال فیلترهای Optional
+            if (status.HasValue)
+                query = query.Where(r => r.CurrentStatus == status.Value);
+
+            if (!string.IsNullOrEmpty(role))
+                query = query.Where(r => r.CreatedByUser != null && r.CreatedByUser.Role == role);
+
+            if (createdBy.HasValue)
+                query = query.Where(r => r.CreatedByUserId == createdBy.Value);
+
+            return await query.ToListAsync();
+        }
+
 
         public async Task CreateRequestAsync(CreateRequestDto dto)
         {
