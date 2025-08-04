@@ -9,6 +9,7 @@ using EnterpriseAutomation.Infrastructure.Repository;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
+using EnterpriseAutomation.Domain.Entities.Enums;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -165,5 +166,39 @@ namespace EnterpriseAutomation.API.Controllers
                 return StatusCode(500, new { Message = "خطا در دریافت مراحل گردش کار", Error = ex.Message });
             }
         }
+
+        //  دریافت لیست درخواست‌ها با فیلترهای status, role, createdBy
+        [Authorize(Policy = "Admin")] //  Approver هم میتواند اضافه شود
+        [HttpGet("list")]
+        public async Task<IActionResult> GetFilteredRequests([FromQuery] RequestStatus? status, [FromQuery] string? role, [FromQuery] int? createdBy)
+        {
+            try
+            {
+                var requests = await _requestService.GetFilteredRequestsAsync(status, role, createdBy);
+
+                var result = requests.Select(r => new RequestDto
+                {
+                    RequestId = r.RequestId,
+                    Title = r.Title,
+                    Description = r.Description,
+                    CurrentStatus = r.CurrentStatus,
+                    CurrentStep = r.CurrentStep,
+                    UserId = r.CreatedByUserId,
+                    Username = r.CreatedByUser?.Username ?? "Unknown"
+                });
+
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "خطا در دریافت لیست درخواست‌ها", Error = ex.Message });
+            }
+        }
+
+
     }
 }
