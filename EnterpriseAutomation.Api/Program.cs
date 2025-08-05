@@ -58,24 +58,43 @@ builder.Services.AddAuthentication(options =>
         OnAuthenticationFailed = context =>
         {
             context.NoResult();
-            context.Response.StatusCode = 401;
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"توکن نامعتبر یا منقضی شده است.\"}");
+
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"توکن نامعتبر یا منقضی شده است.\"}");
+            }
+
+            return Task.CompletedTask;
         },
         OnChallenge = context =>
         {
+            //  جلوگیری از اجرای پیش‌فرض
             context.HandleResponse();
-            context.Response.StatusCode = 401;
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"ابتدا وارد سیستم شوید.\"}");
+
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"ابتدا وارد سیستم شوید.\"}");
+            }
+
+            return Task.CompletedTask;
         },
         OnForbidden = context =>
         {
-            context.Response.StatusCode = 403;
-            context.Response.ContentType = "application/json";
-            return context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما به این بخش دسترسی ندارید.\"}");
-        }
-    };
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما به این بخش دسترسی ندارید.\"}");
+            }
+
+            return Task.CompletedTask;
+             }
+
+        };
 
 });
 builder.Services.AddAuthorization(options =>
@@ -91,8 +110,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
 
     options.AddPolicy("User", policy => policy.RequireUserName("user"));
-
-    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
 
 });
 
