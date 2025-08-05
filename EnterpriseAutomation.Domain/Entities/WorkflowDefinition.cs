@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnterpriseAutomation.Domain.Entities.Base;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace EnterpriseAutomation.Domain.Entities
 {
     [Display(Name = "شرح گردش کار")]
-    public class WorkflowDefinition
+    public class WorkflowDefinition : BaseEntity
     {
         [Key]
         [Display(Name = "آی دی شرح گردش کار")]
