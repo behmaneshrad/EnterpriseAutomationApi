@@ -32,6 +32,19 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
     command: start-dev
 
+  mongo:
+    image: mongo:6.0
+    container_name: enterprise-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - backend-net
+
 networks:
   backend-net:
     driver: bridge
+volumes:
+  mongo-data:
