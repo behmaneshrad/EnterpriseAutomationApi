@@ -25,6 +25,7 @@
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": true,
+      "authorizationServicesEnabled": false,
       "redirectUris": [
         "*"
       ],
@@ -125,11 +126,17 @@
       "serviceAccountClientId": "enterprise-api",
       "clientRoles": {
         "realm-management": [
-          "manage-users",
           "view-realm",
-          "query-users"
+          "view-users",
+          "view-clients",
+          "query-users",
+          "query-clients",
+          "query-realms"
         ]
-      }
+      },
+      "realmRoles": [
+        "offline_access"
+      ]
     }
   ]
 }
