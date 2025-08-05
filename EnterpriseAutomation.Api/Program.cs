@@ -1,19 +1,21 @@
-﻿using EnterpriseAutomation.Application.Users.Interfaces;
-using EnterpriseAutomation.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using EnterpriseAutomation.Infrastructure.Services;
-using Microsoft.AspNetCore.Builder;
-using Swashbuckle.AspNetCore.SwaggerUI;
-using EnterpriseAutomation.Application.Users.Services;
-using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Infrastructure.Repository;
+﻿using EnterpriseAutomation.Application.IRepository;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
+using EnterpriseAutomation.Application.Users.Interfaces;
+using EnterpriseAutomation.Application.Users.Services;
+using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
+using EnterpriseAutomation.Application.WorkflowDefinitions.Services;
+using EnterpriseAutomation.Infrastructure.Persistence;
+using EnterpriseAutomation.Infrastructure.Repository;
+using EnterpriseAutomation.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,7 @@ builder.Services.AddHttpClient<KeycloakService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
 
 // Generic Repository Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

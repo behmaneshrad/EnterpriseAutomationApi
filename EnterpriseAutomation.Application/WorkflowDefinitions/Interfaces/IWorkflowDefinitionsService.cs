@@ -10,11 +10,14 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces
 {
     public interface IWorkflowDefinitionsService
     {
-        public Task<IEnumerable<WorkflowDefinitionDto>> GetAllWorkflowDefinitionsAsync();
+        public Task<IEnumerable<WorkflowDefinitionGetDto>> GetAllWorkflowDefinitionsAsync();
+
+        public Task<WorkflowDefinitionAndWorkflowStepDto> GetById(int id);
 
         public Task<WorkflowDetailDto> GetWorkFlowById(int id);
 
-        public Task AddWorkflowDefinition(WorkflowDefinitionDto wfDto);
+        public Task AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto);
+
         public Task DeleteWorkflowDefinition(int id);
     }
 }

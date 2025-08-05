@@ -15,12 +15,12 @@ namespace EnterpriseAutomation.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RequestsController : BaseController<Request>
+    public class RequestsController : ControllerBase
     {
         private readonly IRequestService _requestService;
 
-        public RequestsController(IRequestService requestService, IRepository<Request> repository)
-            : base(repository)
+        public RequestsController(IRequestService requestService)
+          
         {
             _requestService = requestService;
         }

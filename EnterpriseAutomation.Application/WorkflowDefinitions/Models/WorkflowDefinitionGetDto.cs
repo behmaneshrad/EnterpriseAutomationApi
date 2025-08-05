@@ -1,13 +1,14 @@
 ﻿using EnterpriseAutomation.Domain.Entities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
 {
-    public class WorkflowDetailDto
+    public class WorkflowDefinitionGetDto
     {
         public int WorkflowDefinitionId { get; set; }
 
@@ -23,9 +24,9 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
 
         public DateTime UpdatedAt { get; set; }
 
-        public static WorkflowDetailDto MapFrom(WorkflowDefinition workflowDefinition)
+        public static WorkflowDefinitionGetDto MapFrom(WorkflowDefinition workflowDefinition)
         {
-            return new WorkflowDetailDto
+            return new WorkflowDefinitionGetDto
             {
                 WorkflowDefinitionId = workflowDefinition.WorkflowDefinitionId,
                 Name = workflowDefinition.Name,
@@ -33,7 +34,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
                 CreatedById = workflowDefinition.CreatedById,
                 CreatedAt = workflowDefinition.CreatedAt,
                 UpdatedAt = workflowDefinition.UpdatedAt ?? DateTime.MinValue,
-                UpdatedById = workflowDefinition.UserModifyId ?? 0,
+                UpdatedById = workflowDefinition.UserModifyId ?? 0
             };
         }
     }
