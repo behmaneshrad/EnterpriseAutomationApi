@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250729212920_new Init")]
-    partial class newInit
+    [Migration("20250805110326_initiDb")]
+    partial class initiDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,10 +57,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserCreatedId")
+                    b.Property<int?>("UserCreatedId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserModifyId")
+                    b.Property<int?>("UserModifyId")
                         .HasColumnType("int");
 
                     b.HasKey("ApprovalStepId");
@@ -108,10 +108,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserCreatedId")
+                    b.Property<int?>("UserCreatedId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserModifyId")
+                    b.Property<int?>("UserModifyId")
                         .HasColumnType("int");
 
                     b.Property<int>("WorkflowDefinitionId")
@@ -124,6 +124,38 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.HasIndex("WorkflowDefinitionId");
 
                     b.ToTable("Requests");
+                });
+
+            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserModifyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>
@@ -157,10 +189,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserCreatedId")
+                    b.Property<int?>("UserCreatedId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserModifyId")
+                    b.Property<int?>("UserModifyId")
                         .HasColumnType("int");
 
                     b.Property<string>("Username")
@@ -202,10 +234,23 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowStep", b =>
                 {
                     b.Property<int>("WorkflowStepId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkflowStepId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<bool>("Editable")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
@@ -220,12 +265,42 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserModifyId")
+                        .HasColumnType("int");
+
                     b.Property<int>("WorkflowDefinitionId")
                         .HasColumnType("int");
 
                     b.HasKey("WorkflowStepId");
 
-                    b.ToTable("WorkflowSteps");
+                    b.HasIndex("WorkflowDefinitionId")
+                        .HasDatabaseName("IX_WorkflowStep_WorkflowDefinitionId");
+
+                    b.HasIndex("WorkflowDefinitionId", "Order")
+                        .HasDatabaseName("IX_WorkflowStep_WorkflowDefinitionId_Order");
+
+                    b.ToTable("WorkflowSteps", (string)null);
+                });
+
+            modelBuilder.Entity("UserRole", b =>
+                {
+                    b.Property<int>("RolesRoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsersUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RolesRoleId", "UsersUserId");
+
+                    b.HasIndex("UsersUserId");
+
+                    b.ToTable("UserRole");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.ApprovalStep", b =>
@@ -281,11 +356,26 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 {
                     b.HasOne("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", "WorkflowDefinition")
                         .WithMany("WorkflowSteps")
-                        .HasForeignKey("WorkflowStepId")
+                        .HasForeignKey("WorkflowDefinitionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("WorkflowDefinition");
+                });
+
+            modelBuilder.Entity("UserRole", b =>
+                {
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RolesRoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
