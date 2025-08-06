@@ -16,6 +16,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +26,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<KeycloakService>();
 
-
 // Register and Request Services
-
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
@@ -54,10 +54,57 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateAudience = true,
         ValidAudience = "enterprise-api",
-        RoleClaimType = "roles"
+        RoleClaimType = ClaimTypes.Role, // This is important for role mapping
+        NameClaimType = "preferred_username" // Common for Keycloak
     };
+
     options.Events = new JwtBearerEvents
     {
+        OnTokenValidated = context =>
+        {
+            // Extract roles from Keycloak token structure
+            var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
+
+            // Get realm_access roles
+            var realmAccessClaim = claimsIdentity?.FindFirst("realm_access");
+            if (realmAccessClaim != null)
+            {
+                var realmAccess = JsonDocument.Parse(realmAccessClaim.Value);
+                if (realmAccess.RootElement.TryGetProperty("roles", out var rolesElement))
+                {
+                    foreach (var role in rolesElement.EnumerateArray())
+                    {
+                        var roleValue = role.GetString();
+                        if (!string.IsNullOrEmpty(roleValue))
+                        {
+                            claimsIdentity?.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                        }
+                    }
+                }
+            }
+
+            // Get resource_access roles for enterprise-api
+            var resourceAccessClaim = claimsIdentity?.FindFirst("resource_access");
+            if (resourceAccessClaim != null)
+            {
+                var resourceAccess = JsonDocument.Parse(resourceAccessClaim.Value);
+                if (resourceAccess.RootElement.TryGetProperty("enterprise-api", out var enterpriseApi) &&
+                    enterpriseApi.TryGetProperty("roles", out var resourceRoles))
+                {
+                    foreach (var role in resourceRoles.EnumerateArray())
+                    {
+                        var roleValue = role.GetString();
+                        if (!string.IsNullOrEmpty(roleValue))
+                        {
+                            claimsIdentity?.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                        }
+                    }
+                }
+            }
+
+            return Task.CompletedTask;
+        },
+
         OnAuthenticationFailed = context =>
         {
             context.NoResult();
@@ -73,7 +120,7 @@ builder.Services.AddAuthentication(options =>
         },
         OnChallenge = context =>
         {
-            //  جلوگیری از اجرای پیش‌فرض
+            // جلوگیری از اجرای پیش‌فرض
             context.HandleResponse();
 
             if (!context.Response.HasStarted)
@@ -95,28 +142,20 @@ builder.Services.AddAuthentication(options =>
             }
 
             return Task.CompletedTask;
-             }
-
-        };
-
+        }
+    };
 });
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
-
     options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
-
     options.AddPolicy("Approver", policy => policy.RequireRole("approver", "admin"));
-
     options.AddPolicy("HR", policy => policy.RequireRole("hr", "admin"));
-
     options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
-
-    options.AddPolicy("User", policy => policy.RequireUserName("user"));
-
+    // Note: RequireUserName is not a standard method, you might want to use RequireRole instead
+    // options.AddPolicy("User", policy => policy.RequireRole("user"));
 });
-
-
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
@@ -154,7 +193,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-//  401 ,403 errors
+
+// 401, 403 errors
 app.Use(async (context, next) =>
 {
     await next();
