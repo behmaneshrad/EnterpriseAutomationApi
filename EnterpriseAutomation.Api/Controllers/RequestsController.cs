@@ -170,7 +170,8 @@ namespace EnterpriseAutomation.API.Controllers
         //  دریافت لیست درخواست‌ها با فیلترهای status, role, createdBy
         [Authorize(Policy = "Admin")] //  Approver هم میتواند اضافه شود
         [HttpGet("list")]
-        public async Task<IActionResult> GetFilteredRequests([FromQuery] RequestStatus? status, [FromQuery] string? role, [FromQuery] int? createdBy)
+        public async Task<IActionResult> GetFilteredRequests([FromQuery] RequestStatus? status,
+            [FromQuery] string? role, [FromQuery] int? createdBy)
         {
             try
             {

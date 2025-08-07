@@ -123,9 +123,8 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
         public void UpdateEntityAsync(TEntity entity)
         {
-            _dbSet.Attach(entity);
-            _db.Entry(entity).State = EntityState.Modified;
-            //Alternatively, you can use _dbSet.Update(entity) if you prefer
+            _dbSet.Update(entity);
+            //Update to Entity framework Core 8
         }
 
         public void UpdateEntityAsync(IEnumerable<TEntity> entities)

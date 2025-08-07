@@ -9,40 +9,31 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
 {
     [ApiController]
     [Route("api/[controller]")]
-    public abstract class BaseController<TEntity, TGetDto, TCreatDto, TUpdateDto, TGetDetailDto>
-        : ControllerBase
+    public abstract class BaseController<TEntity> : ControllerBase
         where TEntity : BaseEntity
     {
         private readonly IRepository<TEntity> _repository;
-        private readonly Func<TEntity, TGetDto> _mapToGetDto;
-        private readonly Func<TUpdateDto, TEntity, TEntity> _mapToUpdateDto;
-        private readonly Func<TEntity, TGetDetailDto> _mapToGetDetailDto;
 
-        public BaseController(IRepository<TEntity> repository,
-            Func<TEntity, TGetDto> mapToGetDto,
-            Func<TUpdateDto, TEntity, TEntity> mapToUpdateDto,
-            Func<TEntity, TGetDetailDto> mapToGetDetailDto)
+        public BaseController(IRepository<TEntity> repository)
         {
             _repository = repository;
-            _mapToGetDto = mapToGetDto;
-            _mapToUpdateDto = mapToUpdateDto;
-            _mapToGetDetailDto = mapToGetDetailDto;
+
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<TGetDto>>> GetAllAsync()
+        public async Task<ActionResult<IEnumerable<TEntity>>> GetAllAsync()
         {
-            var entities = await _repository.GetAllAsync();
-            var dtos = entities.Select(_mapToGetDto);
-            return Ok(dtos);
+            var result = await _repository.GetAllAsync();
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
         [HttpGet("GetById/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var item = await _repository.GetByIdAsync(id);
-            if (item == null) return NotFound();
-            var result = _mapToGetDetailDto(item);
+            var result = await _repository.GetByIdAsync(id);
+            if (result == null) return NotFound();
+            
             return Ok(result);
         }
 
@@ -69,15 +60,9 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
         }
 
         [HttpPost("Update/{id}")]
-        public async Task<IActionResult> UpdateByIdAsync(int id, TUpdateDto updateDto)
+        public async Task<IActionResult> UpdateByIdAsync(TEntity updateEntity)
         {
-            if (updateDto == null) return NotFound();
-
-            var existEntity = await _repository.GetByIdAsync(id);
-
-            if (existEntity == null) return NotFound();
-
-            var updateEntity = _mapToUpdateDto(updateDto, existEntity);
+            if (updateEntity == null) return NotFound();
 
             _repository.UpdateEntityAsync(updateEntity);
             await _repository.SaveChangesAsync();
