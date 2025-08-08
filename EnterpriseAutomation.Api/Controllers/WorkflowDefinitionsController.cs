@@ -11,19 +11,12 @@ namespace EnterpriseAutomation.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class WorkflowDefinitionsController :
-        BaseController<WorkflowDefinition,
-            WorkflowDefinitionGetDto,
-            WorkflowDefinitionCreateDto,
-            WorkflowDefinitionUpdateDto,
-            WorkflowDetailDto>
+        BaseController<WorkflowDefinition>
     {
         private readonly IWorkflowDefinitionsService _definitionsService;
         public WorkflowDefinitionsController(IRepository<WorkflowDefinition> repository,
             IWorkflowDefinitionsService definitionsService)
-            : base(repository,
-                  WorkflowDefinitionGetDto.MapFrom,
-                  WorkflowDefinitionUpdateDto.MapFrom,
-                  WorkflowDetailDto.MapFrom)
+            : base(repository)
         {
             _definitionsService = definitionsService;
         }
