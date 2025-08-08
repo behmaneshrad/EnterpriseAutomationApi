@@ -141,7 +141,7 @@ namespace EnterpriseAutomation.API.Controllers
         // 6. دریافت مراحل گردش کار برای یک WorkflowDefinition خاص (GET)
         //[Authorize(Policy = "User")]
         // TODO : this Process should be run after creating request but for now it just works with workflow definitoion id
-        [HttpGet("workflow/{workflowDefinitionId:int}/steps")]
+        [HttpGet("workflow/{workflowDefinitionId:int}")]
         public async Task<IActionResult> GetWorkflowSteps(int workflowDefinitionId)
         {
             try
@@ -175,7 +175,7 @@ namespace EnterpriseAutomation.API.Controllers
             try
             {
                 var requests = await _requestService.GetFilteredRequestsAsync(status, role, createdBy);
-
+                    
                 var result = requests.Select(r => new RequestDto
                 {
                     RequestId = r.RequestId,
