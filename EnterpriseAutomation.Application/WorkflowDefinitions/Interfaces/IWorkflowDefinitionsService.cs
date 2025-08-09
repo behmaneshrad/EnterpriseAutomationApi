@@ -18,6 +18,8 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces
 
         public Task AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto);
 
+        public Task UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto);
+
         public Task DeleteWorkflowDefinition(int id);
     }
 }

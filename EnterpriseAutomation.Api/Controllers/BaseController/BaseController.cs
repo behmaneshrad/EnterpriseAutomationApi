@@ -21,7 +21,7 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
         }
 
         [HttpGet("GetAll")]
-        public async Task<ActionResult<IEnumerable<TEntity>>> GetAllAsync()
+        public  async Task<ActionResult<IEnumerable<TEntity>>> GetAllAsync()
         {
             var result = await _repository.GetAllAsync();
             if (result == null) return NotFound();
@@ -56,15 +56,16 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
         public async Task<IActionResult> DeleteById(int id)
         {
             var item = await _repository.DeleteByIdAsync(id);
+            await _repository.SaveChangesAsync();
             return Ok(item);
         }
 
-        [HttpPost("Update/{id}")]
+        [HttpPost("Update")]
         public async Task<IActionResult> UpdateByIdAsync(TEntity updateEntity)
         {
             if (updateEntity == null) return NotFound();
 
-            _repository.UpdateEntityAsync(updateEntity);
+            _repository.UpdateEntity(updateEntity);
             await _repository.SaveChangesAsync();
 
             return Ok();

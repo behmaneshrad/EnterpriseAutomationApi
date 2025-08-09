@@ -9,6 +9,10 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
 {
     public class WorkflowDefinitionUpdateDto
     {
+        public WorkflowDefinitionUpdateDto()
+        {
+            this.UpdatedAt = DateTime.Now;
+        }
         public string Name { get; set; }
 
         public string Description { get; set; }
@@ -17,15 +21,5 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
 
         public DateTime UpdatedAt { get; set; }
 
-        public static WorkflowDefinition MapFrom(
-            WorkflowDefinitionUpdateDto dto, WorkflowDefinition workflowDefinition)
-        {
-            workflowDefinition.Description = dto.Description;
-            workflowDefinition.Name = dto.Name;
-            workflowDefinition.UserModifyId = dto.UpdatedById;
-            workflowDefinition.UpdatedAt = dto.UpdatedAt;
-
-            return workflowDefinition;
-        }
     }
 }

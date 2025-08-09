@@ -28,8 +28,8 @@ namespace EnterpriseAutomation.Application.IRepository
         public Task<EntityEntry<TEntity>> InsertAsync(TEntity entity);
         public Task InsertAsync(IEnumerable<TEntity> entities);
 
-        public void UpdateEntityAsync(TEntity entity);
-        public void UpdateEntityAsync(IEnumerable<TEntity> entities);
+        public void UpdateEntity(TEntity entity);
+        public void UpdateEntity(IEnumerable<TEntity> entities);
 
 
         public void DeleteEntity(TEntity entity);
