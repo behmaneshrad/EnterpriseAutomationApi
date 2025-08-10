@@ -16,7 +16,7 @@ namespace EnterpriseAutomation.Application.Requests.Interfaces
         Task<Request?> GetRequestByIdAsync(int requestId);
         Task<bool> SubmitRequestAsync(SubmitRequestDto dto);
         Task<IEnumerable<WorkflowStep>> GetWorkflowStepsAsync(int workflowDefinitionId);
-        Task<IEnumerable<Request>> GetFilteredRequestsAsync(RequestStatus? status, string? role, Guid? createdBy); //گرفتن درخواست ها با فیلتر
+        Task<IEnumerable<Request>> GetFilteredRequestsAsync(string? status, string? role, Guid? createdBy); //گرفتن درخواست ها با فیلتر
 
     }
 }

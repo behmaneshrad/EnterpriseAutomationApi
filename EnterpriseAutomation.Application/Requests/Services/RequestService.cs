@@ -30,7 +30,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<IEnumerable<Request>> GetFilteredRequestsAsync(RequestStatus? status, string? role, Guid? createdBy)
+        public async Task<IEnumerable<Request>> GetFilteredRequestsAsync(string? status, string? role, Guid? createdBy)
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null || !user.Identity!.IsAuthenticated)
@@ -47,8 +47,8 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 query = query.Where(r => r.CreatedByUserId == currentUserGuid);
             }
 
-            if (status.HasValue)
-                query = query.Where(r => r.CurrentStatus == status.Value);
+            if (status != null)
+                query = query.Where(r => r.CurrentStatus == status);
 
 
             if (createdBy.HasValue)

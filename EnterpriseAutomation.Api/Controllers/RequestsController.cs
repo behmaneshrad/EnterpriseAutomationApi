@@ -168,7 +168,7 @@ namespace EnterpriseAutomation.API.Controllers
 
         //  دریافت لیست درخواست‌ها با فیلترهای status, role, createdBy
         [HttpGet("list")]
-        public async Task<IActionResult> GetFilteredRequests([FromQuery] RequestStatus? status,
+        public async Task<IActionResult> GetFilteredRequests([FromQuery] string? status,
             [FromQuery] string? role, [FromQuery] Guid? createdBy)
         {
             try
