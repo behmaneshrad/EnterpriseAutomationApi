@@ -64,17 +64,30 @@ namespace EnterpriseAutomation.Application.Requests.Services
             if (user == null || !user.Identity!.IsAuthenticated)
                 throw new UnauthorizedAccessException("توکن معتبر نیست یا کاربر لاگین نشده است.");
 
-            var sub = user.FindFirst("sub")?.Value;
-            if (!Guid.TryParse(sub, out var userGuid))
+            // چندین روش برای پیدا کردن sub
+            var sub = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user.FindFirst("sub")?.Value
+                   ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(sub) || !Guid.TryParse(sub, out var userGuid))
+            {
+                // برای debug - تمام claims را لاگ کنید
+                foreach (var claim in user.Claims)
+                {
+                    Console.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+                }
+
                 throw new UnauthorizedAccessException("شناسه کاربر (sub) در توکن معتبر نیست.");
+            }
+
             var request = new Request
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CreatedByUserId = userGuid,                 //  از توکن
+                CreatedByUserId = userGuid,                 // از توکن
                 CurrentStatus = RequestStatus.Pending,
-                CurrentStep = "Pending",
-                WorkflowDefinitionId = 1,
+                CurrentStep = 1,
+                WorkflowDefinitionId = 4,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null
             };
@@ -82,30 +95,26 @@ namespace EnterpriseAutomation.Application.Requests.Services
             await _repository.InsertAsync(request);
             await _repository.SaveChangesAsync();
 
-
             // حالا ApprovalStep ها را ایجاد می‌کنیم
             try
             {
                 // دریافت مراحل workflow
                 var workflowSteps = await GetWorkflowStepsAsync(request.WorkflowDefinitionId);
-
                 if (workflowSteps != null && workflowSteps.Any())
                 {
                     var approvalSteps = new List<ApprovalStep>();
-
                     foreach (var step in workflowSteps)
                     {
                         var approvalStep = new ApprovalStep
                         {
-                            StepId = step.Order,              
+                            StepId = step.Order,
                             RequestId = request.RequestId,
-                            ApproverUserId = null,              
+                            ApproverUserId = null,
                             Status = ApprovalStatus.Pending,
                             ApprovedAt = null,
                             CreatedAt = DateTime.UtcNow
                         };
-
-                        approvalSteps.Add(approvalStep); //نمیدونم باید کامنت بشه یا خیر
+                        approvalSteps.Add(approvalStep);
                     }
 
                     // ذخیره تمام ApprovalSteps

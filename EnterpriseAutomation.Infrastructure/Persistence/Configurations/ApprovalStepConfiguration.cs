@@ -16,9 +16,6 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
             builder.Property(x => x.RequestId)
                 .IsRequired();
 
-            builder.Property(x => x.ApproverUserId)
-                .IsRequired();
-
             builder.Property(x => x.Status)
                 .IsRequired();
 

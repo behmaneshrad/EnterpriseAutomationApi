@@ -27,7 +27,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public required string UserName { get; set; }
 
         [Display(Name = "نوع عملیات")]
-        public ActionType ActionType { get; set; }
+        public required string ActionType { get; set; }
 
         [Display(Name = "توضیحات")]
         public string ? Description { get; set; }

@@ -7,12 +7,12 @@
         Rejected = 2
     }
 
-    public enum RequestStatus
+    public static class RequestStatus
     {
-        Pending = 1,
-        InProgress = 2,
-        Completed = 3,
-        Rejected = 4,
-        Cancelled = 5
+        public const string Pending = "Pending";
+        public const string InProgress = "InProgress";
+        public const string Completed = "Completed";
+        public const string Rejected = "Rejected";
+        public const string Cancelled = "Cancelled";
     }
 }

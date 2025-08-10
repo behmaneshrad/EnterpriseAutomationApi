@@ -36,12 +36,9 @@ builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionServic
 // Generic Repository Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-//builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
-
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
@@ -60,32 +57,56 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateAudience = true,
         ValidAudience = "enterprise-api",
-        RoleClaimType = ClaimTypes.Role, // This is important for role mapping
-        NameClaimType = "preferred_username" // Common for Keycloak
+        ValidateIssuer = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = ClaimTypes.NameIdentifier // این باعث می‌شود sub به NameIdentifier map شود
     };
 
     options.Events = new JwtBearerEvents
     {
         OnTokenValidated = context =>
         {
-            // Extract roles from Keycloak token structure
             var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
 
+            // اضافه کردن sub claim به عنوان NameIdentifier اگر وجود نداشته باشد
+            var subClaim = claimsIdentity?.FindFirst("sub");
+            if (subClaim != null && !claimsIdentity.HasClaim(ClaimTypes.NameIdentifier, subClaim.Value))
+            {
+                claimsIdentity?.AddClaim(new Claim(ClaimTypes.NameIdentifier, subClaim.Value));
+            }
+
+            // اضافه کردن preferred_username به عنوان Name claim
+            var usernameClaim = claimsIdentity?.FindFirst("preferred_username");
+            if (usernameClaim != null && !claimsIdentity.HasClaim(ClaimTypes.Name, usernameClaim.Value))
+            {
+                claimsIdentity?.AddClaim(new Claim(ClaimTypes.Name, usernameClaim.Value));
+            }
+
+            // Extract roles from Keycloak token structure
             // Get realm_access roles
             var realmAccessClaim = claimsIdentity?.FindFirst("realm_access");
             if (realmAccessClaim != null)
             {
-                var realmAccess = JsonDocument.Parse(realmAccessClaim.Value);
-                if (realmAccess.RootElement.TryGetProperty("roles", out var rolesElement))
+                try
                 {
-                    foreach (var role in rolesElement.EnumerateArray())
+                    var realmAccess = JsonDocument.Parse(realmAccessClaim.Value);
+                    if (realmAccess.RootElement.TryGetProperty("roles", out var rolesElement))
                     {
-                        var roleValue = role.GetString();
-                        if (!string.IsNullOrEmpty(roleValue))
+                        foreach (var role in rolesElement.EnumerateArray())
                         {
-                            claimsIdentity?.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                            var roleValue = role.GetString();
+                            if (!string.IsNullOrEmpty(roleValue) && !claimsIdentity.HasClaim(ClaimTypes.Role, roleValue))
+                            {
+                                claimsIdentity?.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                            }
                         }
                     }
+                }
+                catch (JsonException)
+                {
+                    // Handle JSON parsing error
                 }
             }
 
@@ -93,18 +114,25 @@ builder.Services.AddAuthentication(options =>
             var resourceAccessClaim = claimsIdentity?.FindFirst("resource_access");
             if (resourceAccessClaim != null)
             {
-                var resourceAccess = JsonDocument.Parse(resourceAccessClaim.Value);
-                if (resourceAccess.RootElement.TryGetProperty("enterprise-api", out var enterpriseApi) &&
-                    enterpriseApi.TryGetProperty("roles", out var resourceRoles))
+                try
                 {
-                    foreach (var role in resourceRoles.EnumerateArray())
+                    var resourceAccess = JsonDocument.Parse(resourceAccessClaim.Value);
+                    if (resourceAccess.RootElement.TryGetProperty("enterprise-api", out var enterpriseApi) &&
+                        enterpriseApi.TryGetProperty("roles", out var resourceRoles))
                     {
-                        var roleValue = role.GetString();
-                        if (!string.IsNullOrEmpty(roleValue))
+                        foreach (var role in resourceRoles.EnumerateArray())
                         {
-                            claimsIdentity?.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                            var roleValue = role.GetString();
+                            if (!string.IsNullOrEmpty(roleValue) && !claimsIdentity.HasClaim(ClaimTypes.Role, roleValue))
+                            {
+                                claimsIdentity?.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                            }
                         }
                     }
+                }
+                catch (JsonException)
+                {
+                    // Handle JSON parsing error
                 }
             }
 
@@ -124,6 +152,7 @@ builder.Services.AddAuthentication(options =>
 
             return Task.CompletedTask;
         },
+
         OnChallenge = context =>
         {
             // جلوگیری از اجرای پیش‌فرض
@@ -138,6 +167,7 @@ builder.Services.AddAuthentication(options =>
 
             return Task.CompletedTask;
         },
+
         OnForbidden = context =>
         {
             if (!context.Response.HasStarted)
@@ -151,17 +181,6 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
-
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
-//    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
-//    options.AddPolicy("Approver", policy => policy.RequireRole("approver", "admin"));
-//    options.AddPolicy("HR", policy => policy.RequireRole("hr", "admin"));
-//    options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
-//    // Note: RequireUserName is not a standard method, you might want to use RequireRole instead
-//    // options.AddPolicy("User", policy => policy.RequireRole("user"));
-//});
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
@@ -192,7 +211,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -200,8 +218,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
@@ -226,6 +242,5 @@ app.Use(async (context, next) =>
         }
     }
 });
-
 
 app.Run();

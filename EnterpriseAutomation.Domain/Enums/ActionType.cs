@@ -1,16 +1,16 @@
 ﻿namespace EnterpriseAutomation.Domain.Enums
 {
-    public enum ActionType
+    public static class ActionType
     {
-        Approve = 1,
-        Reject = 2,
-        Skip = 3,
-        Assign = 4,
-        Start = 5,
-        Complete = 6,
-        Cancel = 7,
-        Pause = 8,
-        Resume = 9,
-        Update = 10
+        public const string Approve = "Approve";
+        public const string Reject = "Reject";
+        public const string Skip = "Skip";
+        public const string Assign = "Assign";
+        public const string Start = "Start";
+        public const string Complete = "Complete";
+        public const string Cancel = "Cancel";
+        public const string Pause = "Pause";
+        public const string Resume = "Resume";
+        public const string Update = "Update";
     }
 }

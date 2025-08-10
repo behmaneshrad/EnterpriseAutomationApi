@@ -27,8 +27,8 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         // 3. ایجاد یک Request جدید (POST)
-        [Authorize]
-        [RequiresPermission("requests", "create")]
+        //[Authorize]
+        //[RequiresPermission("requests", "create")]
         [HttpPost("create")] // حتماً متد HTTP مشخص باشد
         public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
         {

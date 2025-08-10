@@ -22,7 +22,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public int RequestId { get; set; } = default!;
 
         [Display(Name = "آی دی کاربر تایید کننده")]
-        public int? ApproverUserId { get; set; } = default!;
+        public int? ApproverUserId { get; set; }
 
         [Display(Name = "وضعیت")]
         public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
