@@ -1,4 +1,5 @@
-﻿using EnterpriseAutomation.Application.IRepository;
+﻿using EnterpriseAutomation.Api.Security;
+using EnterpriseAutomation.Application.IRepository;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
@@ -11,6 +12,7 @@ using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -34,11 +36,15 @@ builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionServic
 // Generic Repository Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
+//builder.Services.AddTransient<IClaimsTransformation, KeycloakRolesClaimsTransformation>();
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
 // JWT Keycloak
 builder.Services.AddAuthentication(options =>
@@ -146,16 +152,16 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
-    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
-    options.AddPolicy("Approver", policy => policy.RequireRole("approver", "admin"));
-    options.AddPolicy("HR", policy => policy.RequireRole("hr", "admin"));
-    options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
-    // Note: RequireUserName is not a standard method, you might want to use RequireRole instead
-    // options.AddPolicy("User", policy => policy.RequireRole("user"));
-});
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("Admin", policy => policy.RequireRole("admin"));
+//    options.AddPolicy("Employee", policy => policy.RequireRole("employee", "admin"));
+//    options.AddPolicy("Approver", policy => policy.RequireRole("approver", "admin"));
+//    options.AddPolicy("HR", policy => policy.RequireRole("hr", "admin"));
+//    options.AddPolicy("Finance", policy => policy.RequireRole("finance", "admin"));
+//    // Note: RequireUserName is not a standard method, you might want to use RequireRole instead
+//    // options.AddPolicy("User", policy => policy.RequireRole("user"));
+//});
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
@@ -186,6 +192,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -194,26 +201,31 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 401, 403 errors
-app.Use(async (context, next) =>
-{
-    await next();
 
-    if (context.Response.StatusCode == 401 && !context.Response.HasStarted)
-    {
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
-    }
-    else if (context.Response.StatusCode == 403 && !context.Response.HasStarted)
-    {
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
-    }
-});
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Handle 401/403 responses
+app.Use(async (context, next) =>
+{
+    await next();
+    if (!context.Response.HasStarted)
+    {
+        if (context.Response.StatusCode == 401)
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
+        }
+        else if (context.Response.StatusCode == 403)
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
+        }
+    }
+});
+
 
 app.Run();
