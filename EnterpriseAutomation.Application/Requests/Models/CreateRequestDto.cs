@@ -10,7 +10,8 @@ namespace EnterpriseAutomation.Application.Requests.Models
     {
         public string Title { get; set; }
         public string Description { get; set; }
+
         //more detail #TODO
-        public int CreatedBy { get; set; }
+        //public int CreatedBy { get; set; }
     }
 }

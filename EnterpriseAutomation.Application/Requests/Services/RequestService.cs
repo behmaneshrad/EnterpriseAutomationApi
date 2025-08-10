@@ -6,6 +6,8 @@ using EnterpriseAutomation.Domain.Entities.Enums;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System;
 
 namespace EnterpriseAutomation.Application.Requests.Services
 {
@@ -28,35 +30,26 @@ namespace EnterpriseAutomation.Application.Requests.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<IEnumerable<Request>> GetFilteredRequestsAsync(RequestStatus? status, string? role, int? createdBy)
+        public async Task<IEnumerable<Request>> GetFilteredRequestsAsync(RequestStatus? status, string? role, Guid? createdBy)
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null || !user.Identity!.IsAuthenticated)
                 throw new UnauthorizedAccessException("توکن معتبر نیست یا کاربر لاگین نشده است.");
+            Guid.TryParse(user.FindFirst("sub")?.Value, out var currentUserGuid);
 
-            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
-            var currentUserIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            int.TryParse(currentUserIdClaim, out int currentUserId);
-
-            //  گرفتن Query با Include کامل
             var query = _repository.GetQueryable(
-                include: q => q.Include(r => r.CreatedByUser)
-                               .Include(r => r.ApprovalSteps),
+                include: q => q.Include(r => r.ApprovalSteps),
                 asNoTracking: true
             );
 
-            //  محدودیت دسترسی برای Employee
-            if (userRole == "employee")
+            if (user.IsInRole("employee") && currentUserGuid != Guid.Empty)
             {
-                query = query.Where(r => r.CreatedByUserId == currentUserId);
+                query = query.Where(r => r.CreatedByUserId == currentUserGuid);
             }
 
-            //  اعمال فیلترهای Optional
             if (status.HasValue)
                 query = query.Where(r => r.CurrentStatus == status.Value);
 
-            if (!string.IsNullOrEmpty(role))
-                query = query.Where(r => r.CreatedByUser != null && r.CreatedByUser.Role == role);
 
             if (createdBy.HasValue)
                 query = query.Where(r => r.CreatedByUserId == createdBy.Value);
@@ -71,34 +64,24 @@ namespace EnterpriseAutomation.Application.Requests.Services
             if (user == null || !user.Identity!.IsAuthenticated)
                 throw new UnauthorizedAccessException("توکن معتبر نیست یا کاربر لاگین نشده است.");
 
-            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
-            if (userRole != "employee")
-                throw new UnauthorizedAccessException("شما اجازه ثبت درخواست ندارید.");
-                Console.WriteLine("test");
-
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim))
-                throw new UnauthorizedAccessException("شناسه کاربر در توکن یافت نشد.");
-
-            //  تبدیل به int
-            if (!int.TryParse(userIdClaim, out int userId))
-                throw new UnauthorizedAccessException("شناسه کاربر در توکن معتبر نیست یا عددی نیست.");
-
-            // ایجاد درخواست
+            var sub = user.FindFirst("sub")?.Value;
+            if (!Guid.TryParse(sub, out var userGuid))
+                throw new UnauthorizedAccessException("شناسه کاربر (sub) در توکن معتبر نیست.");
             var request = new Request
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CreatedByUserId = userId,
+                CreatedByUserId = userGuid,                 //  از توکن
                 CurrentStatus = RequestStatus.Pending,
-                CurrentStep = "Pending",
-                WorkflowDefinitionId = 1,
+                CurrentStep = "Initial Creation",
+                WorkflowDefinitionId = 1,                  
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null
             };
 
             await _repository.InsertAsync(request);
             await _repository.SaveChangesAsync();
+
 
             // حالا ApprovalStep ها را ایجاد می‌کنیم
             try
@@ -114,15 +97,15 @@ namespace EnterpriseAutomation.Application.Requests.Services
                     {
                         var approvalStep = new ApprovalStep
                         {
-                            StepId = step.Order, // استفاده از Order به عنوان شناسه مرحله
+                            StepId = step.Order,              
                             RequestId = request.RequestId,
-                            ApproverUserId = null,
+                            ApproverUserId = null,              
                             Status = ApprovalStatus.Pending,
                             ApprovedAt = null,
                             CreatedAt = DateTime.UtcNow
                         };
 
-                        approvalSteps.Add(approvalStep);
+                        approvalSteps.Add(approvalStep); //نمیدونم باید کامنت بشه یا خیر
                     }
 
                     // ذخیره تمام ApprovalSteps
@@ -134,6 +117,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
             {
                 // اگر ایجاد ApprovalStep ها با خطا مواجه شد، درخواست را حذف کنیم
                 await _repository.DeleteByIdAsync(request.RequestId);
+                await _repository.SaveChangesAsync();
                 throw new Exception($"خطا در ایجاد مراحل تایید: {ex.Message}", ex);
             }
         }

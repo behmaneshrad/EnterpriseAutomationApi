@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using EnterpriseAutomation.Domain.Entities.Enums;
+using EnterpriseAutomation.Api.Security;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -26,8 +27,9 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         // 3. ایجاد یک Request جدید (POST)
-        //  [Authorize(Policy = "EmployeeOnly")]
-        [HttpPost]
+        [Authorize]
+        [RequiresPermission("requests", "create")]
+        [HttpPost("create")] // حتماً متد HTTP مشخص باشد
         public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -36,10 +38,7 @@ namespace EnterpriseAutomation.API.Controllers
             try
             {
                 await _requestService.CreateRequestAsync(dto);
-                return StatusCode(201, new
-                {
-                    Message = "باموفقیت درخواست شما ثبت شد"
-                });
+                return StatusCode(201, new { Message = "باموفقیت درخواست شما ثبت شد" });
             }
             catch (Exception ex)
             {
@@ -47,7 +46,6 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
-        [Authorize(Policy = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllRequests()
         {
@@ -61,16 +59,16 @@ namespace EnterpriseAutomation.API.Controllers
                     r.RequestId,
                     r.Title,
                     r.Description,
-                    r.CreatedByUserId,
+                    CreatedByUserId = r.CreatedByUserId, 
                     r.CurrentStatus,
                     r.CurrentStep,
                     r.WorkflowDefinitionId,
-                    User = new
-                    {
-                        r.CreatedByUser.UserId,
-                        r.CreatedByUser.Username,
-                        r.CreatedByUser.Role
-                    },
+                    //User = new
+                    //{
+                    //    r.CreatedByUser.UserId,
+                    //    r.CreatedByUser.Username,
+                    //    r.CreatedByUser.Role
+                    //},
                     ApprovalSteps = r.ApprovalSteps.Select(s => new
                     {
                         s.ApprovalStepId,
@@ -87,8 +85,10 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         // 4. ارسال درخواست توسط کارمند (POST)
-        [Authorize(Policy = "Employee")]
-        [HttpPost("submit")]
+        [Authorize]
+        [RequiresPermission("requests", "submit")]
+        [HttpPost("submit")] 
+
         public async Task<IActionResult> SubmitRequest([FromBody] SubmitRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -109,7 +109,6 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         // 5. دریافت اطلاعات یک درخواست خاص با جزئیات بیشتر (GET by ID)
-        [Authorize(Policy = "User")]
         [HttpGet("{requestId:int}")]
         public async Task<IActionResult> GetRequestById(int requestId)
         {
@@ -168,10 +167,9 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         //  دریافت لیست درخواست‌ها با فیلترهای status, role, createdBy
-        [Authorize(Policy = "Admin")] //  Approver هم میتواند اضافه شود
         [HttpGet("list")]
         public async Task<IActionResult> GetFilteredRequests([FromQuery] RequestStatus? status,
-            [FromQuery] string? role, [FromQuery] int? createdBy)
+            [FromQuery] string? role, [FromQuery] Guid? createdBy)
         {
             try
             {
@@ -185,7 +183,7 @@ namespace EnterpriseAutomation.API.Controllers
                     CurrentStatus = r.CurrentStatus,
                     CurrentStep = r.CurrentStep,
                     UserId = r.CreatedByUserId,
-                    Username = r.CreatedByUser?.Username ?? "Unknown"
+                    //Username = r.CreatedByUser?.Username ?? "Unknown"
                 });
 
                 return Ok(result);
