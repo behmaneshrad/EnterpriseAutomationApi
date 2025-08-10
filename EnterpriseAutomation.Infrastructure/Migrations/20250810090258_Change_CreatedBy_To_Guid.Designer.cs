@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250805163634_Init Db")]
-    partial class InitDb
+    [Migration("20250810090258_Change_CreatedBy_To_Guid")]
+    partial class Change_CreatedBy_To_Guid
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -83,8 +83,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CreatedByUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("CurrentStatus")
                         .HasColumnType("int");
@@ -111,6 +111,9 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int?>("UserCreatedId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("UserModifyId")
                         .HasColumnType("int");
 
@@ -119,7 +122,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("RequestId");
 
-                    b.HasIndex("CreatedByUserId");
+                    b.HasIndex("UserId");
 
                     b.HasIndex("WorkflowDefinitionId");
 
@@ -339,19 +342,15 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
                 {
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "CreatedByUser")
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", null)
                         .WithMany("Requests")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.HasOne("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", "WorkflowDefinition")
                         .WithMany("Requests")
                         .HasForeignKey("WorkflowDefinitionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("CreatedByUser");
 
                     b.Navigation("WorkflowDefinition");
                 });

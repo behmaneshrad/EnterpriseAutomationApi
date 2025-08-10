@@ -27,10 +27,10 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
            
-            builder.HasOne(x => x.CreatedByUser)
-                .WithMany(u => u.Requests)
-                .HasForeignKey(x => x.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder.HasOne(x => x.CreatedByUser)
+            //    .WithMany(u => u.Requests)
+            //    .HasForeignKey(x => x.CreatedByUserId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
           
             builder.HasOne(x => x.WorkflowDefinition)

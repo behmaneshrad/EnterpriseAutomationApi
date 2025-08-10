@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDb : Migration
+    public partial class Change_CreatedBy_To_Guid : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -108,10 +108,11 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedByUserId = table.Column<int>(type: "int", nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CurrentStatus = table.Column<int>(type: "int", nullable: false),
                     CurrentStep = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     WorkflowDefinitionId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -122,11 +123,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Requests", x => x.RequestId);
                     table.ForeignKey(
-                        name: "FK_Requests_Users_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
+                        name: "FK_Requests_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "UserId");
                     table.ForeignKey(
                         name: "FK_Requests_WorkflowDefinitions_WorkflowDefinitionId",
                         column: x => x.WorkflowDefinitionId,
@@ -208,9 +208,9 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 column: "RequestId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Requests_CreatedByUserId",
+                name: "IX_Requests_UserId",
                 table: "Requests",
-                column: "CreatedByUserId");
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Requests_WorkflowDefinitionId",

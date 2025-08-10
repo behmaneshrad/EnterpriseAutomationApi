@@ -24,7 +24,7 @@ namespace EnterpriseAutomation.Domain.Entities
 
         // نقض اصل DRY 
         [Display(Name = "آی دی کاربر سازنده")]
-        public int CreatedByUserId { get; set; } = default!;
+        public Guid CreatedByUserId { get; set; } = default!;
 
         //[Display(Name = "آی دی کاربر تغییر دهنده")]
         //public int ModifiedByUserId { get; set; } = default!;
@@ -41,7 +41,7 @@ namespace EnterpriseAutomation.Domain.Entities
 
 
         public virtual WorkflowDefinition? WorkflowDefinition { get; set; }
-        public virtual User? CreatedByUser { get; set; }
+        //public virtual User? CreatedByUser { get; set; }
         //public virtual User? ModifiedByUser { get; set; }
 
         public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];

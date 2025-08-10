@@ -26,10 +26,10 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
 
             // Relation to Requests model
 
-            builder.HasMany(r => r.Requests)
-                .WithOne(u => u.CreatedByUser)
-                .HasForeignKey(r => r.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder.HasMany(r => r.Requests)
+            //    .WithOne(u => u.CreatedByUser)
+            //    .HasForeignKey(r => r.CreatedByUserId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             // Relation to  WorkflowDefinition
             builder.HasMany(r => r.WorkflowDefinitions)
