@@ -22,13 +22,34 @@ namespace EnterpriseAutomation.Api.Controllers
         }
 
         [HttpGet("GetWorkflowDefinitionsAndStepById/{id}")]
-        public async Task<IActionResult> Get(int id) 
+        public async Task<IActionResult> Get(int id)
         {
-            var result= await _definitionsService.GetById(id);
+            var result = await _definitionsService.GetById(id);
 
             if (result == null) return NotFound();
 
             return Ok(result);
+        }
+
+        [HttpPost("AddAndupdateWorkflow")]
+        public async Task<IActionResult> AddAndupdateWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
+        {
+            if (id != null)
+            {
+                await _definitionsService.UpdateWorkflowDefinition((int)id, entityDTO);
+                return StatusCode(202, new { message = "update" });
+            }
+               
+
+            //Create Workflow
+            if (entityDTO != null)
+            {
+                await _definitionsService.AddWorkflowDefinition(entityDTO);
+                return StatusCode(201, new { message = "insert is success" });
+            }
+               
+
+            return BadRequest(new { message = "invalid data" });
         }
     }
 }

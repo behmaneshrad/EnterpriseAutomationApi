@@ -2,6 +2,7 @@
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -23,12 +24,12 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
         {
             var workflowDefinition = new WorkflowDefinition()
             {
-                //CreatedAt = DateTime.Now,
-                //Description = wfDto.Description,
-                //Name = wfDto.Name,
-                //CreatedById= wfDto.CreatedById,
-                //UpdatedAt = DateTime.Now,
-                //UserCreatedId=wfDto.UpdatedById,
+                Description = wfDto.Description,
+                Name = wfDto.Name,
+                CreatedAt = DateTime.Now,
+                CreatedById = 3,
+                UpdatedAt = DateTime.MinValue,
+                UserCreatedId = 0,
             };
 
             await _repository.InsertAsync(workflowDefinition);
@@ -77,9 +78,21 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             throw new NotImplementedException();
         }
 
-        Task<IEnumerable<WorkflowDefinitionGetDto>> IWorkflowDefinitionsService.GetAllWorkflowDefinitionsAsync()
+        public async Task UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto)
         {
-            throw new NotImplementedException();
+            if (wfDto == null) throw new ArgumentException(nameof(wfDto));
+
+            var workflowdef = await _repository.GetByIdAsync(id);
+            if (workflowdef == null) throw new ArgumentException(nameof(workflowdef));
+
+            workflowdef.Name = wfDto.Name;
+            workflowdef.Description = wfDto.Description;
+            workflowdef.UserModifyId = 3;
+            workflowdef.UpdatedAt = DateTime.Now;
+
+            _repository.UpdateEntity(workflowdef);
+            await _repository.SaveChangesAsync();
+
         }
     }
 }

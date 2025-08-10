@@ -73,8 +73,8 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 Description = dto.Description,
                 CreatedByUserId = userGuid,                 //  از توکن
                 CurrentStatus = RequestStatus.Pending,
-                CurrentStep = "Initial Creation",
-                WorkflowDefinitionId = 1,                  
+                CurrentStep = "Pending",
+                WorkflowDefinitionId = 1,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null
             };

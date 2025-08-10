@@ -121,13 +121,13 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
         #region Update Entity
 
-        public void UpdateEntityAsync(TEntity entity)
+        public void UpdateEntity(TEntity entity)
         {
-            _dbSet.Update(entity);
+            _db.Entry(entity).State = EntityState.Modified;
             //Update to Entity framework Core 8
         }
 
-        public void UpdateEntityAsync(IEnumerable<TEntity> entities)
+        public void UpdateEntity(IEnumerable<TEntity> entities)
         {
             _dbSet.AttachRange(entities);
             foreach (var entity in entities)
