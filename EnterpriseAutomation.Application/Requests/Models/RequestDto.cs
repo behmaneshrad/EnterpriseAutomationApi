@@ -13,7 +13,7 @@ namespace EnterpriseAutomation.Application.Requests.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public RequestStatus CurrentStatus { get; set; }
-        public string CurrentStep { get; set; }
+        public int CurrentStep { get; set; }
 
         public int UserId { get; set; }
         public string Username { get; set; }

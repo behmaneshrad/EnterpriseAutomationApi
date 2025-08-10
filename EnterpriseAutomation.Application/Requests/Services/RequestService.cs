@@ -91,7 +91,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 Description = dto.Description,
                 CreatedByUserId = userId,
                 CurrentStatus = RequestStatus.Pending,
-                CurrentStep = "Pending",
+                CurrentStep = 1,
                 WorkflowDefinitionId = 1,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null

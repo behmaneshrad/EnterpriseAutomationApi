@@ -34,7 +34,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public RequestStatus CurrentStatus { get; set; } = RequestStatus.Pending;
 
         [Display(Name = "مرحله فعلی")]
-        public string CurrentStep { get; set; } = default!;
+        public int CurrentStep { get; set; } = default!;
 
         [Display(Name = "آی دی شرح گردش کار")]
         public int WorkflowDefinitionId { get; set; }
