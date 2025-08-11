@@ -1,0 +1,19 @@
+﻿using EnterpriseAutomation.Application.WorkflowSteps.Models;
+using EnterpriseAutomation.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EnterpriseAutomation.Application.WorkflowSteps.Interfaces
+{
+    public interface IWorkflowStepsService
+    {
+        public Task<IEnumerable<WorkflowStep>> GetAllWorkflowSteps();
+
+        public Task AddWorkflowStep(WorkflowStepsCreatDto workflowStepDto);
+
+        public Task UpdateWorkflowStep(int id, WorkflowStepsCreatDto workflowStepDto);
+    }
+}

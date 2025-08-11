@@ -7,6 +7,8 @@ using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Application.Users.Services;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Services;
+using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
+using EnterpriseAutomation.Application.WorkflowSteps.Services;
 using EnterpriseAutomation.Infrastructure.Persistence;
 using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Services;
@@ -23,6 +25,7 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
@@ -31,6 +34,7 @@ builder.Services.AddHttpClient<KeycloakService>();
 // Register and Request Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
 
 // Generic Repository Service
@@ -223,6 +227,10 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.UseStaticFiles();
+
+
+
 
 // Handle 401/403 responses
 app.Use(async (context, next) =>
