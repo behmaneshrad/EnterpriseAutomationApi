@@ -1,4 +1,5 @@
-﻿using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
+﻿using EnterpriseAutomation.Application.ServiceResults;
+using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,9 +17,11 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces
 
         public Task<WorkflowDetailDto> GetWorkFlowById(int id);
 
-        public Task AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto);
+        public Task<ServiceResult<WorkflowDefinition>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto);
 
         public Task UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto);
+
+        public Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO);
 
         public Task DeleteWorkflowDefinition(int id);
     }

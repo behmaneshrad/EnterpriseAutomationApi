@@ -31,25 +31,15 @@ namespace EnterpriseAutomation.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPost("AddAndupdateWorkflow")]
-        public async Task<IActionResult> AddAndupdateWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
+        [HttpPost("UpsertWorkflow")]
+        public async Task<IActionResult> UpsertWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
-            if (id != null)
+            var result = await _definitionsService.UpsertWorkflowDefinition(id, entityDTO);
+            if (result.Error)
             {
-                await _definitionsService.UpdateWorkflowDefinition((int)id, entityDTO);
-                return StatusCode(202, new { message = "update" });
+                return StatusCode(result.Status, new { errors = result.Error });
             }
-               
-
-            //Create Workflow
-            if (entityDTO != null)
-            {
-                await _definitionsService.AddWorkflowDefinition(entityDTO);
-                return StatusCode(201, new { message = "insert is success" });
-            }
-               
-
-            return BadRequest(new { message = "invalid data" });
+            return StatusCode(result.Status, result.Entity);
         }
     }
 }

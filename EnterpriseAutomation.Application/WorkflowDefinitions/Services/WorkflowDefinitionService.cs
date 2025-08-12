@@ -1,4 +1,5 @@
 ﻿using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.ServiceResults;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
@@ -20,8 +21,17 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
         {
             _repository = repository;
         }
-        public async Task AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
+        public async Task<ServiceResult<WorkflowDefinition>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
         {
+            if (wfDto == null)
+            {
+                return new ServiceResult<WorkflowDefinition>
+                {
+                    Status = 400,
+                    Error = true,
+                    Errors = new[] { "اطلاعات ارسالی معتبر نیست" }
+                };
+            }
             var workflowDefinition = new WorkflowDefinition()
             {
                 Description = wfDto.Description,
@@ -34,6 +44,14 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
             await _repository.InsertAsync(workflowDefinition);
             await _repository.SaveChangesAsync();
+
+            return new ServiceResult<WorkflowDefinition>
+            {
+                Status = 201,
+                Entity = workflowDefinition,
+                MessageCode = "workflow add",
+                Error = false
+            };
         }
 
         public Task DeleteWorkflowDefinition(int id)
@@ -93,6 +111,48 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             _repository.UpdateEntity(workflowdef);
             await _repository.SaveChangesAsync();
 
+        }
+
+        public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
+        {
+            if (entityDTO == null)
+                return ServiceResult<WorkflowDefinition>.Failure(new[] { "Invalid data" }, 400);
+
+            WorkflowDefinition entity;
+
+            if (id != null) // Update
+            {
+                entity = await _repository.GetByIdAsync((int)id);
+                if (entity == null)
+                    return ServiceResult<WorkflowDefinition>.Failure(new[] { "Workflow not found" }, 404);
+
+                entity.Description = entityDTO.Description;
+                entity.Name = entityDTO.Name;
+                entity.UpdatedAt = DateTime.Now;
+                entity.UserCreatedId = 3; // نمونه
+
+                _repository.UpdateEntity(entity);
+                await _repository.SaveChangesAsync();
+
+                return ServiceResult<WorkflowDefinition>.Success(entity, 202, "Updated successfully");
+            }
+            else // Create
+            {
+                entity = new WorkflowDefinition
+                {
+                    Description = entityDTO.Description,
+                    Name = entityDTO.Name,
+                    CreatedAt = DateTime.Now,
+                    CreatedById = 3,
+                    UpdatedAt = DateTime.MinValue,
+                    UserCreatedId = 0
+                };
+
+                await _repository.InsertAsync(entity);
+                await _repository.SaveChangesAsync();
+
+                return ServiceResult<WorkflowDefinition>.Success(entity, 201, "Created successfully");
+            }
         }
     }
 }
