@@ -1,4 +1,5 @@
-﻿using EnterpriseAutomation.Api.Security;
+﻿using EnterpriseAutomation.Api.Middelware.AuthorizeMIddelware;
+using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Application.IRepository;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
@@ -154,46 +155,46 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         },
 
-        OnAuthenticationFailed = context =>
-        {
-            context.NoResult();
+        //OnAuthenticationFailed = context =>
+        //{
+        //    context.NoResult();
 
-            if (!context.Response.HasStarted)
-            {
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-                return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"توکن نامعتبر یا منقضی شده است.\"}");
-            }
+        //    if (!context.Response.HasStarted)
+        //    {
+        //        context.Response.StatusCode = 401;
+        //        context.Response.ContentType = "application/json";
+        //        return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"توکن نامعتبر یا منقضی شده است.\"}");
+        //    }
 
-            return Task.CompletedTask;
-        },
+        //    return Task.CompletedTask;
+        //},
 
-        OnChallenge = context =>
-        {
-            // جلوگیری از اجرای پیش‌فرض
-            context.HandleResponse();
+        //OnChallenge = context =>
+        //{
+        //    // جلوگیری از اجرای پیش‌فرض
+        //    context.HandleResponse();
 
-            if (!context.Response.HasStarted)
-            {
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-                return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"ابتدا وارد سیستم شوید.\"}");
-            }
+        //    if (!context.Response.HasStarted)
+        //    {
+        //        context.Response.StatusCode = 401;
+        //        context.Response.ContentType = "application/json";
+        //        return context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"ابتدا وارد سیستم شوید.\"}");
+        //    }
 
-            return Task.CompletedTask;
-        },
+        //    return Task.CompletedTask;
+        //},
 
-        OnForbidden = context =>
-        {
-            if (!context.Response.HasStarted)
-            {
-                context.Response.StatusCode = 403;
-                context.Response.ContentType = "application/json";
-                return context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما به این بخش دسترسی ندارید.\"}");
-            }
+        //OnForbidden = context =>
+        //{
+        //    if (!context.Response.HasStarted)
+        //    {
+        //        context.Response.StatusCode = 403;
+        //        context.Response.ContentType = "application/json";
+        //        return context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما به این بخش دسترسی ندارید.\"}");
+        //    }
 
-            return Task.CompletedTask;
-        }
+        //    return Task.CompletedTask;
+        //}
     };
 });
 
@@ -242,25 +243,25 @@ app.MapControllers();
 app.UseStaticFiles();
 
 
+app.UseMiddleware<AuthorizeMessageMW>();
 
-
-// Handle 401/403 responses
-app.Use(async (context, next) =>
-{
-    await next();
-    if (!context.Response.HasStarted)
-    {
-        if (context.Response.StatusCode == 401)
-        {
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
-        }
-        else if (context.Response.StatusCode == 403)
-        {
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
-        }
-    }
-});
+//// Handle 401/403 responses
+//app.Use(async (context, next) =>
+//{
+//    await next();
+//    if (!context.Response.HasStarted)
+//    {
+//        if (context.Response.StatusCode == 401)
+//        {
+//            context.Response.ContentType = "application/json";
+//            await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
+//        }
+//        else if (context.Response.StatusCode == 403)
+//        {
+//            context.Response.ContentType = "application/json";
+//            await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
+//        }
+//    }
+//});
 
 app.Run();
