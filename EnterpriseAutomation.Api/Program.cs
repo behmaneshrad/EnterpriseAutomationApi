@@ -30,7 +30,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontPolicy", policy =>
     {
-        policy.AllowAnyOrigin();
+        policy.WithOrigins("FrontPolicy", "http://localhost:4000");
         policy.AllowAnyHeader();
         policy.AllowAnyMethod();
         policy.AllowCredentials();
