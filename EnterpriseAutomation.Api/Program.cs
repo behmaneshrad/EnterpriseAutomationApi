@@ -235,9 +235,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("FrontPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("FrontPolicy");
 app.MapControllers();
 app.UseStaticFiles();
 
