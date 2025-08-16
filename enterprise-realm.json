@@ -4,15 +4,9 @@
   "enabled": true,
   "roles": {
     "realm": [
-      {
-        "name": "admin"
-      },
-      {
-        "name": "employee"
-      },
-      {
-        "name": "approver"
-      }
+      { "name": "admin" },
+      { "name": "user" },
+      { "name": "approver" }
     ]
   },
   "clients": [
@@ -26,9 +20,7 @@
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": true,
       "authorizationServicesEnabled": false,
-      "redirectUris": [
-        "*"
-      ],
+      "redirectUris": ["*"],
       "defaultClientScopes": [
         "roles-mapper",
         "aud-enterprise-api"
@@ -67,7 +59,7 @@
           }
         },
         {
-          "name": "client roles",
+          "name": "client roles (enterprise-api)",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-client-role-mapper",
           "consentRequired": false,

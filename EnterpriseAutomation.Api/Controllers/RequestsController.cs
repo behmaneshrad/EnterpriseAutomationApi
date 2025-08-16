@@ -11,6 +11,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using EnterpriseAutomation.Domain.Entities.Enums;
 using EnterpriseAutomation.Api.Security;
+using EnterpriseAutomation.Domain.Entities.Policy;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -47,6 +48,7 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = Policies.Requests_GetAllRequests)]
         public async Task<IActionResult> GetAllRequests()
         {
             try
