@@ -28,11 +28,11 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.RequestId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relation to User (Approver)
-            builder.HasOne(x => x.ApproverUser)
-                .WithMany(u => u.ApprovalSteps)
-                .HasForeignKey(x => x.ApproverUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //// Relation to User (Approver)
+            //builder.HasOne(x => x.ApproverUser)
+            //    .WithMany(u => u.ApprovalSteps)
+            //    .HasForeignKey(x => x.ApproverUserId)
+            //    .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

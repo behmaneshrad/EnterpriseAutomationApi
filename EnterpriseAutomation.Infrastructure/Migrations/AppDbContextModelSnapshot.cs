@@ -33,8 +33,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ApproverUserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ApproverUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -57,14 +57,17 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int?>("UserCreatedId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("UserModifyId")
                         .HasColumnType("int");
 
                     b.HasKey("ApprovalStepId");
 
-                    b.HasIndex("ApproverUserId");
-
                     b.HasIndex("RequestId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("ApprovalSteps");
                 });
@@ -83,12 +86,12 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CurrentStatus")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CurrentStep")
+                    b.Property<string>("CurrentStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CurrentStep")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -320,19 +323,15 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.ApprovalStep", b =>
                 {
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "ApproverUser")
-                        .WithMany("ApprovalSteps")
-                        .HasForeignKey("ApproverUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("EnterpriseAutomation.Domain.Entities.Request", "Request")
                         .WithMany("ApprovalSteps")
                         .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("ApproverUser");
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", null)
+                        .WithMany("ApprovalSteps")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Request");
                 });

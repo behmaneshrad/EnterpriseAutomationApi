@@ -200,6 +200,40 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
+        [Authorize]
+        [RequiresPermission("requests", "approve")]
+        [HttpPost("{id:int}/approve")]
+        public async Task<IActionResult> ApproveRequest(int id, [FromBody] ApproveRequestDto dto)
+        {
+            try
+            {
+                await _requestService.ApproveAsync(id, dto.IsApproved, dto.Comment);
+
+                return Ok(new
+                {
+                    Message = dto.IsApproved
+                        ? "مرحله با موفقیت تایید شد."
+                        : "مرحله با موفقیت رد شد."
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "خطای داخلی سرور", Error = ex.Message });
+            }
+        }
+
 
     }
 }

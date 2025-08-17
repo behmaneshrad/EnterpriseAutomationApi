@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System;
+using System.Linq;
+using EnterpriseAutomation.Domain.Enums;
 
 namespace EnterpriseAutomation.Application.Requests.Services
 {
@@ -16,17 +18,20 @@ namespace EnterpriseAutomation.Application.Requests.Services
         private readonly IRepository<Request> _repository;
         private readonly IRepository<WorkflowStep> _workflowStepRepository;
         private readonly IRepository<ApprovalStep> _approvalStepRepository; // اضافه شد
+        private readonly IRepository<WorkflowLog> _workflowLogRepository; // اضافه شد
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public RequestService(
             IRepository<Request> repository,
             IRepository<WorkflowStep> workflowStepRepository,
             IRepository<ApprovalStep> approvalStepRepository, // اضافه شد
+            IRepository<WorkflowLog> workflowLogRepository, // اضافه شد
             IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _workflowStepRepository = workflowStepRepository;
             _approvalStepRepository = approvalStepRepository; // اضافه شد
+            _workflowLogRepository = workflowLogRepository;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -171,5 +176,106 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 throw new Exception($"خطا در دریافت مراحل گردش کار برای تعریف {workflowDefinitionId}", ex);
             }
         }
+
+
+
+        public async Task ApproveAsync(int requestId, bool isApproved, string? comment)
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null || !user.Identity!.IsAuthenticated)
+                throw new UnauthorizedAccessException("کاربر معتبر نیست.");
+
+            // شناسه کاربر تاییدکننده (Guid از توکن)
+            var sub = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(sub) || !Guid.TryParse(sub, out var approverGuid))
+                throw new UnauthorizedAccessException("شناسه کاربر در توکن معتبر نیست.");
+
+            var approverName = user.Identity?.Name
+                ?? user.FindFirst("preferred_username")?.Value
+                ?? "Unknown";
+
+            // لود درخواست + مراحل
+            var request = await _repository
+                .GetQueryable(include: q => q.Include(r => r.ApprovalSteps))
+                .FirstOrDefaultAsync(r => r.RequestId == requestId);
+
+            if (request == null)
+                throw new KeyNotFoundException("درخواست پیدا نشد.");
+
+            var currentStep = request.ApprovalSteps
+                .OrderBy(s => s.StepId)
+                .FirstOrDefault(s => s.StepId == request.CurrentStep);
+
+            if (currentStep == null)
+                throw new InvalidOperationException("مرحله جاری یافت نشد.");
+
+            if (currentStep.Status != ApprovalStatus.Pending)
+                throw new InvalidOperationException("این مرحله قبلاً بررسی شده است.");
+
+            //  چک نقش
+            var stepMeta = await _workflowStepRepository.GetFirstOrDefaultAsync(ws =>
+                ws.WorkflowDefinitionId == request.WorkflowDefinitionId &&
+                ws.Order == request.CurrentStep);
+
+            if (stepMeta == null)
+                throw new InvalidOperationException("اطلاعات مرحله گردش کار یافت نشد.");
+
+            // بررسی نقش کاربر با نقش موردنیاز مرحله
+            if (!string.IsNullOrWhiteSpace(stepMeta.Role))
+            {
+                if (!user.IsInRole(stepMeta.Role))
+                    throw new UnauthorizedAccessException($"شما نقش مورد نیاز این مرحله ({stepMeta.Role}) را ندارید.");
+            }
+
+            var prevState = currentStep.Status.ToString();
+
+            currentStep.Status = isApproved ? ApprovalStatus.Approved : ApprovalStatus.Rejected;
+            currentStep.ApproverUserId = approverGuid;  
+            currentStep.ApprovedAt = DateTime.UtcNow;
+
+            // تغییر وضعیت درخواست
+            if (isApproved)
+            {
+                var maxStep = request.ApprovalSteps.Max(s => s.StepId);
+                if (request.CurrentStep < maxStep)
+                {
+                    request.CurrentStep++;
+                    request.CurrentStatus = RequestStatus.InProgress;  
+                }
+                else
+                {
+                    request.CurrentStatus = RequestStatus.Completed;   
+                }
+            }
+            else
+            {
+                request.CurrentStatus = RequestStatus.Rejected;       
+            }
+
+            request.UpdatedAt = DateTime.UtcNow;
+
+            // ثبت لاگ بعد از تغییر 
+            var newState = currentStep.Status.ToString();
+            var log = new WorkflowLog
+            {
+                WorkflowId = request.WorkflowDefinitionId,
+                StepId = currentStep.StepId,
+                UserId = approverGuid,                          
+                UserName = approverName,
+                ActionType = isApproved ? ActionType.Approve : ActionType.Reject,
+                Description = comment,
+                RequestId = request.RequestId,
+                PreviousState = prevState,
+                NewState = newState,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _workflowLogRepository.InsertAsync(log);
+
+            _approvalStepRepository.UpdateEntity(currentStep);
+            _repository.UpdateEntity(request);
+            await _workflowLogRepository.SaveChangesAsync();
+        }
+
     }
 }
