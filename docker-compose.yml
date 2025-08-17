@@ -32,19 +32,40 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
     command: start-dev
 
-  mongo:
-    image: mongo:6.0
-    container_name: enterprise-mongo
-    restart: unless-stopped
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.1.2
+    container_name: enterprise-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false   # فقط برای توسعه
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
-      - "27017:27017"
+      - "9200:9200"
     volumes:
-      - mongo-data:/data/db
+      - elastic_data:/usr/share/elasticsearch/data
+    networks:
+      - backend-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.1.2
+    container_name: enterprise-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://enterprise-elasticsearch:9200
+    ports:
+      - "5601:5601"
+    volumes:
+      - kibana_data:/usr/share/kibana/data
+    depends_on:
+      - elasticsearch
     networks:
       - backend-net
 
 networks:
   backend-net:
     driver: bridge
+
 volumes:
-  mongo-data:
+  elastic_data:
+    driver: local
+  kibana_data:
+    driver: local
