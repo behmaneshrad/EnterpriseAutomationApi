@@ -14,7 +14,7 @@ namespace EnterpriseAutomation.Application.Permissions.Services
         {
             _permRepo = permRepo;
         }
-
+        
         public async Task<PermissionListItemDto> UpsertAsync(PermissionUpsertDto dto, CancellationToken ct = default)
         {
             // invalidate active versions
@@ -92,5 +92,36 @@ namespace EnterpriseAutomation.Application.Permissions.Services
                 p.Roles.Select(r => r.RoleName).ToList()
             );
         }
+        // کلیدها همگی باید lowercase و بدون اسلش انتهایی باشند.
+        private static readonly Dictionary<string, string[]> Map = new(StringComparer.OrdinalIgnoreCase)
+        {
+            
+            ["/api/keycloak/roles/realm|post"] = new[] { "admin", "approver" },
+
+            // مثال‌های دیگر:
+            // ["/api/requests|get"] = new[] { "admin", "user" },
+            // ["/api/users|delete"] = new[] { "admin" },
+        };
+
+        public async Task<IReadOnlyList<string>> GetAllowedRolesByRouteAsync(string routeKey, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(routeKey))
+                return Array.Empty<string>();
+
+            routeKey = routeKey.Trim().TrimEnd('/').ToLowerInvariant();
+
+            var q = _permRepo.GetQueryable(q => q.Include(p => p.Roles), asNoTracking: true);
+            var p = await q.Where(x => x.Key.ToLower() == routeKey && x.IsActive)
+                           .OrderByDescending(x => x.Version)
+                           .FirstOrDefaultAsync(ct);
+
+            if (p is null || p.Roles.Count == 0) return Array.Empty<string>();
+
+            return p.Roles.Select(r => r.RoleName)
+                          .Where(r => !string.IsNullOrWhiteSpace(r))
+                          .Distinct(StringComparer.OrdinalIgnoreCase)
+                          .ToList();
+        }
+
     }
 }

@@ -74,24 +74,34 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// ===== Dynamic Policy =====
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
-
-// ===== Authorization (Fallback: همه اکشن‌ها احراز هویت) =====
+// ===== Authorization =====
+// سیاست پیش‌فرض: همه اکشن‌ها نیاز به احراز هویت دارند
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
+
+    // سیاست داینامیک HasAccess (کنترل دسترسی بر اساس مسیر/کنترلر از DB)
+    options.AddPolicy("HasAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new HasAccessRequirement());
+    });
 });
+
+// ===== Authorization Handlers =====
+builder.Services.AddScoped<IAuthorizationHandler, HasAccessHandler>();
+
+// اگر هم‌زمان PermissionRequirement/PermissionHandler را جای دیگری استفاده می‌کنی، این خط را نگه دار:
+// builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 
 // ===== JWT (Keycloak) =====
 var keycloakAuthority = builder.Configuration["Keycloak:Authority"]?.TrimEnd('/');
 var realm = builder.Configuration["Keycloak:Realm"];
-var audience = builder.Configuration["Keycloak:Audience"]; // باید "enterprise-api" باشد
+var audience = builder.Configuration["Keycloak:Audience"]; // مثلا "enterprise-api"
 
-// نمایش PII برای دیباگ فقط در Dev
+// نمایش PII فقط در Dev
 if (builder.Environment.IsDevelopment())
 {
     IdentityModelEventSource.ShowPII = true;
@@ -106,7 +116,7 @@ builder.Services.AddAuthentication(options =>
 {
     // آدرس OIDC (issuer)
     options.Authority = $"{keycloakAuthority}/realms/{realm}";
-    options.RequireHttpsMetadata = false; // چون Keycloak روی http است
+    options.RequireHttpsMetadata = false; // اگر Keycloak روی http است
 
     // جلوگیری از مپ قدیمی Claimها
     options.MapInboundClaims = false;
@@ -119,34 +129,27 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = true,
         ValidIssuer = $"{keycloakAuthority}/realms/{realm}",
 
-        // ما خودمان با AudienceValidator بررسی می‌کنیم
         ValidateAudience = true,
-        // ValidAudiences را نیاز نیست ست کنیم
         AudienceValidator = (audiences, securityToken, validationParameters) =>
         {
-            // مقدار هدف از کانفیگ
             var target = audience; // مثلا "enterprise-api"
             if (string.IsNullOrWhiteSpace(target)) return false;
 
-            // 1) اگر aud مستقیماً شامل target بود ⇒ OK
+            // 1) aud شامل target بود
             if (audiences != null && audiences.Contains(target, StringComparer.Ordinal))
                 return true;
 
-            // 2) اگر aud مطابق نبود، resource_access را چک کن
+            // 2) در غیر این صورت resource_access را چک کن
             if (securityToken is JwtSecurityToken jwt)
             {
-                // ادعای JSON به نام resource_access معمولاً به صورت یک string-JSON است
                 var ra = jwt.Claims.FirstOrDefault(c => c.Type == "resource_access")?.Value;
                 if (!string.IsNullOrEmpty(ra))
                 {
                     try
                     {
                         using var doc = JsonDocument.Parse(ra);
-                        if (doc.RootElement.TryGetProperty(target, out var _))
-                        {
-                            // یعنی resource_access.<audience> وجود دارد
+                        if (doc.RootElement.TryGetProperty(target, out _))
                             return true;
-                        }
                     }
                     catch { /* ignore parse errors */ }
                 }
@@ -222,11 +225,10 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         },
 
-        // لاگ علت 401
+        // 401 (Invalid Token)
         OnAuthenticationFailed = async ctx =>
         {
-            ctx.NoResult(); // اعلام کن که دیگه پردازش پیش‌فرضی انجام نشه
-
+            ctx.NoResult();
             ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
             ctx.Response.ContentType = "application/json; charset=utf-8";
 
@@ -240,7 +242,7 @@ builder.Services.AddAuthentication(options =>
             await ctx.Response.WriteAsync(JsonSerializer.Serialize(msg));
         },
 
-        // 401 سفارشی
+        // 401 Challenge
         OnChallenge = async ctx =>
         {
             if (!ctx.Response.HasStarted)
@@ -252,7 +254,7 @@ builder.Services.AddAuthentication(options =>
             ctx.HandleResponse();
         },
 
-        // 403 سفارشی
+        // 403 Forbidden
         OnForbidden = async ctx =>
         {
             ctx.Response.ContentType = "application/json; charset=utf-8";
@@ -289,7 +291,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// ===== Middleware pipeline =====
+// ===== Pipeline =====
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
