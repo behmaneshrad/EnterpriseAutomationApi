@@ -16,18 +16,11 @@ public class KeycloakRolesController : ControllerBase
     public record ClientRoleCreateRequest(string ClientId, string Name, string? Description);
 
     [HttpPost("realm")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public async Task<IActionResult> CreateRealmRole([FromBody] RealmRoleCreateRequest req, CancellationToken ct)
     {
         await _kc.CreateRealmRoleAsync(req.Name, req.Description, ct);
         return NoContent();
     }
 
-    [HttpPost("client")]
-    [Authorize(Roles = "admin")]
-    public async Task<IActionResult> CreateClientRole([FromBody] ClientRoleCreateRequest req, CancellationToken ct)
-    {
-        await _kc.CreateClientRoleAsync(req.ClientId, req.Name, req.Description, ct);
-        return NoContent();
-    }
 }

@@ -123,7 +123,11 @@
           "view-clients",
           "query-users",
           "query-clients",
-          "query-realms"
+          "query-realms",
+          "manage-realm",       
+          "manage-clients",     
+          "manage-users",       
+          "manage-roles"        
         ]
       },
       "realmRoles": [

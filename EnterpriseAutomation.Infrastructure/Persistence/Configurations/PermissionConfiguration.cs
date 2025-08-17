@@ -10,7 +10,7 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
     {
         builder.ToTable("Permissions");
 
-        builder.HasKey(p => p.Id);
+        builder.HasKey(p => p.PermissionId);
 
         builder.Property(p => p.Key)
                .IsRequired()

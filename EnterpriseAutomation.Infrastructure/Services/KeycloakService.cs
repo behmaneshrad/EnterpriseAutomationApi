@@ -212,10 +212,18 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
         private async Task<RoleDto?> GetRealmRoleAsync(string roleName, CancellationToken ct = default)
         {
-            var url = Combine("admin/realms", _opt.Realm, "roles", Uri.EscapeDataString(roleName));
+            if (string.IsNullOrWhiteSpace(roleName))
+                throw new ArgumentException("Role name is required.", nameof(roleName));
+            if (string.IsNullOrWhiteSpace(_opt?.Realm))
+                throw new InvalidOperationException("Keycloak 'Realm' is not configured.");
+
+            var safeName = Uri.EscapeDataString(roleName);
+            var url = Combine("admin/realms", _opt.Realm, "roles", safeName);
+
             var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
             var resp = await _http.SendAsync(req, ct);
             var body = await resp.Content.ReadAsStringAsync(ct);
+
             if (!resp.IsSuccessStatusCode) return null;
 
             try
@@ -257,7 +265,48 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
         public async Task CreateRealmRoleAsync(string name, string? description, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Role name is required.", nameof(name));
+
+            // 1) اگر نقش از قبل وجود دارد، کاری نکن (idempotent)
+            var existing = await GetRealmRoleAsync(name, ct);
+            if (existing is not null)
+            {
+                _logger?.LogInformation("Realm role '{Role}' already exists. Skipping creation.", name);
+                return;
+            }
+
+            // 2) ساخت نقش جدید
+            var url = Combine("admin/realms", _opt.Realm, "roles");
+            var payloadObj = new
+            {
+                name = name.Trim(),
+                description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+                // optional fields:
+                // composite = false,
+                // clientRole = false
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payloadObj, JsonOpts), Encoding.UTF8, "application/json");
+            var req = await AuthedAdminRequestAsync(HttpMethod.Post, url, content, ct);
+            var resp = await _http.SendAsync(req, ct);
+            var body = await resp.Content.ReadAsStringAsync(ct);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                _logger?.LogInformation("Realm role '{Role}' created successfully.", name);
+                return;
+            }
+
+            // 3) اگر به هر دلیل Keycloak 409 برگرداند (شرایط رقابتی)، عبور (idempotent)
+            if ((int)resp.StatusCode == 409)
+            {
+                _logger?.LogWarning("Realm role '{Role}' creation returned 409 (already exists). Treating as success.", name);
+                return;
+            }
+
+            // سایر خطاها
+            throw HttpError("CreateRealmRole", resp, body);
         }
 
         public async Task CreateClientRoleAsync(string clientId, string name, string? description, CancellationToken ct)

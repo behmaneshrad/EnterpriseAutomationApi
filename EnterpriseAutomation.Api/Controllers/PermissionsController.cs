@@ -18,7 +18,7 @@ public class PermissionsController : ControllerBase
 
     // محافظت: فقط ادمین (برای بوت‌استرپ ساده)
     [HttpPost("upsert")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public async Task<ActionResult<PermissionListItemDto>> Upsert([FromBody] PermissionUpsertDto dto, CancellationToken ct)
     {
         var result = await _service.UpsertAsync(dto, ct);
@@ -26,7 +26,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public async Task<ActionResult<IReadOnlyList<PermissionListItemDto>>> GetAll(CancellationToken ct)
     {
         var result = await _service.GetAllAsync(ct);
@@ -34,7 +34,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public async Task<ActionResult<PermissionListItemDto>> GetById(Guid id, CancellationToken ct)
     {
         var result = await _service.GetByIdAsync(id, ct);
@@ -43,7 +43,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var ok = await _service.DeleteAsync(id, ct);

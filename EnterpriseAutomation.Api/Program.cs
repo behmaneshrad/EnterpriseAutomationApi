@@ -1,6 +1,11 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text.Json;
+
+// Security / AuthZ
 using EnterpriseAutomation.Api.Security;
+
+// DI Contracts
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Application.Permissions.Interfaces;
 using EnterpriseAutomation.Application.Permissions.Services;
@@ -12,15 +17,22 @@ using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Services;
 using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Services;
+
+// Infra
 using EnterpriseAutomation.Infrastructure.Persistence;
 using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Services;
+
+// ASP.NET & EF & Swagger
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using KeycloakOptions = EnterpriseAutomation.Infrastructure.Options.KeycloakOptions;
+
+// Options alias
+using KeycloakOptions = EnterpriseAutomation.Infrastructure.Services.KeycloakOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,7 +89,13 @@ builder.Services.AddAuthorization(options =>
 // ===== JWT (Keycloak) =====
 var keycloakAuthority = builder.Configuration["Keycloak:Authority"]?.TrimEnd('/');
 var realm = builder.Configuration["Keycloak:Realm"];
-var audience = builder.Configuration["Keycloak:Audience"];
+var audience = builder.Configuration["Keycloak:Audience"]; // باید "enterprise-api" باشد
+
+// نمایش PII برای دیباگ فقط در Dev
+if (builder.Environment.IsDevelopment())
+{
+    IdentityModelEventSource.ShowPII = true;
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -86,103 +104,158 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    // آدرس OIDC (issuer)
     options.Authority = $"{keycloakAuthority}/realms/{realm}";
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = false; // چون Keycloak روی http است
 
+    // جلوگیری از مپ قدیمی Claimها
+    options.MapInboundClaims = false;
+
+    // اعتبارسنجی دقیق
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateAudience = true,
-        ValidAudience = audience,
-        ValidateIssuer = true,
-        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        RoleClaimType = ClaimTypes.Role,
-        NameClaimType = ClaimTypes.NameIdentifier
+
+        ValidateIssuer = true,
+        ValidIssuer = $"{keycloakAuthority}/realms/{realm}",
+
+        // ما خودمان با AudienceValidator بررسی می‌کنیم
+        ValidateAudience = true,
+        // ValidAudiences را نیاز نیست ست کنیم
+        AudienceValidator = (audiences, securityToken, validationParameters) =>
+        {
+            // مقدار هدف از کانفیگ
+            var target = audience; // مثلا "enterprise-api"
+            if (string.IsNullOrWhiteSpace(target)) return false;
+
+            // 1) اگر aud مستقیماً شامل target بود ⇒ OK
+            if (audiences != null && audiences.Contains(target, StringComparer.Ordinal))
+                return true;
+
+            // 2) اگر aud مطابق نبود، resource_access را چک کن
+            if (securityToken is JwtSecurityToken jwt)
+            {
+                // ادعای JSON به نام resource_access معمولاً به صورت یک string-JSON است
+                var ra = jwt.Claims.FirstOrDefault(c => c.Type == "resource_access")?.Value;
+                if (!string.IsNullOrEmpty(ra))
+                {
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(ra);
+                        if (doc.RootElement.TryGetProperty(target, out var _))
+                        {
+                            // یعنی resource_access.<audience> وجود دارد
+                            return true;
+                        }
+                    }
+                    catch { /* ignore parse errors */ }
+                }
+            }
+            return false;
+        },
+
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(2),
+
+        NameClaimType = "preferred_username",
+        RoleClaimType = ClaimTypes.Role
     };
 
-    // استخراج Roleها از realm_access و resource_access
     options.Events = new JwtBearerEvents
     {
         OnTokenValidated = context =>
         {
-            var claimsIdentity = context.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
-            if (claimsIdentity is null)
-                return Task.CompletedTask;
+            var ci = context.Principal?.Identity as ClaimsIdentity;
+            if (ci is null) return Task.CompletedTask;
 
             // sub -> NameIdentifier
-            var subClaim = claimsIdentity.FindFirst("sub");
-            if (subClaim != null && !claimsIdentity.HasClaim(ClaimTypes.NameIdentifier, subClaim.Value))
-                claimsIdentity.AddClaim(new Claim(ClaimTypes.NameIdentifier, subClaim.Value));
+            var sub = ci.FindFirst("sub")?.Value;
+            if (!string.IsNullOrEmpty(sub) && !ci.HasClaim(ClaimTypes.NameIdentifier, sub))
+                ci.AddClaim(new Claim(ClaimTypes.NameIdentifier, sub));
 
             // preferred_username -> Name
-            var usernameClaim = claimsIdentity.FindFirst("preferred_username");
-            if (usernameClaim != null && !claimsIdentity.HasClaim(ClaimTypes.Name, usernameClaim.Value))
-                claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, usernameClaim.Value));
+            var uname = ci.FindFirst("preferred_username")?.Value;
+            if (!string.IsNullOrEmpty(uname) && !ci.HasClaim(ClaimTypes.Name, uname))
+                ci.AddClaim(new Claim(ClaimTypes.Name, uname));
 
             // realm_access.roles
-            var realmAccessClaim = claimsIdentity.FindFirst("realm_access");
-            if (realmAccessClaim != null)
+            var realmAccess = ci.FindFirst("realm_access")?.Value;
+            if (!string.IsNullOrEmpty(realmAccess))
             {
                 try
                 {
-                    using var doc = JsonDocument.Parse(realmAccessClaim.Value);
-                    if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
+                    using var doc = JsonDocument.Parse(realmAccess);
+                    if (doc.RootElement.TryGetProperty("roles", out var rolesEl))
                     {
-                        foreach (var role in rolesElement.EnumerateArray())
+                        foreach (var r in rolesEl.EnumerateArray())
                         {
-                            var roleValue = role.GetString();
-                            if (!string.IsNullOrWhiteSpace(roleValue) &&
-                                !claimsIdentity.HasClaim(ClaimTypes.Role, roleValue))
-                            {
-                                claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
-                            }
+                            var rv = r.GetString();
+                            if (!string.IsNullOrWhiteSpace(rv) && !ci.HasClaim(ClaimTypes.Role, rv))
+                                ci.AddClaim(new Claim(ClaimTypes.Role, rv));
                         }
                     }
                 }
-                catch { /* ignore parse errors */ }
+                catch { /* ignore */ }
             }
 
             // resource_access.{audience}.roles
-            var resourceAccessClaim = claimsIdentity.FindFirst("resource_access");
-            if (resourceAccessClaim != null && !string.IsNullOrEmpty(audience))
+            var resourceAccess = ci.FindFirst("resource_access")?.Value;
+            if (!string.IsNullOrEmpty(resourceAccess) && !string.IsNullOrEmpty(audience))
             {
                 try
                 {
-                    using var doc = JsonDocument.Parse(resourceAccessClaim.Value);
+                    using var doc = JsonDocument.Parse(resourceAccess);
                     if (doc.RootElement.TryGetProperty(audience, out var clientObj) &&
-                        clientObj.TryGetProperty("roles", out var resourceRoles))
+                        clientObj.TryGetProperty("roles", out var rr))
                     {
-                        foreach (var role in resourceRoles.EnumerateArray())
+                        foreach (var r in rr.EnumerateArray())
                         {
-                            var roleValue = role.GetString();
-                            if (!string.IsNullOrWhiteSpace(roleValue) &&
-                                !claimsIdentity.HasClaim(ClaimTypes.Role, roleValue))
-                            {
-                                claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
-                            }
+                            var rv = r.GetString();
+                            if (!string.IsNullOrWhiteSpace(rv) && !ci.HasClaim(ClaimTypes.Role, rv))
+                                ci.AddClaim(new Claim(ClaimTypes.Role, rv));
                         }
                     }
                 }
-                catch { /* ignore parse errors */ }
+                catch { /* ignore */ }
             }
 
             return Task.CompletedTask;
         },
+
+        // لاگ علت 401
+        OnAuthenticationFailed = async ctx =>
+        {
+            ctx.NoResult(); // اعلام کن که دیگه پردازش پیش‌فرضی انجام نشه
+
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            ctx.Response.ContentType = "application/json; charset=utf-8";
+
+            var msg = new
+            {
+                error = "Unauthorized",
+                message = "توکن معتبر نیست.",
+                detail = ctx.Exception?.Message
+            };
+
+            await ctx.Response.WriteAsync(JsonSerializer.Serialize(msg));
+        },
+
+        // 401 سفارشی
         OnChallenge = async ctx =>
         {
-            // 401 سفارشی
             if (!ctx.Response.HasStarted)
             {
-                ctx.Response.ContentType = "application/json";
+                ctx.Response.ContentType = "application/json; charset=utf-8";
                 var payload = "{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}";
                 await ctx.Response.WriteAsync(payload);
             }
-            ctx.HandleResponse(); // جلوگیری از پاسخ پیش‌فرض
+            ctx.HandleResponse();
         },
+
+        // 403 سفارشی
         OnForbidden = async ctx =>
         {
-            // 403 سفارشی
-            ctx.Response.ContentType = "application/json";
+            ctx.Response.ContentType = "application/json; charset=utf-8";
             var payload = "{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}";
             await ctx.Response.WriteAsync(payload);
         }

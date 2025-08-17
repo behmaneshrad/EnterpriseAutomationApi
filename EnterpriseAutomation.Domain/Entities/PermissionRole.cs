@@ -7,10 +7,10 @@ namespace EnterpriseAutomation.Domain.Entities;
 public class PermissionRole : BaseEntity
 {
     [Display(Name = "آیدی")]
-    public int Id { get; set; }
+    public int PermissionRoleId { get; set; }
 
     [Display(Name = "آیدی دسترسی")]
-    public int PermissionId { get; set; }
+    public Guid PermissionId { get; set; }
 
     public Permission Permission { get; set; } = default!;
 

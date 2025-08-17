@@ -8,7 +8,7 @@ namespace EnterpriseAutomation.Domain.Entities;
 public class Permission : BaseEntity
 {
     [Display(Name = "آیدی")]
-    public Guid Id { get; set; }
+    public Guid PermissionId { get; set; }
 
     [Display(Name = "اسم api")]
     public string Key { get; set; } = default!;

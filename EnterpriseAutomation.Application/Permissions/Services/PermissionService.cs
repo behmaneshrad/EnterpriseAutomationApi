@@ -50,7 +50,7 @@ namespace EnterpriseAutomation.Application.Permissions.Services
             await _permRepo.InsertAsync(entity);
             await _permRepo.SaveChangesAsync();
 
-            return await MapAsync(entity.Id, ct) ?? throw new InvalidOperationException();
+            return await MapAsync(entity.PermissionId, ct) ?? throw new InvalidOperationException();
         }
 
         public async Task<IReadOnlyList<PermissionListItemDto>> GetAllAsync(CancellationToken ct = default)
@@ -59,7 +59,7 @@ namespace EnterpriseAutomation.Application.Permissions.Services
             var list = await query.OrderByDescending(p => p.CreatedAt).ToListAsync(ct);
 
             return list.Select(p => new PermissionListItemDto(
-                p.Id, p.Key, p.Name, p.Description, p.Version, p.IsActive,
+                p.PermissionId, p.Key, p.Name, p.Description, p.Version, p.IsActive,
                 p.Roles.Select(r => r.RoleName).ToList()
             )).ToList();
         }
@@ -69,7 +69,7 @@ namespace EnterpriseAutomation.Application.Permissions.Services
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
         {
-            var entity = await _permRepo.GetFirstOrDefaultAsync(p => p.Id == id);
+            var entity = await _permRepo.GetFirstOrDefaultAsync(p => p.PermissionId == id);
             if (entity is null) return false;
             entity.IsActive = false;
             entity.UpdatedAt = DateTime.UtcNow;
@@ -81,14 +81,14 @@ namespace EnterpriseAutomation.Application.Permissions.Services
         private async Task<PermissionListItemDto?> MapAsync(Guid id, CancellationToken ct)
         {
             var p = await _permRepo.GetFirstWithInclude(
-                x => x.Id == id,
+                x => x.PermissionId == id,
                 q => q.Include(x => x.Roles),
                 asNoTracking: true);
 
             if (p is null) return null;
 
             return new PermissionListItemDto(
-                p.Id, p.Key, p.Name, p.Description, p.Version, p.IsActive,
+                p.PermissionId, p.Key, p.Name, p.Description, p.Version, p.IsActive,
                 p.Roles.Select(r => r.RoleName).ToList()
             );
         }
