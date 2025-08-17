@@ -6,20 +6,18 @@ namespace EnterpriseAutomation.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
-    public DbSet<User> Users {  get; set; }
+    public DbSet<User> Users { get; set; }      
+    public DbSet<Request> Requests { get; set; } 
+    public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; } 
+    public DbSet<WorkflowStep> WorkflowSteps { get; set; }            
+    public DbSet<ApprovalStep> ApprovalSteps { get; set; }            
+    public DbSet<Role> Roles { get; set; }                              
 
-    public DbSet<Request> Requests { get; set; }
-
-    public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
-
-    public DbSet<WorkflowStep> WorkflowSteps { get; set; }
-
-    public DbSet<ApprovalStep> ApprovalSteps { get; set; }
-
-    public DbSet<Role> Roles { get; set; }
+    // جدید:
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<PermissionRole> PermissionRoles { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,5 +28,9 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new WorkflowDefinitionConfiguration());
         modelBuilder.ApplyConfiguration(new WorkflowStepConfiguration());
+
+        // جدید
+        modelBuilder.ApplyConfiguration(new PermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new PermissionRolesConfiguration());
     }
 }
