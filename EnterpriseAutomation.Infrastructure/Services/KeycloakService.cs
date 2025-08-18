@@ -103,7 +103,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
             return body;
         }
 
-        public async Task<bool> CreateUserAsync(string username, string email, string password, string firstName = "", string lastName = "", string defaultRealmRoleToAssign = "employee", CancellationToken ct = default)
+        public async Task<bool> CreateUserAsync(string username, string email, string password, string firstName = "", string lastName = "", string defaultRealmRoleToAssign = "NoRole", CancellationToken ct = default)
         {
             var url = Combine("admin/realms", _opt.Realm, "users");
 

@@ -36,7 +36,6 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         var permission = await _db.Permissions
             .Include(p => p.Roles)
             .Where(p => p.Key == requirement.PolicyKey && p.IsActive)
-            .OrderByDescending(p => p.Version)
             .FirstOrDefaultAsync();
 
         if (permission is null || permission.Roles.Count == 0)
@@ -46,7 +45,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
             return;
         }
 
-        var allowed = permission.Roles.Select(r => r.RoleName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var allowed = permission.Roles.Select(r => r.Role.RoleName).ToHashSet(StringComparer.OrdinalIgnoreCase);
         bool any = userRoles.Overlaps(allowed);
 
         if (any) context.Succeed(requirement);

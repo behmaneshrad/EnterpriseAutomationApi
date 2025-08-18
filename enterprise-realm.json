@@ -5,8 +5,7 @@
   "roles": {
     "realm": [
       { "name": "admin" },
-      { "name": "user" },
-      { "name": "approver" }
+      { "name": "NoRole" }
     ]
   },
   "clients": [

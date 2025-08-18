@@ -22,13 +22,10 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(p => p.Description)
                .HasMaxLength(1000);
 
-        builder.Property(p => p.Version)
-               .IsRequired();
 
         builder.Property(p => p.IsActive)
                .IsRequired();
 
-        builder.HasIndex(p => new { p.Key, p.Version }).IsUnique();
         builder.HasIndex(p => new { p.Key, p.IsActive });
 
         builder.HasMany(p => p.Roles)

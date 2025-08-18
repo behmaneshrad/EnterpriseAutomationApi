@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class initnew : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,11 +15,11 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 name: "Permissions",
                 columns: table => new
                 {
-                    PermissionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PermissionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Key = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    Version = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -38,7 +38,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 {
                     RoleId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RoleName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -58,7 +58,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Username = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     RefreshToken = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -72,12 +72,14 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PermissionRoles",
+                name: "RolesPermissions",
                 columns: table => new
                 {
-                    PermissionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PermissionRoleId = table.Column<int>(type: "int", nullable: false),
-                    RoleName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    RolePermissionsId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    PermissionId = table.Column<int>(type: "int", nullable: false),
+                    RoleId1 = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -86,13 +88,24 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PermissionRoles", x => x.PermissionId);
+                    table.PrimaryKey("PK_RolesPermissions", x => x.RolePermissionsId);
                     table.ForeignKey(
-                        name: "FK_PermissionRoles_Permissions_PermissionId",
+                        name: "FK_RolesPermissions_Permissions_PermissionId",
                         column: x => x.PermissionId,
                         principalTable: "Permissions",
                         principalColumn: "PermissionId",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RolesPermissions_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "RoleId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RolesPermissions_Roles_RoleId1",
+                        column: x => x.RoleId1,
+                        principalTable: "Roles",
+                        principalColumn: "RoleId");
                 });
 
             migrationBuilder.CreateTable(
@@ -253,21 +266,9 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 column: "RequestId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PermissionRoles_PermissionId_RoleName",
-                table: "PermissionRoles",
-                columns: new[] { "PermissionId", "RoleName" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Permissions_Key_IsActive",
                 table: "Permissions",
                 columns: new[] { "Key", "IsActive" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Permissions_Key_Version",
-                table: "Permissions",
-                columns: new[] { "Key", "Version" },
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Requests_UserId",
@@ -278,6 +279,28 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 name: "IX_Requests_WorkflowDefinitionId",
                 table: "Requests",
                 column: "WorkflowDefinitionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Roles_RoleName",
+                table: "Roles",
+                column: "RoleName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolesPermissions_PermissionId_RoleId",
+                table: "RolesPermissions",
+                columns: new[] { "PermissionId", "RoleId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolesPermissions_RoleId",
+                table: "RolesPermissions",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolesPermissions_RoleId1",
+                table: "RolesPermissions",
+                column: "RoleId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRole_UsersUserId",
@@ -307,7 +330,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 name: "ApprovalSteps");
 
             migrationBuilder.DropTable(
-                name: "PermissionRoles");
+                name: "RolesPermissions");
 
             migrationBuilder.DropTable(
                 name: "UserRole");

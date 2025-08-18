@@ -9,12 +9,14 @@ namespace EnterpriseAutomation.Application.Permissions.Services
     public class PermissionService : IPermissionService
     {
         private readonly IRepository<Permission> _permRepo;
+        private readonly IRepository<Role> _roleRepo; // فرض می‌کنیم جدول Role وجود دارد
 
-        public PermissionService(IRepository<Permission> permRepo)
+        public PermissionService(IRepository<Permission> permRepo, IRepository<Role> roleRepo)
         {
             _permRepo = permRepo;
+            _roleRepo = roleRepo;
         }
-        
+
         public async Task<PermissionListItemDto> UpsertAsync(PermissionUpsertDto dto, CancellationToken ct = default)
         {
             // invalidate active versions
@@ -27,24 +29,17 @@ namespace EnterpriseAutomation.Application.Permissions.Services
                 _permRepo.UpdateEntity(p);
             }
 
-            var lastVersion = 0;
-            var allForKey = await _permRepo.GetWhereAsync(p => p.Key == dto.Key);
-            foreach (var p in allForKey)
-                if (p is not null && p.Version > lastVersion) lastVersion = p.Version;
-
             var entity = new Permission
             {
                 Key = dto.Key.Trim(),
                 Name = dto.Name,
                 Description = dto.Description,
-                Version = lastVersion + 1,
                 IsActive = true
             };
 
-            foreach (var role in dto.Roles ?? Array.Empty<string>())
+            foreach (var roleId in dto.RoleIds)
             {
-                if (string.IsNullOrWhiteSpace(role)) continue;
-                entity.Roles.Add(new PermissionRole { RoleName = role.Trim() });
+                entity.Roles.Add(new RolePermissions { RoleId = roleId, PermissionId = entity.PermissionId });
             }
 
             await _permRepo.InsertAsync(entity);
@@ -55,19 +50,23 @@ namespace EnterpriseAutomation.Application.Permissions.Services
 
         public async Task<IReadOnlyList<PermissionListItemDto>> GetAllAsync(CancellationToken ct = default)
         {
-            var query = _permRepo.GetQueryable(q => q.Include(p => p.Roles), asNoTracking: true);
+            var query = _permRepo.GetQueryable(q => q.Include(p => p.Roles).ThenInclude(r => r.Role), asNoTracking: true);
             var list = await query.OrderByDescending(p => p.CreatedAt).ToListAsync(ct);
 
             return list.Select(p => new PermissionListItemDto(
-                p.PermissionId, p.Key, p.Name, p.Description, p.Version, p.IsActive,
-                p.Roles.Select(r => r.RoleName).ToList()
+                p.PermissionId,
+                p.Key,
+                p.Name,
+                p.Description,
+                p.IsActive,
+                p.Roles.Select(r => r.RoleId).ToList()
             )).ToList();
         }
 
-        public Task<PermissionListItemDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        public Task<PermissionListItemDto?> GetByIdAsync(int id, CancellationToken ct = default)
             => MapAsync(id, ct);
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             var entity = await _permRepo.GetFirstOrDefaultAsync(p => p.PermissionId == id);
             if (entity is null) return false;
@@ -78,30 +77,24 @@ namespace EnterpriseAutomation.Application.Permissions.Services
             return true;
         }
 
-        private async Task<PermissionListItemDto?> MapAsync(Guid id, CancellationToken ct)
+        private async Task<PermissionListItemDto?> MapAsync(int id, CancellationToken ct)
         {
             var p = await _permRepo.GetFirstWithInclude(
                 x => x.PermissionId == id,
-                q => q.Include(x => x.Roles),
+                q => q.Include(x => x.Roles).ThenInclude(r => r.Role),
                 asNoTracking: true);
 
             if (p is null) return null;
 
             return new PermissionListItemDto(
-                p.PermissionId, p.Key, p.Name, p.Description, p.Version, p.IsActive,
-                p.Roles.Select(r => r.RoleName).ToList()
+                p.PermissionId,
+                p.Key,
+                p.Name,
+                p.Description,
+                p.IsActive,
+                p.Roles.Select(r => r.RoleId).ToList()
             );
         }
-        // کلیدها همگی باید lowercase و بدون اسلش انتهایی باشند.
-        private static readonly Dictionary<string, string[]> Map = new(StringComparer.OrdinalIgnoreCase)
-        {
-            
-            ["/api/keycloak/roles/realm|post"] = new[] { "admin", "approver" },
-
-            // مثال‌های دیگر:
-            // ["/api/requests|get"] = new[] { "admin", "user" },
-            // ["/api/users|delete"] = new[] { "admin" },
-        };
 
         public async Task<IReadOnlyList<string>> GetAllowedRolesByRouteAsync(string routeKey, CancellationToken ct = default)
         {
@@ -110,18 +103,17 @@ namespace EnterpriseAutomation.Application.Permissions.Services
 
             routeKey = routeKey.Trim().TrimEnd('/').ToLowerInvariant();
 
-            var q = _permRepo.GetQueryable(q => q.Include(p => p.Roles), asNoTracking: true);
+            var q = _permRepo.GetQueryable(q => q.Include(p => p.Roles).ThenInclude(r => r.Role), asNoTracking: true);
             var p = await q.Where(x => x.Key.ToLower() == routeKey && x.IsActive)
-                           .OrderByDescending(x => x.Version)
                            .FirstOrDefaultAsync(ct);
 
             if (p is null || p.Roles.Count == 0) return Array.Empty<string>();
 
-            return p.Roles.Select(r => r.RoleName)
+            return p.Roles.Where(r => r.Role != null)
+                          .Select(r => r.Role.RoleName)
                           .Where(r => !string.IsNullOrWhiteSpace(r))
                           .Distinct(StringComparer.OrdinalIgnoreCase)
                           .ToList();
         }
-
     }
 }

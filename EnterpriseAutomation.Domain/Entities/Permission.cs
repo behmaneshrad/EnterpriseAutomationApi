@@ -7,20 +7,21 @@ namespace EnterpriseAutomation.Domain.Entities;
 [Display(Name = "دسترسی ها")]
 public class Permission : BaseEntity
 {
+    [Key]
     [Display(Name = "آیدی")]
-    public Guid PermissionId { get; set; }
+    public int PermissionId { get; set; }
 
     [Display(Name = "اسم api")]
     public string Key { get; set; } = default!;
 
+    [Display(Name = "اسم اکشن")]
     public string? Name { get; set; }
-    public string? Description { get; set; }
 
-    [Display(Name = "ورژن")]
-    public int Version { get; set; } = 1;
+    [Display(Name = "توضیحات")]
+    public string? Description { get; set; }
 
     [Display(Name = "فعال بودن")]
     public bool IsActive { get; set; } = true;
 
-    public ICollection<PermissionRole> Roles { get; set; } = new List<PermissionRole>();
+    public ICollection<RolePermissions> Roles { get; set; } = [];
 }

@@ -35,7 +35,7 @@ public class PermissionsController : ControllerBase
 
     [HttpGet("{id:guid}")]
     //[Authorize(Roles = "admin")]
-    public async Task<ActionResult<PermissionListItemDto>> GetById(Guid id, CancellationToken ct)
+    public async Task<ActionResult<PermissionListItemDto>> GetById(int id, CancellationToken ct)
     {
         var result = await _service.GetByIdAsync(id, ct);
         if (result is null) return NotFound();
@@ -44,7 +44,7 @@ public class PermissionsController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     //[Authorize(Roles = "admin")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var ok = await _service.DeleteAsync(id, ct);
         return ok ? NoContent() : NotFound();

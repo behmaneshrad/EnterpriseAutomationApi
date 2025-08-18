@@ -1,18 +1,17 @@
 ﻿namespace EnterpriseAutomation.Application.Permissions.DTOs;
 
 public record PermissionListItemDto(
-    Guid Id,
+    int Id,
     string Key,
     string? Name,
     string? Description,
-    int Version,
     bool IsActive,
-    IReadOnlyList<string> Roles
+    IReadOnlyList<int> RoleIds
 );
 
 public record PermissionUpsertDto(
     string Key,
     string? Name,
     string? Description,
-    IReadOnlyList<string> Roles
+    IReadOnlyList<int> RoleIds
 );

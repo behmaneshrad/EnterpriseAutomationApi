@@ -6,16 +6,16 @@ namespace EnterpriseAutomation.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
-    public DbSet<User> Users { get; set; }      
-    public DbSet<Request> Requests { get; set; } 
-    public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; } 
-    public DbSet<WorkflowStep> WorkflowSteps { get; set; }            
-    public DbSet<ApprovalStep> ApprovalSteps { get; set; }            
-    public DbSet<Role> Roles { get; set; }                              
+    public DbSet<User> Users { get; set; }
+    public DbSet<Request> Requests { get; set; }
+    public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; }
+    public DbSet<WorkflowStep> WorkflowSteps { get; set; }
+    public DbSet<ApprovalStep> ApprovalSteps { get; set; }
+    public DbSet<Role> Roles { get; set; }
 
-    // جدید:
+    // Permission system
     public DbSet<Permission> Permissions { get; set; }
-    public DbSet<PermissionRole> PermissionRoles { get; set; }
+    public DbSet<RolePermissions> RolePermissions { get; set; } // نام صحیح
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -23,14 +23,16 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // کانفیگوریشن‌های موجود
         modelBuilder.ApplyConfiguration(new RequestConfiguration());
         modelBuilder.ApplyConfiguration(new ApprovalStepConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new WorkflowDefinitionConfiguration());
         modelBuilder.ApplyConfiguration(new WorkflowStepConfiguration());
 
-        // جدید
+        // کانفیگوریشن‌های جدید
+        modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new PermissionRolesConfiguration());
+        modelBuilder.ApplyConfiguration(new RolePermissionsConfiguration());
     }
 }

@@ -71,9 +71,11 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Permission", b =>
                 {
-                    b.Property<Guid>("PermissionId")
+                    b.Property<int>("PermissionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PermissionId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -106,53 +108,11 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int?>("UserModifyId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
                     b.HasKey("PermissionId");
 
                     b.HasIndex("Key", "IsActive");
 
-                    b.HasIndex("Key", "Version")
-                        .IsUnique();
-
                     b.ToTable("Permissions", (string)null);
-                });
-
-            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.PermissionRole", b =>
-                {
-                    b.Property<Guid>("PermissionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("PermissionRoleId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UserCreatedId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserModifyId")
-                        .HasColumnType("int");
-
-                    b.HasKey("PermissionId");
-
-                    b.HasIndex("PermissionId", "RoleName")
-                        .IsUnique();
-
-                    b.ToTable("PermissionRoles", (string)null);
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
@@ -228,7 +188,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -241,7 +202,54 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("RoleId");
 
-                    b.ToTable("Roles");
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Roles", (string)null);
+                });
+
+            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.RolePermissions", b =>
+                {
+                    b.Property<int>("RolePermissionsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RolePermissionsId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RoleId1")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserModifyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RolePermissionsId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("RoleId1");
+
+                    b.HasIndex("PermissionId", "RoleId")
+                        .IsUnique();
+
+                    b.ToTable("RolesPermissions", (string)null);
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>
@@ -268,9 +276,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -422,17 +429,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Navigation("Request");
                 });
 
-            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.PermissionRole", b =>
-                {
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.Permission", "Permission")
-                        .WithMany("Roles")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Permission");
-                });
-
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
                 {
                     b.HasOne("EnterpriseAutomation.Domain.Entities.User", null)
@@ -446,6 +442,29 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("WorkflowDefinition");
+                });
+
+            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.RolePermissions", b =>
+                {
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.Permission", "Permission")
+                        .WithMany("Roles")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.Role", null)
+                        .WithMany("Permissions")
+                        .HasForeignKey("RoleId1");
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", b =>
@@ -493,6 +512,11 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
                 {
                     b.Navigation("ApprovalSteps");
+                });
+
+            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("Permissions");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>
