@@ -1,21 +1,25 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace EnterpriseAutomation.Infrastructure.Services
 {
     public class KeycloakOptions
     {
-        public string Authority { get; set; } = default!;     // مثل: http://localhost:8080
-        public string Realm { get; set; } = default!;         // مثل: EnterpriseRealm
+        public string Authority { get; set; } = default!;     // e.g. http://localhost:8080
+        public string Realm { get; set; } = default!;         // e.g. EnterpriseRealm
 
-        // برای ورود کاربر (Password Grant) و اعتبارسنجی توکن‌ها
+        // For user login (Password Grant) & token validation
         public string ClientId { get; set; } = default!;
         public string ClientSecret { get; set; } = default!;
 
-        // برای عملیات ادمینی (Admin REST API):
+        // For admin operations (Admin REST API)
         public string AdminClientId { get; set; } = default!;
         public string AdminClientSecret { get; set; } = default!;
     }
@@ -26,7 +30,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
         private readonly KeycloakOptions _opt;
         private readonly ILogger<KeycloakService>? _logger;
 
-        // کش بسیار ساده‌ی توکن ادمین (برای کاهش درخواست‌های اضافی)
+        // Very simple admin token cache
         private string? _adminToken;
         private DateTimeOffset _adminTokenExpiresAt = DateTimeOffset.MinValue;
 
@@ -36,11 +40,19 @@ namespace EnterpriseAutomation.Infrastructure.Services
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         };
 
-        public KeycloakService(HttpClient httpClient, IOptions<KeycloakOptions> options, ILogger<KeycloakService>? logger = null)
+        private readonly IRepository<Role> _roleRepo;
+
+        public KeycloakService(
+            HttpClient httpClient,
+            IOptions<KeycloakOptions> options,
+            IRepository<Role> roleRepo,
+            ILogger<KeycloakService>? logger = null)
         {
             _http = httpClient;
             _opt = options.Value;
             _logger = logger;
+            _roleRepo = roleRepo;
+
             if (!string.IsNullOrWhiteSpace(_opt.Authority))
             {
                 _http.BaseAddress = new Uri(_opt.Authority.TrimEnd('/') + "/");
@@ -53,7 +65,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
         private static string Combine(params string[] parts)
         {
-            // ساده و امن برای ساخت URL نسبی
+            // Safe URL join for relative paths
             return string.Join("/", parts.Select(p => p.Trim('/')));
         }
 
@@ -128,16 +140,16 @@ namespace EnterpriseAutomation.Infrastructure.Services
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("CreateUser", resp, body);
 
-            // userId از Location header
+            // userId from Location header
             string? userId = resp.Headers.Location?.Segments.LastOrDefault()?.Trim('/');
             if (string.IsNullOrEmpty(userId))
             {
-                // اگر Location نبود، با username جست‌وجو کن
+                // Fallback: search by username
                 userId = await GetUserIdByUsernameAsync(username, ct);
                 if (string.IsNullOrEmpty(userId)) throw new("User created but ID could not be resolved.");
             }
 
-            // یک نقش Realm پیش‌فرض بده (اختیاری)
+            // Optional: assign a default realm role
             if (!string.IsNullOrWhiteSpace(defaultRealmRoleToAssign))
             {
                 await AssignRealmRoleToUserAsync(userId, defaultRealmRoleToAssign, ct);
@@ -154,19 +166,22 @@ namespace EnterpriseAutomation.Infrastructure.Services
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("SearchUser", resp, body);
 
+            List<JsonElement>? users;
             try
             {
-                var users = JsonSerializer.Deserialize<List<JsonElement>>(body);
-                if (users is { Count: > 0 })
-                {
-                    return users[0].TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
-                }
-                return null;
+                users = JsonSerializer.Deserialize<List<JsonElement>>(body);
             }
             catch (Exception ex)
             {
                 throw new($"Parse users response failed: {ex.Message}", ex);
             }
+
+            if (users != null && users.Count > 0)
+            {
+                return users[0].TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+            }
+
+            return null;
         }
 
         // ====== ROLES (Realm) ======
@@ -182,11 +197,11 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
         public async Task<bool> AssignRealmRoleToUserAsync(string userId, string roleName, CancellationToken ct = default)
         {
-            // 1) نقش Realm را بگیر
+            // 1) Get realm role
             var role = await GetRealmRoleAsync(roleName, ct)
                 ?? throw new($"Realm role '{roleName}' not found.");
 
-            // 2) نقش را به کاربر بده
+            // 2) Assign to user
             var url = Combine("admin/realms", _opt.Realm, "users", userId, "role-mappings/realm");
             var payload = JsonSerializer.Serialize(new[] { role }, JsonOpts);
 
@@ -260,31 +275,35 @@ namespace EnterpriseAutomation.Infrastructure.Services
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("Login", resp, body);
 
-            return body; // شامل access_token, refresh_token, ...
+            return body; // contains access_token, refresh_token, ...
         }
 
+        /// <summary>
+        /// Create a Keycloak realm role; then ensure it exists in local DB (idempotent in both).
+        /// </summary>
         public async Task CreateRealmRoleAsync(string name, string? description, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Role name is required.", nameof(name));
 
-            // 1) اگر نقش از قبل وجود دارد، کاری نکن (idempotent)
-            var existing = await GetRealmRoleAsync(name, ct);
+            var trimmedName = name.Trim();
+            var trimmedDesc = string.IsNullOrWhiteSpace(description) ? null : description!.Trim();
+
+            // 1) If role already exists in Keycloak, ensure DB persistence and return
+            var existing = await GetRealmRoleAsync(trimmedName, ct);
             if (existing is not null)
             {
-                _logger?.LogInformation("Realm role '{Role}' already exists. Skipping creation.", name);
+                _logger?.LogInformation("Realm role '{Role}' already exists in Keycloak. Ensuring DB persistence.", trimmedName);
+                await EnsureRolePersistedAsync(trimmedName);
                 return;
             }
 
-            // 2) ساخت نقش جدید
+            // 2) Create role in Keycloak
             var url = Combine("admin/realms", _opt.Realm, "roles");
             var payloadObj = new
             {
-                name = name.Trim(),
-                description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
-                // optional fields:
-                // composite = false,
-                // clientRole = false
+                name = trimmedName,
+                description = trimmedDesc
             };
 
             var content = new StringContent(JsonSerializer.Serialize(payloadObj, JsonOpts), Encoding.UTF8, "application/json");
@@ -294,23 +313,45 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
             if (resp.IsSuccessStatusCode)
             {
-                _logger?.LogInformation("Realm role '{Role}' created successfully.", name);
+                _logger?.LogInformation("Realm role '{Role}' created successfully in Keycloak. Persisting to DB...", trimmedName);
+                await EnsureRolePersistedAsync(trimmedName);
                 return;
             }
 
-            // 3) اگر به هر دلیل Keycloak 409 برگرداند (شرایط رقابتی)، عبور (idempotent)
+            // 3) If 409 (already exists, race), still persist in DB
             if ((int)resp.StatusCode == 409)
             {
-                _logger?.LogWarning("Realm role '{Role}' creation returned 409 (already exists). Treating as success.", name);
+                _logger?.LogWarning("Realm role '{Role}' creation returned 409. Treating as success and ensuring DB persistence.", trimmedName);
+                await EnsureRolePersistedAsync(trimmedName);
                 return;
             }
 
-            // سایر خطاها
+            // 4) Other errors
             throw HttpError("CreateRealmRole", resp, body);
+        }
+
+        /// <summary>
+        /// Idempotent local DB persistence for Role.
+        /// Uses IRepository contracts: GetFirstOrDefaultAsync / InsertAsync / SaveChangesAsync
+        /// </summary>
+        private async Task EnsureRolePersistedAsync(string roleName)
+        {
+            // Check existence
+            var exists = await _roleRepo.GetFirstOrDefaultAsync(r => r.RoleName == roleName);
+            if (exists is not null) return;
+
+            var entity = new Role
+            {
+                RoleName = roleName
+            };
+
+            await _roleRepo.InsertAsync(entity);
+            await _roleRepo.SaveChangesAsync();
         }
 
         public async Task CreateClientRoleAsync(string clientId, string name, string? description, CancellationToken ct)
         {
+            // TODO: implement if needed
             throw new NotImplementedException();
         }
     }
