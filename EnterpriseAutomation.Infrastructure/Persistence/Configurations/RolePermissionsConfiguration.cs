@@ -1,8 +1,6 @@
 ﻿using EnterpriseAutomation.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations;
+using Microsoft.EntityFrameworkCore;
 
 public class RolePermissionsConfiguration : IEntityTypeConfiguration<RolePermissions>
 {
@@ -10,25 +8,29 @@ public class RolePermissionsConfiguration : IEntityTypeConfiguration<RolePermiss
     {
         builder.ToTable("RolesPermissions");
 
-        builder.HasKey(r => r.RolePermissionsId);
+        // کلید اصلی
+        builder.HasKey(rp => rp.RolePermissionsId);
 
-        builder.Property(r => r.RoleId)
+        // خصوصیات scalar
+        builder.Property(rp => rp.RoleId)
                .IsRequired();
 
-        builder.Property(r => r.PermissionId)
+        builder.Property(rp => rp.PermissionId)
                .IsRequired();
 
-        builder.HasIndex(r => new { r.PermissionId, r.RoleId }).IsUnique();
+        // ایندکس ترکیبی یکتا
+        builder.HasIndex(rp => new { rp.PermissionId, rp.RoleId })
+               .IsUnique();
 
-        builder.HasOne(r => r.Role)
-               .WithMany()
-               .HasForeignKey(r => r.RoleId)
+        // روابط
+        builder.HasOne(rp => rp.Role)
+               .WithMany(r => r.RolePermissions) // اضافه کردن collection در Role
+               .HasForeignKey(rp => rp.RoleId)
                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(r => r.Permission)
+        builder.HasOne(rp => rp.Permission)
                .WithMany(p => p.Roles)
-               .HasForeignKey(r => r.PermissionId)
+               .HasForeignKey(rp => rp.PermissionId)
                .OnDelete(DeleteBehavior.Cascade);
     }
 }
-

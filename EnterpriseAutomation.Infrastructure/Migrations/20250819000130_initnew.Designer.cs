@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250818232022_initnew")]
+    [Migration("20250819000130_initnew")]
     partial class initnew
     {
         /// <inheritdoc />
@@ -231,9 +231,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RoleId1")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -246,8 +243,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.HasKey("RolePermissionsId");
 
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("RoleId1");
 
                     b.HasIndex("PermissionId", "RoleId")
                         .IsUnique();
@@ -456,14 +451,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("EnterpriseAutomation.Domain.Entities.Role", "Role")
-                        .WithMany()
+                        .WithMany("RolePermissions")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.Role", null)
-                        .WithMany("Permissions")
-                        .HasForeignKey("RoleId1");
 
                     b.Navigation("Permission");
 
@@ -519,7 +510,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Role", b =>
                 {
-                    b.Navigation("Permissions");
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>

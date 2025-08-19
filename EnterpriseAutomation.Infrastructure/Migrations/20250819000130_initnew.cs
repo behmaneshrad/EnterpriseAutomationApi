@@ -79,7 +79,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     PermissionId = table.Column<int>(type: "int", nullable: false),
-                    RoleId1 = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -101,11 +100,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         principalTable: "Roles",
                         principalColumn: "RoleId",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_RolesPermissions_Roles_RoleId1",
-                        column: x => x.RoleId1,
-                        principalTable: "Roles",
-                        principalColumn: "RoleId");
                 });
 
             migrationBuilder.CreateTable(
@@ -296,11 +290,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 name: "IX_RolesPermissions_RoleId",
                 table: "RolesPermissions",
                 column: "RoleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RolesPermissions_RoleId1",
-                table: "RolesPermissions",
-                column: "RoleId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRole_UsersUserId",

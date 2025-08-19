@@ -228,9 +228,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RoleId1")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -243,8 +240,6 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.HasKey("RolePermissionsId");
 
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("RoleId1");
 
                     b.HasIndex("PermissionId", "RoleId")
                         .IsUnique();
@@ -453,14 +448,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("EnterpriseAutomation.Domain.Entities.Role", "Role")
-                        .WithMany()
+                        .WithMany("RolePermissions")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EnterpriseAutomation.Domain.Entities.Role", null)
-                        .WithMany("Permissions")
-                        .HasForeignKey("RoleId1");
 
                     b.Navigation("Permission");
 
@@ -516,7 +507,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Role", b =>
                 {
-                    b.Navigation("Permissions");
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>
