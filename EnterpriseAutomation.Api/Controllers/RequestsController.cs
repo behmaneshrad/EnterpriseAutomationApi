@@ -31,7 +31,6 @@ namespace EnterpriseAutomation.API.Controllers
         //[Authorize]
         //[RequiresPermission("requests", "create")]
         [HttpPost("create")] // حتماً متد HTTP مشخص باشد
-        [Authorize("HasAccess")]
         public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
         {
             if (!ModelState.IsValid)
