@@ -1,364 +1,386 @@
-﻿using System.Net.Http.Headers;
+﻿using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Domain.Entities;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Linq;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Infrastructure.Services
 {
-    public class KeycloakOptions
-    {
-        public string Authority { get; set; } = default!;     // e.g. http://localhost:8080
-        public string Realm { get; set; } = default!;         // e.g. EnterpriseRealm
-
-        // For user login (Password Grant) & token validation
-        public string ClientId { get; set; } = default!;
-        public string ClientSecret { get; set; } = default!;
-
-        // For admin operations (Admin REST API)
-        public string AdminClientId { get; set; } = default!;
-        public string AdminClientSecret { get; set; } = default!;
-    }
-
     public class KeycloakService
     {
-        private readonly HttpClient _http;
-        private readonly KeycloakOptions _opt;
-        private readonly ILogger<KeycloakService>? _logger;
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        // Very simple admin token cache
-        private string? _adminToken;
-        private DateTimeOffset _adminTokenExpiresAt = DateTimeOffset.MinValue;
-
-        private static readonly JsonSerializerOptions JsonOpts = new()
+        public KeycloakService(HttpClient httpClient, IConfiguration configuration)
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        };
+            _httpClient = httpClient;
+            _configuration = configuration;
+        }
 
-        private readonly IRepository<Role> _roleRepo;
-
-        public KeycloakService(
-            HttpClient httpClient,
-            IOptions<KeycloakOptions> options,
-            IRepository<Role> roleRepo,
-            ILogger<KeycloakService>? logger = null)
+        public async Task<string> GetAccessTokenAsync()
         {
-            _http = httpClient;
-            _opt = options.Value;
-            _logger = logger;
-            _roleRepo = roleRepo;
+            var keycloakConfig = _configuration.GetSection("Keycloak");
+            // Use admin client for admin operations if available
+            var clientId = keycloakConfig["AdminClientId"] ?? keycloakConfig["ClientId"];
+            var clientSecret = keycloakConfig["AdminClientSecret"] ?? keycloakConfig["ClientSecret"];
+            var realm = keycloakConfig["Realm"];
+            var authority = keycloakConfig["Authority"];
 
-            if (!string.IsNullOrWhiteSpace(_opt.Authority))
+            var tokenUrl = $"{authority}/realms/{realm}/protocol/openid-connect/token";
+
+            var parameters = new Dictionary<string, string>
             {
-                _http.BaseAddress = new Uri(_opt.Authority.TrimEnd('/') + "/");
-            }
-        }
-
-        // ====== Helpers ======
-        private static Exception HttpError(string action, HttpResponseMessage resp, string body) =>
-            new($"Keycloak {action} failed: {(int)resp.StatusCode} {resp.ReasonPhrase} - {body}");
-
-        private static string Combine(params string[] parts)
-        {
-            // Safe URL join for relative paths
-            return string.Join("/", parts.Select(p => p.Trim('/')));
-        }
-
-        // ====== Admin Token (Client Credentials) ======
-        private async Task<string> GetAdminAccessTokenAsync(CancellationToken ct = default)
-        {
-            if (!string.IsNullOrEmpty(_adminToken) && DateTimeOffset.UtcNow < _adminTokenExpiresAt.AddSeconds(-30))
-                return _adminToken!;
-
-            var tokenUrl = Combine("realms", _opt.Realm, "protocol/openid-connect/token");
-
-            var form = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                ["grant_type"] = "client_credentials",
-                ["client_id"] = _opt.AdminClientId ?? _opt.ClientId,
-                ["client_secret"] = _opt.AdminClientSecret ?? _opt.ClientSecret
-            });
-
-            var resp = await _http.PostAsync(tokenUrl, form, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("Token (admin)", resp, body);
-
-            using var doc = JsonDocument.Parse(body);
-            _adminToken = doc.RootElement.GetProperty("access_token").GetString();
-            var expiresIn = doc.RootElement.TryGetProperty("expires_in", out var expEl) ? expEl.GetInt32() : 60;
-            _adminTokenExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresIn);
-            return _adminToken!;
-        }
-
-        private async Task<HttpRequestMessage> AuthedAdminRequestAsync(HttpMethod method, string relativeUrl, HttpContent? content = null, CancellationToken ct = default)
-        {
-            var token = await GetAdminAccessTokenAsync(ct);
-            var req = new HttpRequestMessage(method, relativeUrl);
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            if (content != null) req.Content = content;
-            return req;
-        }
-
-        // ====== USERS ======
-        public async Task<string> GetUsersAsync(CancellationToken ct = default)
-        {
-            var url = Combine("admin/realms", _opt.Realm, "users");
-            var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("GetUsers", resp, body);
-            return body;
-        }
-
-        public async Task<bool> CreateUserAsync(string username, string email, string password, string firstName = "", string lastName = "", string defaultRealmRoleToAssign = "NoRole", CancellationToken ct = default)
-        {
-            var url = Combine("admin/realms", _opt.Realm, "users");
-
-            var payload = new
-            {
-                username,
-                email,
-                firstName = string.IsNullOrWhiteSpace(firstName) ? null : firstName,
-                lastName = string.IsNullOrWhiteSpace(lastName) ? null : lastName,
-                enabled = true,
-                emailVerified = true,
-                credentials = new[]
-                {
-                    new { type = "password", value = password, temporary = false }
-                }
+                { "grant_type", "client_credentials" },
+                { "client_id", clientId },
+                { "client_secret", clientSecret }
             };
 
-            var req = await AuthedAdminRequestAsync(HttpMethod.Post, url,
-                new StringContent(JsonSerializer.Serialize(payload, JsonOpts), Encoding.UTF8, "application/json"), ct);
+            var content = new FormUrlEncodedContent(parameters);
 
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("CreateUser", resp, body);
-
-            // userId from Location header
-            string? userId = resp.Headers.Location?.Segments.LastOrDefault()?.Trim('/');
-            if (string.IsNullOrEmpty(userId))
-            {
-                // Fallback: search by username
-                userId = await GetUserIdByUsernameAsync(username, ct);
-                if (string.IsNullOrEmpty(userId)) throw new("User created but ID could not be resolved.");
-            }
-
-            // Optional: assign a default realm role
-            if (!string.IsNullOrWhiteSpace(defaultRealmRoleToAssign))
-            {
-                await AssignRealmRoleToUserAsync(userId, defaultRealmRoleToAssign, ct);
-            }
-
-            return true;
-        }
-
-        public async Task<string?> GetUserIdByUsernameAsync(string username, CancellationToken ct = default)
-        {
-            var url = Combine("admin/realms", _opt.Realm, $"users?username={Uri.EscapeDataString(username)}&exact=true");
-            var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("SearchUser", resp, body);
-
-            List<JsonElement>? users;
             try
             {
-                users = JsonSerializer.Deserialize<List<JsonElement>>(body);
+                var response = await _httpClient.PostAsync(tokenUrl, content);
+                var body = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception($"Keycloak Token Error: {response.StatusCode} - {body}");
+
+                using var doc = JsonDocument.Parse(body);
+                return doc.RootElement.GetProperty("access_token").GetString();
             }
             catch (Exception ex)
             {
-                throw new($"Parse users response failed: {ex.Message}", ex);
+                throw new Exception($"Failed to get access token: {ex.Message}", ex);
             }
-
-            if (users != null && users.Count > 0)
-            {
-                return users[0].TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
-            }
-
-            return null;
         }
 
-        // ====== ROLES (Realm) ======
-        public async Task<string> GetRolesAsync(CancellationToken ct = default)
+        public async Task<string> GetUsersAsync()
         {
-            var url = Combine("admin/realms", _opt.Realm, "roles");
-            var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("GetRoles", resp, body);
-            return body;
+            var token = await GetAccessTokenAsync();
+            var keycloakConfig = _configuration.GetSection("Keycloak");
+            var authority = keycloakConfig["Authority"];
+            var realm = keycloakConfig["Realm"];
+            var url = $"{authority}/admin/realms/{realm}/users";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<bool> AssignRealmRoleToUserAsync(string userId, string roleName, CancellationToken ct = default)
+        public async Task<string> GetRolesAsync()
         {
-            // 1) Get realm role
-            var role = await GetRealmRoleAsync(roleName, ct)
-                ?? throw new($"Realm role '{roleName}' not found.");
+            var token = await GetAccessTokenAsync();
+            var keycloakConfig = _configuration.GetSection("Keycloak");
+            var authority = keycloakConfig["Authority"];
+            var realm = keycloakConfig["Realm"];
+            var url = $"{authority}/admin/realms/{realm}/roles";
 
-            // 2) Assign to user
-            var url = Combine("admin/realms", _opt.Realm, "users", userId, "role-mappings/realm");
-            var payload = JsonSerializer.Serialize(new[] { role }, JsonOpts);
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var req = await AuthedAdminRequestAsync(HttpMethod.Post, url,
-                new StringContent(payload, Encoding.UTF8, "application/json"), ct);
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
 
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("AssignRealmRole", resp, body);
-
-            return true;
+            return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task CheckUserRealmRolesAsync(string userId, CancellationToken ct = default)
+        public async Task<bool> CreateUserAsync(string username, string email, string password, string firstName = "", string lastName = "")
         {
-            var url = Combine("admin/realms", _opt.Realm, "users", userId, "role-mappings/realm");
-            var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("GetUserRealmRoles", resp, body);
-            _logger?.LogInformation("User {UserId} realm roles: {Body}", userId, body);
-        }
-
-        private async Task<RoleDto?> GetRealmRoleAsync(string roleName, CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(roleName))
-                throw new ArgumentException("Role name is required.", nameof(roleName));
-            if (string.IsNullOrWhiteSpace(_opt?.Realm))
-                throw new InvalidOperationException("Keycloak 'Realm' is not configured.");
-
-            var safeName = Uri.EscapeDataString(roleName);
-            var url = Combine("admin/realms", _opt.Realm, "roles", safeName);
-
-            var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-
-            if (!resp.IsSuccessStatusCode) return null;
-
             try
             {
-                var el = JsonSerializer.Deserialize<JsonElement>(body);
-                return new RoleDto
+                var token = await GetAccessTokenAsync();
+                Console.WriteLine("ACCESS TOKEN:\n" + token);
+                var keycloakConfig = _configuration.GetSection("Keycloak");
+                var authority = keycloakConfig["Authority"];
+                var realm = keycloakConfig["Realm"];
+                var url = $"{authority}/admin/realms/{realm}/users";
+
+                var userPayload = new
                 {
-                    Id = el.TryGetProperty("id", out var idEl) ? idEl.GetString()! : "",
-                    Name = el.TryGetProperty("name", out var nameEl) ? nameEl.GetString()! : roleName
+                    username = username,
+                    email = email,
+                    firstName = firstName,
+                    lastName = lastName,
+                    enabled = true,
+                    emailVerified = true,
+                    credentials = new[]
+                    {
+                        new { type = "password", value = password, temporary = false }
+                    }
                 };
+
+                var json = JsonSerializer.Serialize(userPayload);
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                // Debug information
+                Console.WriteLine($"Request URL: {url}");
+                if (!string.IsNullOrEmpty(token))
+                    Console.WriteLine($"Token (first 20 chars): {token.Substring(0, Math.Min(20, token.Length))}...");
+                else
+                    Console.WriteLine("Token is null or empty.");
+                Console.WriteLine($"Payload: {json}");
+
+                var response = await _httpClient.SendAsync(request);
+                Console.WriteLine("Request : \n" + request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    var headers = response.Headers.ToString();
+                    throw new Exception($"Keycloak user creation failed: {response.StatusCode} - {errorContent}. Headers: {headers}");
+                }
+
+                // Get the created user's ID from the Location header
+                var locationHeader = response.Headers.Location?.ToString();
+                if (string.IsNullOrEmpty(locationHeader))
+                {
+                    // If location header is not available, try to find user by username
+                    Console.WriteLine("Location header not found, searching for user by username...");
+                    var userId = await GetUserIdByUsernameAsync(username);
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        throw new Exception("Failed to get user ID from response headers and couldn't find user by username");
+                    }
+
+                    Console.WriteLine($"Found user ID by username search: {userId}");
+                    await AssignRoleToUserAsync(userId, "employee");
+                }
+                else
+                {
+                    var userId = locationHeader.Split('/').Last();
+                    Console.WriteLine($"Created user ID: {userId}");
+                    await AssignRoleToUserAsync(userId, "employee");
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "Failed to parse realm role {RoleName}", roleName);
+                throw new Exception($"Failed to create user: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<string> GetUserIdByUsernameAsync(string username)
+        {
+            try
+            {
+                var token = await GetAccessTokenAsync();
+                var keycloakConfig = _configuration.GetSection("Keycloak");
+                var authority = keycloakConfig["Authority"];
+                var realm = keycloakConfig["Realm"];
+                var url = $"{authority}/admin/realms/{realm}/users?username={username}&exact=true";
+
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to search for user: {response.StatusCode} - {errorContent}");
+                    return null;
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var users = JsonSerializer.Deserialize<JsonElement[]>(responseContent);
+
+                if (users != null && users.Length > 0)
+                {
+                    return users[0].GetProperty("id").GetString();
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error searching for user: {ex.Message}");
                 return null;
             }
         }
 
-        // ====== LOGIN (Resource Owner Password) ======
-        public async Task<string> LoginUserAsync(string username, string password, CancellationToken ct = default)
+        public async Task<bool> AssignRoleToUserAsync(string userId, string roleName)
         {
-            var tokenUrl = Combine("realms", _opt.Realm, "protocol/openid-connect/token");
-
-            var form = new FormUrlEncodedContent(new Dictionary<string, string>
+            try
             {
-                ["grant_type"] = "password",
-                ["client_id"] = _opt.ClientId,
-                ["client_secret"] = _opt.ClientSecret,
-                ["username"] = username,
-                ["password"] = password
-            });
+                var token = await GetAccessTokenAsync();
+                var keycloakConfig = _configuration.GetSection("Keycloak");
+                var authority = keycloakConfig["Authority"];
+                var realm = keycloakConfig["Realm"];
 
-            var resp = await _http.PostAsync(tokenUrl, form, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("Login", resp, body);
+                // First, get the role details
+                var role = await GetRealmRoleAsync(roleName);
+                if (role == null)
+                {
+                    throw new Exception($"Role '{roleName}' not found in realm");
+                }
 
-            return body; // contains access_token, refresh_token, ...
+                // Assign the role to the user
+                var roleAssignmentUrl = $"{authority}/admin/realms/{realm}/users/{userId}/role-mappings/realm";
+                var rolePayload = new[] { role };
+                var roleJson = JsonSerializer.Serialize(rolePayload);
+
+                var roleRequest = new HttpRequestMessage(HttpMethod.Post, roleAssignmentUrl)
+                {
+                    Content = new StringContent(roleJson, Encoding.UTF8, "application/json")
+                };
+                roleRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                Console.WriteLine($"Assigning role '{roleName}' to user {userId}");
+                Console.WriteLine($"Role assignment URL: {roleAssignmentUrl}");
+                Console.WriteLine($"Role payload: {roleJson}");
+
+                var roleResponse = await _httpClient.SendAsync(roleRequest);
+
+                if (!roleResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await roleResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to assign role: {roleResponse.StatusCode} - {errorContent}");
+
+                    // Let's also check what roles the user currently has
+                    await CheckUserRolesAsync(userId);
+
+                    throw new Exception($"Failed to assign role: {roleResponse.StatusCode} - {errorContent}");
+                }
+
+                Console.WriteLine($"Successfully assigned '{roleName}' role to user {userId}");
+
+                // Verify the role assignment
+                await CheckUserRolesAsync(userId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to assign role to user: {ex.Message}", ex);
+            }
         }
 
-        /// <summary>
-        /// Create a Keycloak realm role; then ensure it exists in local DB (idempotent in both).
-        /// </summary>
-        public async Task CreateRealmRoleAsync(string name, string? description, CancellationToken ct)
+        public async Task CheckUserRolesAsync(string userId)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Role name is required.", nameof(name));
-
-            var trimmedName = name.Trim();
-            var trimmedDesc = string.IsNullOrWhiteSpace(description) ? null : description!.Trim();
-
-            // 1) If role already exists in Keycloak, ensure DB persistence and return
-            var existing = await GetRealmRoleAsync(trimmedName, ct);
-            if (existing is not null)
+            try
             {
-                _logger?.LogInformation("Realm role '{Role}' already exists in Keycloak. Ensuring DB persistence.", trimmedName);
-                await EnsureRolePersistedAsync(trimmedName);
-                return;
+                var token = await GetAccessTokenAsync();
+                var keycloakConfig = _configuration.GetSection("Keycloak");
+                var authority = keycloakConfig["Authority"];
+                var realm = keycloakConfig["Realm"];
+
+                var userRolesUrl = $"{authority}/admin/realms/{realm}/users/{userId}/role-mappings/realm";
+                var roleRequest = new HttpRequestMessage(HttpMethod.Get, userRolesUrl);
+                roleRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var roleResponse = await _httpClient.SendAsync(roleRequest);
+
+                if (roleResponse.IsSuccessStatusCode)
+                {
+                    var rolesJson = await roleResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Current user roles: {rolesJson}");
+                }
+                else
+                {
+                    var errorContent = await roleResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to get user roles: {roleResponse.StatusCode} - {errorContent}");
+                }
             }
-
-            // 2) Create role in Keycloak
-            var url = Combine("admin/realms", _opt.Realm, "roles");
-            var payloadObj = new
+            catch (Exception ex)
             {
-                name = trimmedName,
-                description = trimmedDesc
-            };
-
-            var content = new StringContent(JsonSerializer.Serialize(payloadObj, JsonOpts), Encoding.UTF8, "application/json");
-            var req = await AuthedAdminRequestAsync(HttpMethod.Post, url, content, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-
-            if (resp.IsSuccessStatusCode)
-            {
-                _logger?.LogInformation("Realm role '{Role}' created successfully in Keycloak. Persisting to DB...", trimmedName);
-                await EnsureRolePersistedAsync(trimmedName);
-                return;
+                Console.WriteLine($"Error checking user roles: {ex.Message}");
             }
-
-            // 3) If 409 (already exists, race), still persist in DB
-            if ((int)resp.StatusCode == 409)
-            {
-                _logger?.LogWarning("Realm role '{Role}' creation returned 409. Treating as success and ensuring DB persistence.", trimmedName);
-                await EnsureRolePersistedAsync(trimmedName);
-                return;
-            }
-
-            // 4) Other errors
-            throw HttpError("CreateRealmRole", resp, body);
         }
 
-        /// <summary>
-        /// Idempotent local DB persistence for Role.
-        /// Uses IRepository contracts: GetFirstOrDefaultAsync / InsertAsync / SaveChangesAsync
-        /// </summary>
-        private async Task EnsureRolePersistedAsync(string roleName)
+        private async Task<RoleDto> GetRealmRoleAsync(string roleName)
         {
-            // Check existence
-            var exists = await _roleRepo.GetFirstOrDefaultAsync(r => r.RoleName == roleName);
-            if (exists is not null) return;
-
-            var entity = new Role
+            try
             {
-                RoleName = roleName
-            };
+                var token = await GetAccessTokenAsync();
+                var keycloakConfig = _configuration.GetSection("Keycloak");
+                var authority = keycloakConfig["Authority"];
+                var realm = keycloakConfig["Realm"];
 
-            await _roleRepo.InsertAsync(entity);
-            await _roleRepo.SaveChangesAsync();
+                var roleUrl = $"{authority}/admin/realms/{realm}/roles/{roleName}";
+                var roleRequest = new HttpRequestMessage(HttpMethod.Get, roleUrl);
+                roleRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var roleResponse = await _httpClient.SendAsync(roleRequest);
+
+                if (!roleResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await roleResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to get role '{roleName}': {roleResponse.StatusCode} - {errorContent}");
+                    return null;
+                }
+
+                var roleJson = await roleResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Role details: {roleJson}");
+
+                var roleObject = JsonSerializer.Deserialize<JsonElement>(roleJson);
+
+                return new RoleDto
+                {
+                    id = roleObject.GetProperty("id").GetString(),
+                    name = roleObject.GetProperty("name").GetString()
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting realm role: {ex.Message}");
+                return null;
+            }
         }
 
-        public async Task CreateClientRoleAsync(string clientId, string name, string? description, CancellationToken ct)
+        public async Task<string> LoginUserAsync(string username, string password)
         {
-            // TODO: implement if needed
-            throw new NotImplementedException();
+            try
+            {
+                var keycloakConfig = _configuration.GetSection("Keycloak");
+                var authority = keycloakConfig["Authority"];
+                var realm = keycloakConfig["Realm"];
+                var clientId = keycloakConfig["ClientId"];
+                var clientSecret = keycloakConfig["ClientSecret"];
+
+                var tokenUrl = $"{authority}/realms/{realm}/protocol/openid-connect/token";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    { "client_id", clientId },
+                    { "grant_type", "password" },
+                    { "username", username },
+                    { "password", password },
+                    { "client_secret", clientSecret }
+                };
+
+                var content = new FormUrlEncodedContent(parameters);
+                var response = await _httpClient.PostAsync(tokenUrl, content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Login failed: {response.StatusCode} - {responseContent}");
+                }
+
+                return responseContent;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to login user: {ex.Message}", ex);
+            }
         }
     }
-
+    //
     public class RoleDto
     {
-        public required string Id { get; set; }
-        public required string Name { get; set; }
+        public required string id { get; set; }
+        public required string name { get; set; }
     }
 }

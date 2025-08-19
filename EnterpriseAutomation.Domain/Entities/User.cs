@@ -18,7 +18,7 @@ public class User : BaseEntity
     public string RefreshToken { get; set; } = string.Empty;
 
     [Display(Name = "نقش")]
-    public required int Role { get; set; }
+    public string Role { get; set; } = string.Empty;
 
     [Display(Name = "پسورد هش")]
     public string PasswordHash { get; set; } = string.Empty;

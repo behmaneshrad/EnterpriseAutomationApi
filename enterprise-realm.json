@@ -5,7 +5,8 @@
   "roles": {
     "realm": [
       { "name": "admin" },
-      { "name": "NoRole" }
+      { "name": "user" },
+      { "name": "approver" }
     ]
   },
   "clients": [
@@ -122,11 +123,7 @@
           "view-clients",
           "query-users",
           "query-clients",
-          "query-realms",
-          "manage-realm",       
-          "manage-clients",     
-          "manage-users",       
-          "manage-roles"        
+          "query-realms"
         ]
       },
       "realmRoles": [

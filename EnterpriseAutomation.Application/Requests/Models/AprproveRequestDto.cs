@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EnterpriseAutomation.Domain.Enums
+namespace EnterpriseAutomation.Application.Requests.Models
 {
-    public static class BasicRoles
+    internal class AprproveRequestDto
     {
-        public const int NoRole = 0;
     }
 }

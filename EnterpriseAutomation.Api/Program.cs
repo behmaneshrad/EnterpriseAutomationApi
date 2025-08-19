@@ -1,14 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text.Json;
-
-// Security / AuthZ
+﻿using EnterpriseAutomation.Api.Middelware.AuthorizeMIddelware;
 using EnterpriseAutomation.Api.Security;
-
-// DI Contracts
 using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.Permissions.Interfaces;
-using EnterpriseAutomation.Application.Permissions.Services;
+// Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
 using EnterpriseAutomation.Application.Users.Interfaces;
@@ -17,34 +10,26 @@ using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Services;
 using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Services;
-
-// Infra
 using EnterpriseAutomation.Infrastructure.Persistence;
 using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Services;
 
-// ASP.NET & EF & Swagger
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
-// Options alias
-using KeycloakOptions = EnterpriseAutomation.Infrastructure.Services.KeycloakOptions;
+using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== Options =====
-builder.Services.Configure<KeycloakOptions>(builder.Configuration.GetSection("Keycloak"));
-
-// ===== CORS =====
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontPolicy", policy =>
     {
-        policy.WithOrigins(builder.Configuration["Cors:FrontOrigin"] ?? "http://localhost:4000")
+        policy.WithOrigins("http://localhost:4000")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -56,57 +41,47 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<KeycloakService>();
 
-// ===== Application services =====
+// Application services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
 
-// Permission services
-builder.Services.AddScoped<IPermissionService, PermissionService>();
-
 // Generic Repository
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-// ===== EF Core =====
+// EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ===== Authorization =====
-// سیاست پیش‌فرض: همه اکشن‌ها نیاز به احراز هویت دارند
+// (اگر از Provider/Handler سفارشی استفاده می‌کنی نگه‌شان دار)
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+
+// ===== Authorization Policies (مطابق جدول) =====
 builder.Services.AddAuthorization(options =>
 {
+    // AccountsController
+    options.AddPolicy("Accounts.GetRoles", p => p.RequireRole("admin"));
+    options.AddPolicy("Accounts.GetUsers", p => p.RequireRole("admin"));
+
+    // RequestsController
+    options.AddPolicy("Requests.CreateRequest", p => p.RequireRole("user"));
+    options.AddPolicy("Requests.GetAllRequests", p => p.RequireRole("admin"));
+    options.AddPolicy("Requests.GetRequestById", p => p.RequireRole("admin", "approver")); // OR
+    options.AddPolicy("Requests.GetWorkflowSteps", p => p.RequireRole("admin"));
+    options.AddPolicy("Requests.GetFilteredRequests", p => p.RequireRole("admin", "approver")); // OR
+
+    // WorkflowDefinitionsController
+    options.AddPolicy("WorkflowDefinitions.Get", p => p.RequireRole("admin"));
+
+    // همه‌ی اکشن‌ها به‌صورت پیش‌فرض نیاز به احراز هویت دارند
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
-
-    // سیاست داینامیک HasAccess (کنترل دسترسی بر اساس مسیر/کنترلر از DB)
-    options.AddPolicy("HasAccess", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-        policy.AddRequirements(new HasAccessRequirement());
-    });
 });
 
-// ===== Authorization Handlers =====
-builder.Services.AddScoped<IAuthorizationHandler, HasAccessHandler>();
-
-// اگر هم‌زمان PermissionRequirement/PermissionHandler را جای دیگری استفاده می‌کنی، این خط را نگه دار:
-// builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
-
 // ===== JWT (Keycloak) =====
-var keycloakAuthority = builder.Configuration["Keycloak:Authority"]?.TrimEnd('/');
-var realm = builder.Configuration["Keycloak:Realm"];
-var audience = builder.Configuration["Keycloak:Audience"]; // مثلا "enterprise-api"
-
-// نمایش PII فقط در Dev
-if (builder.Environment.IsDevelopment())
-{
-    IdentityModelEventSource.ShowPII = true;
-}
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -114,157 +89,88 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    // آدرس OIDC (issuer)
-    options.Authority = $"{keycloakAuthority}/realms/{realm}";
-    options.RequireHttpsMetadata = false; // اگر Keycloak روی http است
-
-    // جلوگیری از مپ قدیمی Claimها
-    options.MapInboundClaims = false;
-
-    // اعتبارسنجی دقیق
+    options.Authority = "http://localhost:8080/realms/EnterpriseRealm";
+    options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey = true,
-
-        ValidateIssuer = true,
-        ValidIssuer = $"{keycloakAuthority}/realms/{realm}",
-
         ValidateAudience = true,
-        AudienceValidator = (audiences, securityToken, validationParameters) =>
-        {
-            var target = audience; // مثلا "enterprise-api"
-            if (string.IsNullOrWhiteSpace(target)) return false;
-
-            // 1) aud شامل target بود
-            if (audiences != null && audiences.Contains(target, StringComparer.Ordinal))
-                return true;
-
-            // 2) در غیر این صورت resource_access را چک کن
-            if (securityToken is JwtSecurityToken jwt)
-            {
-                var ra = jwt.Claims.FirstOrDefault(c => c.Type == "resource_access")?.Value;
-                if (!string.IsNullOrEmpty(ra))
-                {
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(ra);
-                        if (doc.RootElement.TryGetProperty(target, out _))
-                            return true;
-                    }
-                    catch { /* ignore parse errors */ }
-                }
-            }
-            return false;
-        },
-
+        ValidAudience = "enterprise-api",
+        ValidateIssuer = true,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(2),
-
-        NameClaimType = "preferred_username",
-        RoleClaimType = ClaimTypes.Role
+        ValidateIssuerSigningKey = true,
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = ClaimTypes.NameIdentifier
     };
 
     options.Events = new JwtBearerEvents
     {
         OnTokenValidated = context =>
         {
-            var ci = context.Principal?.Identity as ClaimsIdentity;
-            if (ci is null) return Task.CompletedTask;
+            var claimsIdentity = context.Principal?.Identity as ClaimsIdentity;
 
             // sub -> NameIdentifier
-            var sub = ci.FindFirst("sub")?.Value;
-            if (!string.IsNullOrEmpty(sub) && !ci.HasClaim(ClaimTypes.NameIdentifier, sub))
-                ci.AddClaim(new Claim(ClaimTypes.NameIdentifier, sub));
+            var subClaim = claimsIdentity?.FindFirst("sub");
+            if (subClaim != null && !claimsIdentity.HasClaim(ClaimTypes.NameIdentifier, subClaim.Value))
+                claimsIdentity?.AddClaim(new Claim(ClaimTypes.NameIdentifier, subClaim.Value));
 
             // preferred_username -> Name
-            var uname = ci.FindFirst("preferred_username")?.Value;
-            if (!string.IsNullOrEmpty(uname) && !ci.HasClaim(ClaimTypes.Name, uname))
-                ci.AddClaim(new Claim(ClaimTypes.Name, uname));
+            var usernameClaim = claimsIdentity?.FindFirst("preferred_username");
+            if (usernameClaim != null && !claimsIdentity.HasClaim(ClaimTypes.Name, usernameClaim.Value))
+                claimsIdentity?.AddClaim(new Claim(ClaimTypes.Name, usernameClaim.Value));
 
-            // realm_access.roles
-            var realmAccess = ci.FindFirst("realm_access")?.Value;
-            if (!string.IsNullOrEmpty(realmAccess))
+            // realm_access.roles -> Role
+            var realmAccessClaim = claimsIdentity?.FindFirst("realm_access");
+            if (realmAccessClaim != null)
             {
                 try
                 {
-                    using var doc = JsonDocument.Parse(realmAccess);
-                    if (doc.RootElement.TryGetProperty("roles", out var rolesEl))
+                    using var doc = JsonDocument.Parse(realmAccessClaim.Value);
+                    if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
                     {
-                        foreach (var r in rolesEl.EnumerateArray())
+                        foreach (var role in rolesElement.EnumerateArray())
                         {
-                            var rv = r.GetString();
-                            if (!string.IsNullOrWhiteSpace(rv) && !ci.HasClaim(ClaimTypes.Role, rv))
-                                ci.AddClaim(new Claim(ClaimTypes.Role, rv));
+                            var roleValue = role.GetString();
+                            if (!string.IsNullOrWhiteSpace(roleValue) &&
+                                !claimsIdentity!.HasClaim(ClaimTypes.Role, roleValue))
+                            {
+                                claimsIdentity!.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                            }
                         }
                     }
                 }
-                catch { /* ignore */ }
+                catch { /* ignore parse errors */ }
             }
 
-            // resource_access.{audience}.roles
-            var resourceAccess = ci.FindFirst("resource_access")?.Value;
-            if (!string.IsNullOrEmpty(resourceAccess) && !string.IsNullOrEmpty(audience))
+            // resource_access.enterprise-api.roles -> Role
+            var resourceAccessClaim = claimsIdentity?.FindFirst("resource_access");
+            if (resourceAccessClaim != null)
             {
                 try
                 {
-                    using var doc = JsonDocument.Parse(resourceAccess);
-                    if (doc.RootElement.TryGetProperty(audience, out var clientObj) &&
-                        clientObj.TryGetProperty("roles", out var rr))
+                    using var doc = JsonDocument.Parse(resourceAccessClaim.Value);
+                    if (doc.RootElement.TryGetProperty("enterprise-api", out var enterpriseApi) &&
+                        enterpriseApi.TryGetProperty("roles", out var resourceRoles))
                     {
-                        foreach (var r in rr.EnumerateArray())
+                        foreach (var role in resourceRoles.EnumerateArray())
                         {
-                            var rv = r.GetString();
-                            if (!string.IsNullOrWhiteSpace(rv) && !ci.HasClaim(ClaimTypes.Role, rv))
-                                ci.AddClaim(new Claim(ClaimTypes.Role, rv));
+                            var roleValue = role.GetString();
+                            if (!string.IsNullOrWhiteSpace(roleValue) &&
+                                !claimsIdentity!.HasClaim(ClaimTypes.Role, roleValue))
+                            {
+                                claimsIdentity!.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                            }
                         }
                     }
                 }
-                catch { /* ignore */ }
+                catch { /* ignore parse errors */ }
             }
 
             return Task.CompletedTask;
-        },
-
-        // 401 (Invalid Token)
-        OnAuthenticationFailed = async ctx =>
-        {
-            ctx.NoResult();
-            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            ctx.Response.ContentType = "application/json; charset=utf-8";
-
-            var msg = new
-            {
-                error = "Unauthorized",
-                message = "توکن معتبر نیست.",
-                detail = ctx.Exception?.Message
-            };
-
-            await ctx.Response.WriteAsync(JsonSerializer.Serialize(msg));
-        },
-
-        // 401 Challenge
-        OnChallenge = async ctx =>
-        {
-            if (!ctx.Response.HasStarted)
-            {
-                ctx.Response.ContentType = "application/json; charset=utf-8";
-                var payload = "{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}";
-                await ctx.Response.WriteAsync(payload);
-            }
-            ctx.HandleResponse();
-        },
-
-        // 403 Forbidden
-        OnForbidden = async ctx =>
-        {
-            ctx.Response.ContentType = "application/json; charset=utf-8";
-            var payload = "{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}";
-            await ctx.Response.WriteAsync(payload);
         }
     };
 });
 
-// ===== Swagger =====
+// Swagger
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Enterprise API", Version = "v1" });
@@ -291,11 +197,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// ===== Pipeline =====
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List));
+    app.UseSwaggerUI(c =>
+    {
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+    });
 }
 
 app.UseHttpsRedirection();
@@ -304,6 +212,28 @@ app.UseCors("FrontPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// پیام‌های خطای 401/403 یکدست
+app.Use(async (context, next) =>
+{
+    await next();
+    if (!context.Response.HasStarted)
+    {
+        if (context.Response.StatusCode == 401)
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
+        }
+        else if (context.Response.StatusCode == 403)
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
+        }
+    }
+});
+
+// اگر لازم است پیام‌ میانی خودت اجرا شود
+app.UseMiddleware<AuthorizeMessageMW>();
 
 app.MapControllers();
 

@@ -7,7 +7,6 @@ using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Application;
 using EnterpriseAutomation.Infrastructure.Services;
-using EnterpriseAutomation.Domain.Enums;
 
 namespace EnterpriseAutomation.WebApi.Controllers
 {
@@ -58,7 +57,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             {
                 Username = dto.Username,
                 PasswordHash = passwordHasher.HashPassword(null, dto.Password),
-                Role = BasicRoles.NoRole
+                Role = "user"
             };
 
             await _userService.CreateUserAsync(user);
