@@ -21,7 +21,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public required int StepId { get; set; }
 
         [Display(Name = "آی دی درخواست دهنده")]
-        public required int UserId { get; set; }
+        public required Guid? UserId { get; set; }
 
         [Display(Name = "نام درخواست دهنده")]
         public required string UserName { get; set; }

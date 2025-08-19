@@ -31,7 +31,7 @@ namespace EnterpriseAutomation.Domain.Entities
         //public DateTime CreatedAt { get; set; } = default!;
 
         [Display(Name = "وضعیت فعلی")]
-        public string CurrentStatus { get; set; } = RequestStatus.Pending;
+        public string CurrentStatus { get; set; } = RequestStatus.Pending.ToString();
 
         [Display(Name = "مرحله فعلی")]
         public int CurrentStep { get; set; } = default!;
