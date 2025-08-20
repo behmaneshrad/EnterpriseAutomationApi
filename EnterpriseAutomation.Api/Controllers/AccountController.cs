@@ -7,6 +7,7 @@ using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using EnterpriseAutomation.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
+using EnterpriseAutomation.Domain.Enums;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -25,6 +26,7 @@ namespace EnterpriseAutomation.API.Controllers
             _context = context; // Inject DbContext
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
@@ -138,9 +140,8 @@ namespace EnterpriseAutomation.API.Controllers
                 {
                     Username = model.Username,
                     RefreshToken = string.Empty, 
-                    Role = "User", 
+                    Role = BasicRoles.NoRole, 
                     PasswordHash = string.Empty, 
-                    
                 };
 
                 // Add user to DbContext
