@@ -16,7 +16,7 @@ public class KeycloakRolesController : ControllerBase
     public record ClientRoleCreateRequest(string ClientId, string Name, string? Description);
 
     [HttpPost("realm")]
-    [AllowAnonymous]
+    //[Authorize(Roles = "admin")]
     public async Task<IActionResult> CreateRealmRole([FromBody] RealmRoleCreateRequest req, CancellationToken ct)
     {
         await _kc.CreateRealmRoleAsync(req.Name, req.Description, ct);
