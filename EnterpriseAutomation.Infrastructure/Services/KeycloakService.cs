@@ -4,8 +4,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace EnterpriseAutomation.Infrastructure.Services
 {
@@ -166,11 +170,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
             {
                 throw new($"Parse users response failed: {ex.Message}", ex);
             }
-
-            if (users != null && users.Count > 0)
-            {
-                return users[0].TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
-            }
+        }
 
             return null;
         }
@@ -306,25 +306,6 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
             // 4) Other errors
             throw HttpError("CreateRealmRole", resp, body);
-        }
-
-        /// <summary>
-        /// Idempotent local DB persistence for Role.
-        /// Uses IRepository contracts: GetFirstOrDefaultAsync / InsertAsync / SaveChangesAsync
-        /// </summary>
-        private async Task EnsureRolePersistedAsync(string roleName)
-        {
-            // Check existence
-            var exists = await _roleRepo.GetFirstOrDefaultAsync(r => r.RoleName == roleName);
-            if (exists is not null) return;
-
-            var entity = new Role
-            {
-                RoleName = roleName
-            };
-
-            await _roleRepo.InsertAsync(entity);
-            await _roleRepo.SaveChangesAsync();
         }
 
         public async Task CreateClientRoleAsync(string clientId, string name, string? description, CancellationToken ct)
