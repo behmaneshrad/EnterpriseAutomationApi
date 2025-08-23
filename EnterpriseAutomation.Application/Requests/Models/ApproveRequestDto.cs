@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace EnterpriseAutomation.Application.Requests.Models
 {
-    internal class AprproveRequestDto
+   public class ApproveRequestDto
     {
+        //true -> تایید & false -> رد
+        public bool IsApproved { get; set; }
+        //توضیحات /کامنت کاربر تایید کننده
+        public string? Comment { get; set; }
     }
 }

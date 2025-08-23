@@ -33,7 +33,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         }
 
         // Permission فعّال مربوط به این PolicyKey
-        var permission = await _db.Permissions
+        var permission = await _db.Permission
             .Include(p => p.Roles)
             .Where(p => p.Key == requirement.PolicyKey && p.IsActive)
             .FirstOrDefaultAsync();

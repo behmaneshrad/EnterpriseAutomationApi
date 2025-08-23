@@ -15,5 +15,7 @@ namespace EnterpriseAutomation.Domain.Entities
 
 
         public virtual ICollection<User> Users { get; set; } = [];
+        public ICollection<RolePermissions> RolePermissions { get; set; } = new List<RolePermissions>();
+
     }
 }
