@@ -4,16 +4,27 @@ using Application.Common.Security;
 
 namespace Api.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
     public class TestController : ControllerBase
     {
-
+        private readonly ILogger<TestController> _logger;
+        public TestController(ILogger<TestController> logger)
+        {
+            _logger = logger;
+        }
         [AllowAnonymous]
         [HttpPost("cors")]
         public IActionResult Post([FromBody] object body) => Ok(new { msg = "CORS OK (POST)", body });
 
-
+        [AllowAnonymous]
+        [HttpGet("get")]
+        public IActionResult Get() 
+        {
+            _logger.LogInformation("Test log from TestController at {time}", DateTime.UtcNow);
+            return Ok("check elastic");
+        }
 
 
         //[HttpGet("public")]

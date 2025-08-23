@@ -21,6 +21,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text.Json;
+// for log
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
