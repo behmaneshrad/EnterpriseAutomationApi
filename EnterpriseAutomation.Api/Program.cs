@@ -23,6 +23,7 @@ using System.Security.Claims;
 using System.Text.Json;
 // for log
 using Serilog;
+using EnterpriseAutomation.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,10 +56,11 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<AppDbContextFactory>();
 
 // (اگر از Provider/Handler سفارشی استفاده می‌کنی نگه‌شان دار)
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddScoped<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 
 // ===== Authorization Policies (مطابق جدول) =====
 builder.Services.AddAuthorization(options =>
@@ -209,7 +211,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
 app.UseCors("FrontPolicy");
 
 app.UseAuthentication();
