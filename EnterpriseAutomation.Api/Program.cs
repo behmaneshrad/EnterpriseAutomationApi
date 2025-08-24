@@ -59,8 +59,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<AppDbContextFactory>();
 
 // (اگر از Provider/Handler سفارشی استفاده می‌کنی نگه‌شان دار)
-builder.Services.AddScoped<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddScoped<PermissionPolicyProvider>();
+builder.Services.AddScoped<PermissionHandler>();
 
 // ===== Authorization Policies (مطابق جدول) =====
 builder.Services.AddAuthorization(options =>
