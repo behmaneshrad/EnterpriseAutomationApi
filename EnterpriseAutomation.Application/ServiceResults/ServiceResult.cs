@@ -18,27 +18,37 @@ namespace EnterpriseAutomation.Application.ServiceResults
         public bool Warning { get; set; }
         public string[]? Warnings { get; set; }
 
-        public static ServiceResult<TEntity> Success(TEntity entity, int status = 200, string? messageCode = null)
+        public static ServiceResult<TEntity> Success(
+           TEntity entity,
+           int status = 200,
+           string? message = null,
+           string? messageCode = null,
+           string[]? warnings = null)
         {
             return new ServiceResult<TEntity>
             {
                 Status = status,
                 Entity = entity,
+                Message = message,
                 MessageCode = messageCode,
-                Error = false
+                Warnings = warnings
             };
         }
 
-        public static ServiceResult<TEntity> Failure(string[] errors, int status = 400)
+        public static ServiceResult<TEntity> Failure(
+           string message,
+           int status = 400,
+           string? messageCode = null,
+           string[]? errors = null)
         {
             return new ServiceResult<TEntity>
             {
                 Status = status,
-                Errors = errors,
-                Error = true
+                Message = message,
+                MessageCode = messageCode,
+                Errors = errors ?? new[] { message }
             };
         }
-
 
         public override string ToString()
         {

@@ -37,7 +37,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 Description = wfDto.Description,
                 Name = wfDto.Name,
                 CreatedAt = DateTime.Now,
-                CreatedById = 3,
+                CreatedById = 1,
                 UpdatedAt = DateTime.MinValue,
                 UserCreatedId = 0,
             };
@@ -64,7 +64,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             throw new NotImplementedException();
         }
 
-        public async Task<WorkflowDefinitionAndWorkflowStepDto> GetById(int id)
+        public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetById(int id)
         {
             var result = await _repository.GetQueryable(
                 q => q.Include(x => x.WorkflowSteps)
@@ -88,7 +88,12 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 }).ToList()
             }).FirstOrDefaultAsync();
 
-            return result;
+            return new ServiceResult<WorkflowDefinitionAndWorkflowStepDto>
+            {
+                Status=200,
+                Message="find workflowdefintions",
+                Entity = result
+            };
         }
 
         public Task<WorkflowDetailDto> GetWorkFlowById(int id)
@@ -105,7 +110,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
             workflowdef.Name = wfDto.Name;
             workflowdef.Description = wfDto.Description;
-            workflowdef.UserModifyId = 3;
+            workflowdef.UserModifyId = 1;
             workflowdef.UpdatedAt = DateTime.Now;
 
             _repository.UpdateEntity(workflowdef);
@@ -115,8 +120,8 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
-            if (entityDTO == null)
-                return ServiceResult<WorkflowDefinition>.Failure(new[] { "Invalid data" }, 400);
+            if ((entityDTO.Description == string.Empty)||(entityDTO.Name==string.Empty))
+                return ServiceResult<WorkflowDefinition>.Failure("Invalid data", 400);
 
             WorkflowDefinition entity;
 
@@ -124,17 +129,17 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             {
                 entity = await _repository.GetByIdAsync((int)id);
                 if (entity == null)
-                    return ServiceResult<WorkflowDefinition>.Failure(new[] { "Workflow not found" }, 404);
+                    return ServiceResult<WorkflowDefinition>.Failure("Workflow not found", 404);
 
                 entity.Description = entityDTO.Description;
                 entity.Name = entityDTO.Name;
                 entity.UpdatedAt = DateTime.Now;
-                entity.UserCreatedId = 3; // نمونه
+                entity.UserCreatedId = 1; // نمونه
 
                 _repository.UpdateEntity(entity);
                 await _repository.SaveChangesAsync();
 
-                return ServiceResult<WorkflowDefinition>.Success(entity, 202, "Updated successfully");
+                return ServiceResult<WorkflowDefinition>.Success(entity, 204, "Updated successfully");
             }
             else // Create
             {
@@ -143,7 +148,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                     Description = entityDTO.Description,
                     Name = entityDTO.Name,
                     CreatedAt = DateTime.Now,
-                    CreatedById = 3,
+                    CreatedById = 1,
                     UpdatedAt = DateTime.MinValue,
                     UserCreatedId = 0
                 };

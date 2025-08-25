@@ -10,6 +10,7 @@ using EnterpriseAutomation.Infrastructure.Services;
 
 namespace EnterpriseAutomation.WebApi.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase

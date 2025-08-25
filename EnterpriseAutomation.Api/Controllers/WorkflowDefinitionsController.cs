@@ -1,13 +1,16 @@
 ﻿using EnterpriseAutomation.Api.Controllers.BaseController;
 using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.ServiceResults;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnterpriseAutomation.Api.Controllers
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkflowDefinitionsController :
@@ -32,14 +35,14 @@ namespace EnterpriseAutomation.Api.Controllers
         }
 
         [HttpPost("UpsertWorkflow")]
-        public async Task<IActionResult> UpsertWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
+        public async Task<ActionResult<ServiceResult<WorkflowDefinitionCreateDto>>> UpsertWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
             var result = await _definitionsService.UpsertWorkflowDefinition(id, entityDTO);
             if (result.Error)
             {
-                return StatusCode(result.Status, new { errors = result.Error });
+                return StatusCode(result.Status, result);
             }
-            return StatusCode(result.Status, result.Entity);
+            return StatusCode(result.Status,result);
         }
     }
 }
