@@ -1,12 +1,9 @@
 ﻿using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Models;
 using EnterpriseAutomation.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace EnterpriseAutomation.Application.WorkflowSteps.Services
 {
@@ -52,6 +49,47 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Services
 
             _repository.UpdateEntity(workflowStep);
             await _repository.SaveChangesAsync();
+        }
+
+        public async Task<ServiceResult<WorkflowStep>> UpsertWorkflowStep(int? id, WorkflowStepsCreatDto dto)
+        {
+            if ((dto?.WorkflowDefinitionId == null) || (dto.StepName == string.Empty))
+            {
+                return ServiceResult<WorkflowStep>
+                  .Failure("Invalid data", 400, null, new[] { "The received argument is empty." });
+            }
+              
+            WorkflowStep entity;
+
+            if (id != null) // Update
+            {
+                entity = await _repository.GetByIdAsync((int)id);
+
+                if (entity == null) ServiceResult<WorkflowStep>
+                    .Failure("entity not found", 404, null, new[] { "Update failed." });
+
+                _repository.UpdateEntity(entity);
+                await _repository.SaveChangesAsync();
+
+                return ServiceResult<WorkflowStep>.Success(entity, 200, "Updated successfully");
+            }
+            else // Create
+            {
+                entity =new WorkflowStep
+                {
+                    WorkflowDefinitionId = dto.WorkflowDefinitionId,
+                    Order = dto.Order,
+                    StepName = dto.StepName,
+                    Role = dto.Role,
+                    Editable = dto.Editable,
+                    CreatedAt = DateTime.Now,
+                    UserCreatedId = 1 // نمونه
+                };
+                await _repository.InsertAsync(entity);
+                await _repository.SaveChangesAsync();
+
+                return ServiceResult<WorkflowStep>.Success(entity, 201, "Created successfully");
+            }
         }
     }
 }

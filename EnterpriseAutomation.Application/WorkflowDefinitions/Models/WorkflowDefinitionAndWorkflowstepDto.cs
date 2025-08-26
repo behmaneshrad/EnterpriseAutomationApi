@@ -16,13 +16,13 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
 
         public int CreatedById { get; set; }
 
-        public int UpdatedById { get; set; }
+        public int? UpdatedById { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
-        public List<WorkflowStepDto> WorkflowStepDto { get; set; } = [];
+        public List<WorkflowStepDto>? WorkflowStepDto { get; set; } = [];
     }
 
     public class WorkflowStepDto

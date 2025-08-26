@@ -1,4 +1,4 @@
-﻿using EnterpriseAutomation.Application.ServiceResults;
+﻿using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
 using System;
@@ -12,6 +12,8 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces
     public interface IWorkflowDefinitionsService
     {
         public Task<IEnumerable<WorkflowDefinitionGetDto>> GetAllWorkflowDefinitionsAsync();
+
+        public Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync();
 
         public Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetById(int id);
 

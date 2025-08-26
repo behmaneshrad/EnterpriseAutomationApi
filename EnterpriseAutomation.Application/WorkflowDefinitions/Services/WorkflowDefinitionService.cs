@@ -1,5 +1,5 @@
 ﻿using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.ServiceResults;
+using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
@@ -25,12 +25,9 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
         {
             if (wfDto == null)
             {
-                return new ServiceResult<WorkflowDefinition>
-                {
-                    Status = 400,
-                    Error = true,
-                    Errors = new[] { "اطلاعات ارسالی معتبر نیست" }
-                };
+                return ServiceResult<WorkflowDefinition>.Failure("list is empty", 400);
+
+
             }
             var workflowDefinition = new WorkflowDefinition()
             {
@@ -45,13 +42,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             await _repository.InsertAsync(workflowDefinition);
             await _repository.SaveChangesAsync();
 
-            return new ServiceResult<WorkflowDefinition>
-            {
-                Status = 201,
-                Entity = workflowDefinition,
-                MessageCode = "workflow add",
-                Error = false
-            };
+            return ServiceResult<WorkflowDefinition>.Success(workflowDefinition, 201, "workflow defintions add to database");
         }
 
         public Task DeleteWorkflowDefinition(int id)
@@ -62,6 +53,38 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
         public Task<IEnumerable<WorkflowDefinitionGetDto>> GetAllWorkflowDefinitionsAsync()
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync()
+        {
+            var result = await _repository.GetAllAsync(
+                p => p.Include(c=>c.WorkflowSteps),
+                asNoTracking: false);
+
+            if (result == null)
+                return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Failure("list is empty",400);
+            
+            var wtf = result.Select(c => new WorkflowDefinitionAndWorkflowStepDto
+            {
+                WorkflowDefinitionId = c.WorkflowDefinitionId,
+                CreatedAt = c.CreatedAt,
+                Name = c.Name,
+                Description = c.Description,
+                CreatedById = c.CreatedById,
+                UpdatedAt=c.UpdatedAt,
+                UpdatedById=c.UserCreatedId,
+                WorkflowStepDto = c.WorkflowSteps.Select(w => new WorkflowStepDto
+                {
+                    WorkflowDefinitionId = w.WorkflowDefinitionId,
+                    WorkflowStepId = w.WorkflowStepId,
+                    Order = w.Order,
+                    Role = w.Role,
+                    StepName = w.StepName,
+                    Editable = w.Editable
+                }).ToList()
+            });
+
+            return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.SuccessList(wtf, 200, "Restore all workflows and related steps.");
         }
 
         public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetById(int id)
@@ -88,12 +111,9 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 }).ToList()
             }).FirstOrDefaultAsync();
 
-            return new ServiceResult<WorkflowDefinitionAndWorkflowStepDto>
-            {
-                Status=200,
-                Message="find workflowdefintions",
-                Entity = result
-            };
+            if (result == null) return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Failure("Not found result", 404);
+
+            return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Success(result, 200);
         }
 
         public Task<WorkflowDetailDto> GetWorkFlowById(int id)

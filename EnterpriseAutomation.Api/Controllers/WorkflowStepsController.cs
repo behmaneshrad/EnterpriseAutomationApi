@@ -1,13 +1,16 @@
 ﻿using EnterpriseAutomation.Api.Controllers.BaseController;
 using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Models;
 using EnterpriseAutomation.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace EnterpriseAutomation.Api.Controllers
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkflowStepsController : BaseController<WorkflowStep>
@@ -20,15 +23,14 @@ namespace EnterpriseAutomation.Api.Controllers
         }
 
         [HttpPost("UpsertWorkflowStep")]
-        public async Task<IActionResult> UpsertWorkflowStep(int id, WorkflowStepsCreatDto workflowstepDto)
+        public async Task<ActionResult<ServiceResult<WorkflowStepsCreatDto>>> UpsertWorkflowStep(int? id, WorkflowStepsCreatDto workflowstepDto)
         {
-            if ((id == 0)|| (id == null))
+            var result = await _stepsService.UpsertWorkflowStep(id, workflowstepDto);
+            if (result.Error)
             {
-                await _stepsService.AddWorkflowStep(workflowstepDto);
-                return Ok();
+                return StatusCode(result.Status, result);
             }
-            await _stepsService.UpdateWorkflowStep(id,workflowstepDto);
-            return Ok();
+            return StatusCode(result.Status, result);
         }
     }
 }

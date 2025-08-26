@@ -23,19 +23,5 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Models
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
-
-        public static WorkflowDefinitionGetDto MapFrom(WorkflowDefinition workflowDefinition)
-        {
-            return new WorkflowDefinitionGetDto
-            {
-                WorkflowDefinitionId = workflowDefinition.WorkflowDefinitionId,
-                Name = workflowDefinition.Name,
-                Description = workflowDefinition.Description,
-                CreatedById = workflowDefinition.CreatedById,
-                CreatedAt = workflowDefinition.CreatedAt,
-                UpdatedAt = workflowDefinition.UpdatedAt ?? DateTime.MinValue,
-                UpdatedById = workflowDefinition.UserModifyId ?? 0
-            };
-        }
     }
 }

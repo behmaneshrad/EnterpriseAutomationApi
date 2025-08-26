@@ -1,4 +1,5 @@
-﻿using EnterpriseAutomation.Application.WorkflowSteps.Models;
+﻿using EnterpriseAutomation.Application.ServiceResult;
+using EnterpriseAutomation.Application.WorkflowSteps.Models;
 using EnterpriseAutomation.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -15,5 +16,7 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Interfaces
         public Task AddWorkflowStep(WorkflowStepsCreatDto workflowStepDto);
 
         public Task UpdateWorkflowStep(int id, WorkflowStepsCreatDto workflowStepDto);
+
+        public Task<ServiceResult<WorkflowStep>> UpsertWorkflowStep(int? id, WorkflowStepsCreatDto dto);
     }
 }

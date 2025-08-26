@@ -1,6 +1,6 @@
 ﻿using EnterpriseAutomation.Api.Controllers.BaseController;
 using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.ServiceResults;
+using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
@@ -24,16 +24,6 @@ namespace EnterpriseAutomation.Api.Controllers
             _definitionsService = definitionsService;
         }
 
-        [HttpGet("GetWorkflowDefinitionsAndStepById/{id}")]
-        public async Task<IActionResult> Get(int id)
-        {
-            var result = await _definitionsService.GetById(id);
-
-            if (result == null) return NotFound();
-
-            return Ok(result);
-        }
-
         [HttpPost("UpsertWorkflow")]
         public async Task<ActionResult<ServiceResult<WorkflowDefinitionCreateDto>>> UpsertWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
@@ -43,6 +33,31 @@ namespace EnterpriseAutomation.Api.Controllers
                 return StatusCode(result.Status, result);
             }
             return StatusCode(result.Status,result);
+        }
+
+        [HttpGet("GetWorkflowDefinitionsAndStepById/{id}")]
+        public async Task<ActionResult<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>>> Get(int id)
+        {
+            var result = await _definitionsService.GetById(id);
+
+            if (result.Error)
+            {
+                return StatusCode(result.Status, result);
+            }
+
+            return StatusCode(result.Status, result);
+        }
+
+
+        [HttpGet("GetAllWorkflowDefinitionsWithSteps")]
+        public async Task<ActionResult<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>>> GetAllWorkflowDefinitionsWithSteps()
+        {
+            var result = await _definitionsService.GetAllWorkflowDefinitionsWithStepsAsync();
+            if (result.Error)
+            {
+                return StatusCode(result.Status, result);
+            }
+            return StatusCode(result.Status, result);
         }
     }
 }

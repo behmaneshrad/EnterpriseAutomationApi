@@ -5,18 +5,19 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace EnterpriseAutomation.Application.ServiceResults
+namespace EnterpriseAutomation.Application.ServiceResult
 {
     public class ServiceResult<TEntity>
     {
         public int Status { get; set; }
-        public string? MessageCode { get; set; }
-        public TEntity? Entity { get; set; }
-        public string? Message { get; set; }
-        public bool Error { get; set; }
-        public string[]? Errors { get; set; }
-        public bool Warning { get; set; }
-        public string[]? Warnings { get; set; }
+        public string? MessageCode { get; private set; }
+        public TEntity? Entity { get; private set; }
+        public string? Message { get; private set; }
+        public bool Error { get; private set; }
+        public string[]? Errors { get; private set; }
+        public bool Warning { get; private set; }
+        public string[]? Warnings { get; private set; }
+        public IEnumerable<TEntity> Entities { get; private set; } = [];
 
         public static ServiceResult<TEntity> Success(
            TEntity entity,
@@ -35,6 +36,23 @@ namespace EnterpriseAutomation.Application.ServiceResults
             };
         }
 
+        public static ServiceResult<TEntity> SuccessList(
+        IEnumerable<TEntity> entities,
+        int status = 200,
+        string? message = null,
+        string? messageCode = null,
+        string[]? warnings = null)
+        {
+            return new ServiceResult<TEntity>
+            {
+                Status = status,
+                Entities = entities,
+                Message = message,
+                MessageCode = messageCode,
+                Warnings = warnings
+            };
+        }
+
         public static ServiceResult<TEntity> Failure(
            string message,
            int status = 400,
@@ -46,7 +64,9 @@ namespace EnterpriseAutomation.Application.ServiceResults
                 Status = status,
                 Message = message,
                 MessageCode = messageCode,
-                Errors = errors ?? new[] { message }
+                Error = true,
+                Errors = errors ?? new[] { message },
+                Warning = true
             };
         }
 
