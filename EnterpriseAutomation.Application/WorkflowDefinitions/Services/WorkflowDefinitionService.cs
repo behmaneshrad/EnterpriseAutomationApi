@@ -1,4 +1,5 @@
 ﻿using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.Logger.WorkflowLogger;
 using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
@@ -16,18 +17,18 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
     public class WorkflowDefinitionService : IWorkflowDefinitionsService
     {
         private readonly IRepository<WorkflowDefinition> _repository;
+        private readonly IWorkflowServiceLogger _workflowServiceLogger;
 
-        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository)
+        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository,IWorkflowServiceLogger workflowServiceLogger)
         {
             _repository = repository;
+            _workflowServiceLogger = workflowServiceLogger;
         }
         public async Task<ServiceResult<WorkflowDefinition>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
         {
             if (wfDto == null)
             {
                 return ServiceResult<WorkflowDefinition>.Failure("list is empty", 400);
-
-
             }
             var workflowDefinition = new WorkflowDefinition()
             {
@@ -111,7 +112,15 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 }).ToList()
             }).FirstOrDefaultAsync();
 
-            if (result == null) return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Failure("Not found result", 404);
+            if (result == null)
+            {
+           
+
+                return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>
+                    .Failure("Not found result", 404);
+            }
+
+          
 
             return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Success(result, 200);
         }

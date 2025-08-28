@@ -24,6 +24,7 @@ using System.Text.Json;
 // for log
 using Serilog;
 using EnterpriseAutomation.Infrastructure;
+using EnterpriseAutomation.Application.Logger.WorkflowLogger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
+// Logger for workflow actions
+builder.Services.AddScoped<IWorkflowServiceLogger,WorkflowServiceLogger>();
 
 // Generic Repository
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
