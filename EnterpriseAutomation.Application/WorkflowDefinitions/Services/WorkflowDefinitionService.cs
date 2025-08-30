@@ -6,6 +6,7 @@ using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +18,14 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
     public class WorkflowDefinitionService : IWorkflowDefinitionsService
     {
         private readonly IRepository<WorkflowDefinition> _repository;
-        private readonly IWorkflowServiceLogger _workflowServiceLogger;
+        private readonly IWorkflowLogService _workflowLogService;
+        private readonly ILogger<WorkflowDefinition> _logger;
 
-        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository,IWorkflowServiceLogger workflowServiceLogger)
+        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository, IWorkflowLogService workflowLogService, ILogger<WorkflowDefinition> logger)
         {
             _repository = repository;
-            _workflowServiceLogger = workflowServiceLogger;
+            _workflowLogService = workflowLogService;
+            _logger = logger;
         }
         public async Task<ServiceResult<WorkflowDefinition>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
         {
@@ -58,13 +61,17 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
         public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync()
         {
+
             var result = await _repository.GetAllAsync(
-                p => p.Include(c=>c.WorkflowSteps),
+                p => p.Include(c => c.WorkflowSteps),
                 asNoTracking: false);
 
             if (result == null)
-                return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Failure("list is empty",400);
-            
+            {
+                _logger.LogWarning("Action: GetAllWorkflowDefinitionsWithStepsAsync Failure list empty");
+                return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Failure("list is empty", 400);
+            }
+
             var wtf = result.Select(c => new WorkflowDefinitionAndWorkflowStepDto
             {
                 WorkflowDefinitionId = c.WorkflowDefinitionId,
@@ -72,8 +79,8 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 Name = c.Name,
                 Description = c.Description,
                 CreatedById = c.CreatedById,
-                UpdatedAt=c.UpdatedAt,
-                UpdatedById=c.UserCreatedId,
+                UpdatedAt = c.UpdatedAt,
+                UpdatedById = c.UserCreatedId,
                 WorkflowStepDto = c.WorkflowSteps.Select(w => new WorkflowStepDto
                 {
                     WorkflowDefinitionId = w.WorkflowDefinitionId,
@@ -84,7 +91,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                     Editable = w.Editable
                 }).ToList()
             });
-
+            _logger.LogInformation("GetAllWorkflowDefinitionsWithStepsAsync success");
             return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.SuccessList(wtf, 200, "Restore all workflows and related steps.");
         }
 
@@ -114,13 +121,33 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
             if (result == null)
             {
-           
+                await _workflowLogService.LogAsync(log: new WorkflowLog
+                {
+                    WorkflowId = 0,
+                    RequestId = 0,
+                    StepId = 0,
+                    UserId = Guid.NewGuid(),
+                    UserName="",
+                    Description = "WorkflowDefinition not found",
+                    CreatedAt = DateTime.UtcNow,
+                    ActionType = "GetById"
+                });
 
                 return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>
                     .Failure("Not found result", 404);
             }
 
-          
+            await _workflowLogService.LogAsync(log: new WorkflowLog
+            {
+                WorkflowId = id,
+                RequestId = 0,
+                StepId = 0,
+                UserId = Guid.NewGuid(),
+                UserName="",
+                Description = "WorkflowDefinition fetched successfully",
+                CreatedAt = DateTime.UtcNow,
+                ActionType = "GetById"
+            });
 
             return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Success(result, 200);
         }
@@ -149,7 +176,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
-            if ((entityDTO.Description == string.Empty)||(entityDTO.Name==string.Empty))
+            if ((entityDTO.Description == string.Empty) || (entityDTO.Name == string.Empty))
                 return ServiceResult<WorkflowDefinition>.Failure("Invalid data", 400);
 
             WorkflowDefinition entity;

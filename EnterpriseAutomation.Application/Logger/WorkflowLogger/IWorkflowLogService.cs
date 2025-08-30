@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Application.Logger.WorkflowLogger
 {
-    public interface IWorkflowServiceLogger
+    public interface IWorkflowLogService
     {
-        Task EnsureIndexExistsAsync();
-        Task<bool> IndexExistsAsync();
-        Task CreateIndexAsync();
+        Task LogAsync(WorkflowLog log);
     }
 }

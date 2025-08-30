@@ -1,6 +1,9 @@
 ﻿using EnterpriseAutomation.Api.Middelware.AuthorizeMIddelware;
 using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.Logger.ElasticServices;
+using EnterpriseAutomation.Application.Logger.WorkflowLogger;
+
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
@@ -10,25 +13,33 @@ using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Services;
 using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Services;
+using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Infrastructure;
 using EnterpriseAutomation.Infrastructure.Persistence;
 using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Services;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Security.Claims;
-using System.Text.Json;
+using Nest;
 // for log
 using Serilog;
-using EnterpriseAutomation.Infrastructure;
-using EnterpriseAutomation.Application.Logger.WorkflowLogger;
+using Serilog.Sinks.Elasticsearch;
+using System.Security.Claims;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// CORS
+// Elasticsearch configuration
+var elasticUri = builder.Configuration["ElasticConfiguration:Uri"];
+ConnectionSettings settings = new ConnectionSettings(new Uri(elasticUri))
+    .DefaultIndex("workflow-logs")
+    .EnableApiVersioningHeader();
+
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontPolicy", policy =>
@@ -50,11 +61,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
+// Register Elasticsearch client
+builder.Services.AddSingleton<IElasticClient>(new ElasticClient(settings));
 // Logger for workflow actions
-builder.Services.AddScoped<IWorkflowServiceLogger,WorkflowServiceLogger>();
-
+builder.Services.AddSingleton<IElasticWorkflowIndexService, ElasticWorkflowIndexService>();
+builder.Services.AddScoped<IWorkflowLogService, WorkflowLogService>();
 // Generic Repository
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(EnterpriseAutomation.Application.IRepository.IRepository<>), typeof(Repository<>));
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -204,6 +217,12 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var workflowIndexService = scope.ServiceProvider.GetRequiredService<IElasticWorkflowIndexService>();
+    await workflowIndexService.EnsureWorkflowIndexExistsAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -212,6 +231,7 @@ if (app.Environment.IsDevelopment())
         c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
     });
 }
+
 
 app.UseHttpsRedirection();
 
