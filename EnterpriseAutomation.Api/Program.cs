@@ -3,7 +3,6 @@ using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Application.Logger.ElasticServices;
 using EnterpriseAutomation.Application.Logger.WorkflowLogger;
-
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
@@ -27,8 +26,10 @@ using Nest;
 // for log
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
+using System.Configuration;
 using System.Security.Claims;
 using System.Text.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,9 +37,12 @@ var builder = WebApplication.CreateBuilder(args);
 var elasticUri = builder.Configuration["ElasticConfiguration:Uri"];
 ConnectionSettings settings = new ConnectionSettings(new Uri(elasticUri))
     .DefaultIndex("workflow-logs")
-    .EnableApiVersioningHeader();
+    .BasicAuthentication("", "");
 
-
+builder.Host.UseSerilog((ctx, Configuration) =>
+{
+    Configuration.ReadFrom.Configuration(ctx.Configuration);
+});
 
 builder.Services.AddCors(options =>
 {
@@ -217,11 +221,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var workflowIndexService = scope.ServiceProvider.GetRequiredService<IElasticWorkflowIndexService>();
-    await workflowIndexService.EnsureWorkflowIndexExistsAsync();
-}
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -264,4 +264,10 @@ app.UseMiddleware<AuthorizeMessageMW>();
 
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var workflowIndexService = scope.ServiceProvider.GetRequiredService<IElasticWorkflowIndexService>();
+    await workflowIndexService.EnsureWorkflowIndexExistsAsync();
+}
 app.Run();
+

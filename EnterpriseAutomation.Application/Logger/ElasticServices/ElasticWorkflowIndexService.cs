@@ -48,10 +48,10 @@ namespace EnterpriseAutomation.Application.Logger.ElasticServices
                             )
                         )
                     );
-                    Console.WriteLine(_elasticClient.Ping());
-                    if (!response.IsValid)
+                    var el = _elasticClient.Ping();
+                    if (!el.IsValid)
                     {
-                        _logger.LogError("Failed to create workflow index: {Info}", response.DebugInformation);
+                        Console.WriteLine("elastic connection error",el.DebugInformation);
                     }
                     else
                     {
@@ -62,6 +62,7 @@ namespace EnterpriseAutomation.Application.Logger.ElasticServices
             catch (Exception ex)
             {
                 _logger.LogError("Failed to create workflow index: {Info}", ex.Message);
+                Console.WriteLine("Failed to create workflow index: {Info}", ex.Message);
                 throw;
             }
 

@@ -148,7 +148,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 CreatedAt = DateTime.UtcNow,
                 ActionType = "GetById"
             });
-
+            _logger.LogInformation("WorkflowDefinition fetched successfully");
             return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Success(result, 200);
         }
 
