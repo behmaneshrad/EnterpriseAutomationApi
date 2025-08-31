@@ -19,9 +19,9 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces
 
         public Task<WorkflowDetailDto> GetWorkFlowById(int id);
 
-        public Task<ServiceResult<WorkflowDefinition>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto);
+        public Task<ServiceResult<WorkflowDefinitionCreateDto>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto);
 
-        public Task UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto);
+        public Task<ServiceResult<WorkflowDefinitionCreateDto>> UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto);
 
         public Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO);
 

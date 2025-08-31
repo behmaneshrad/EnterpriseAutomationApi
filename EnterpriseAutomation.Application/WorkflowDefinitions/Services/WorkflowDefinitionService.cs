@@ -27,11 +27,11 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             _workflowLogService = workflowLogService;
             _logger = logger;
         }
-        public async Task<ServiceResult<WorkflowDefinition>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
+        public async Task<ServiceResult<WorkflowDefinitionCreateDto>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
         {
             if (wfDto == null)
             {
-                return ServiceResult<WorkflowDefinition>.Failure("list is empty", 400);
+                return ServiceResult<WorkflowDefinitionCreateDto>.Failure("list is empty", 400);
             }
             var workflowDefinition = new WorkflowDefinition()
             {
@@ -46,7 +46,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             await _repository.InsertAsync(workflowDefinition);
             await _repository.SaveChangesAsync();
 
-            return ServiceResult<WorkflowDefinition>.Success(workflowDefinition, 201, "workflow defintions add to database");
+            return ServiceResult<WorkflowDefinitionCreateDto>.Success(wfDto, 201, "workflow defintions add to database");
         }
 
         public Task DeleteWorkflowDefinition(int id)
@@ -132,7 +132,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                     CreatedAt = DateTime.UtcNow,
                     ActionType = "GetById"
                 });
-
+                _logger.LogError("WorkflowDefinition not found");
                 return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>
                     .Failure("Not found result", 404);
             }
@@ -157,12 +157,15 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             throw new NotImplementedException();
         }
 
-        public async Task UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto)
+        public async Task<ServiceResult<WorkflowDefinitionCreateDto>> UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto)
         {
             if (wfDto == null) throw new ArgumentException(nameof(wfDto));
 
             var workflowdef = await _repository.GetByIdAsync(id);
-            if (workflowdef == null) throw new ArgumentException(nameof(workflowdef));
+            if (workflowdef == null)
+            {
+                return ServiceResult<WorkflowDefinitionCreateDto>.Failure("not found workflow", 400);
+            }
 
             workflowdef.Name = wfDto.Name;
             workflowdef.Description = wfDto.Description;
@@ -172,12 +175,16 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             _repository.UpdateEntity(workflowdef);
             await _repository.SaveChangesAsync();
 
+            return ServiceResult<WorkflowDefinitionCreateDto>.Success(wfDto, 204,$"Update workflow: {wfDto.Name}");
         }
 
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
             if ((entityDTO.Description == string.Empty) || (entityDTO.Name == string.Empty))
+            {
+
                 return ServiceResult<WorkflowDefinition>.Failure("Invalid data", 400);
+            }
 
             WorkflowDefinition entity;
 
@@ -185,7 +192,10 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             {
                 entity = await _repository.GetByIdAsync((int)id);
                 if (entity == null)
+                {
+                    _logger.LogError("Workflow not found");
                     return ServiceResult<WorkflowDefinition>.Failure("Workflow not found", 404);
+                }
 
                 entity.Description = entityDTO.Description;
                 entity.Name = entityDTO.Name;

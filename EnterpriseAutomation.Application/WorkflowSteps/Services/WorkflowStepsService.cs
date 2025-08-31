@@ -30,7 +30,7 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Services
             await _repository.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<WorkflowStep>> GetAllWorkflowSteps()
+        public Task<ServiceResult<WorkflowStep>> GetAllWorkflowSteps()
         {
             throw new NotImplementedException();
         }

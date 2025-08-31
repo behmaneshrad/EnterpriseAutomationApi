@@ -11,7 +11,7 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Interfaces
 {
     public interface IWorkflowStepsService
     {
-        public Task<IEnumerable<WorkflowStep>> GetAllWorkflowSteps();
+        public Task<ServiceResult<WorkflowStep>> GetAllWorkflowSteps();
 
         public Task AddWorkflowStep(WorkflowStepsCreatDto workflowStepDto);
 
