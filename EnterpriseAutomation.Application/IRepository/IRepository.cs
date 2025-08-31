@@ -1,4 +1,5 @@
 ﻿using EnterpriseAutomation.Domain.Entities.Base;
+using EnterpriseAutomation.Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,10 @@ namespace EnterpriseAutomation.Application.IRepository
     {
 
         public Task<IEnumerable<TEntity?>> GetAllAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+            bool asNoTracking = false);
+
+        public Task<PaginatedList<TEntity?>> GetAllPaginationAsync(int padeIndex,int pageSize,
+            Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
             bool asNoTracking = false);
 
         public Task<TEntity?> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,

@@ -28,6 +28,14 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
             return Ok(result);
         }
 
+        [HttpGet("GetAllPageination/{pageIndex}")]
+        public async Task<ActionResult<IEnumerable<TEntity>>> GetAllWithPaging(int pageIndex)
+        {
+            var result = await _repository.GetAllPaginationAsync(pageIndex,10);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
         [HttpGet("GetById/{id}")]
         public async Task<IActionResult> GetById(int id)
         {

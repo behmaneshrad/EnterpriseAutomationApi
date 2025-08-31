@@ -1,15 +1,16 @@
-﻿using System;
+﻿using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Domain.Entities.Base;
+using EnterpriseAutomation.Infrastructure.Persistence;
+using EnterpriseAutomation.Infrastructure.Utilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Domain.Entities.Base;
-using EnterpriseAutomation.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.VisualBasic;
 
 namespace EnterpriseAutomation.Infrastructure.Repository
 {
@@ -22,6 +23,21 @@ namespace EnterpriseAutomation.Infrastructure.Repository
             _db = context;
             _dbSet = context.Set<TEntity>();
         }
+
+        public async Task<PaginatedList<TEntity?>> GetAllPaginationAsync(int padeIndex, int pageSize,
+         Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
+         bool asNoTracking = false)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            if (include != null)
+                query = include(query);
+
+            return await PaginatedList<TEntity>.CreateAsync(query, padeIndex, pageSize);
+        }
+
 
         #region Deleted Entity
         public async Task<bool> DeleteByIdAsync(int Id)
