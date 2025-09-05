@@ -3,6 +3,7 @@ using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Models;
 using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Infrastructure.Utilities;
 
 
 namespace EnterpriseAutomation.Application.WorkflowSteps.Services
@@ -30,9 +31,19 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Services
             await _repository.SaveChangesAsync();
         }
 
-        public Task<ServiceResult<WorkflowStep>> GetAllWorkflowSteps()
+        public async Task<ServiceResult<WorkflowStep>> GetAllWorkflowSteps(int pageIndex = 1, int pageSize = 10)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var allWorkiflowSteps = await _repository.GetAllAsync();
+                var p = PaginatedList<WorkflowStep>.Create(allWorkiflowSteps.AsQueryable(),
+                    pageIndex, pageSize);
+                return ServiceResult<WorkflowStep>.SuccessPaginated(p, 200);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult<WorkflowStep>.Failure(ex.Message, 400);
+            }
         }
 
         public async Task UpdateWorkflowStep(int id, WorkflowStepsCreatDto workflowStepDto)
@@ -58,7 +69,7 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Services
                 return ServiceResult<WorkflowStep>
                   .Failure("Invalid data", 400, null, new[] { "The received argument is empty." });
             }
-              
+
             WorkflowStep entity;
 
             if (id != null) // Update
@@ -75,7 +86,7 @@ namespace EnterpriseAutomation.Application.WorkflowSteps.Services
             }
             else // Create
             {
-                entity =new WorkflowStep
+                entity = new WorkflowStep
                 {
                     WorkflowDefinitionId = dto.WorkflowDefinitionId,
                     Order = dto.Order,

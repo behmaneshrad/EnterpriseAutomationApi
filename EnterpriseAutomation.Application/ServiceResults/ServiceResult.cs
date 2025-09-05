@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnterpriseAutomation.Infrastructure.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,7 @@ namespace EnterpriseAutomation.Application.ServiceResult
         public bool Warning { get; private set; }
         public string[]? Warnings { get; private set; }
         public IEnumerable<TEntity> Entities { get; private set; } = [];
+        public PaginatedList<TEntity>? paginatedList { get; private set; }
 
         public static ServiceResult<TEntity> Success(
            TEntity entity,
@@ -47,6 +49,23 @@ namespace EnterpriseAutomation.Application.ServiceResult
             {
                 Status = status,
                 Entities = entities,
+                Message = message,
+                MessageCode = messageCode,
+                Warnings = warnings
+            };
+        }
+
+        public static ServiceResult<TEntity> SuccessPaginated(
+        PaginatedList<TEntity> paginatedList,
+        int status = 200,
+        string? message = null,
+        string? messageCode = null,
+        string[]? warnings = null)
+        {
+            return new ServiceResult<TEntity>
+            {
+                Status = status,
+                paginatedList = paginatedList,
                 Message = message,
                 MessageCode = messageCode,
                 Warnings = warnings

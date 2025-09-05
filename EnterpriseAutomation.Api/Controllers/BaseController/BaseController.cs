@@ -1,7 +1,10 @@
-﻿using EnterpriseAutomation.Application.IRepository;
+﻿using Aqua.EnumerableExtensions;
+using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities.Base;
 using EnterpriseAutomation.Infrastructure.Repository;
+using EnterpriseAutomation.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,42 +24,56 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
         }
 
         [HttpGet("GetAll")]
-        public  async Task<ActionResult<IEnumerable<TEntity>>> GetAllAsync()
+        public async Task<ActionResult<IEnumerable<TEntity>>> GetAllAsync()
         {
             var result = await _repository.GetAllAsync();
             if (result == null) return NotFound();
             return Ok(result);
         }
 
-        [HttpGet("GetAllPageination/{pageIndex}")]
-        public async Task<ActionResult<IEnumerable<TEntity>>> GetAllWithPaging(int pageIndex)
+        [HttpGet("GetAllPageination/{pageSize}/{pageIndex}")]
+        public async Task<ActionResult<ServiceResult<TEntity>>> GetAllWithPaging(int pageIndex = 1, int pageSize = 10)
         {
-            var result = await _repository.GetAllPaginationAsync(pageIndex,10);
-            if (result == null) return NotFound();
-            return Ok(result);
+            var allEntity = await _repository.GetAllAsync();
+            if (allEntity == null)
+            {
+                var result = ServiceResult<TEntity>.Failure("break transiaction", 400);
+                return StatusCode(result.Status, result);
+            }
+
+            var p = PaginatedList<TEntity>.Create(allEntity.AsQueryable(), pageIndex, pageSize);
+            var result1 = ServiceResult<TEntity>.SuccessPaginated(p, 200, "Transient is success");
+            return StatusCode(result1.Status, result1);
         }
 
         [HttpGet("GetById/{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<ActionResult<ServiceResult<TEntity>>> GetById(int id)
         {
-            var result = await _repository.GetByIdAsync(id);
-            if (result == null) return NotFound();
-            
-            return Ok(result);
+            var entity = await _repository.GetByIdAsync(id);
+
+            if (entity == null)
+            {
+                var result = ServiceResult<TEntity>.Failure("Transient is failure", 404);
+                return StatusCode(result.Status, result);
+            }
+            var res = ServiceResult<TEntity>.Success(entity, 200, "Transient is success");
+            return StatusCode(res.Status, res);
         }
 
         [HttpPost("Add")]
-        public async Task<IActionResult> AddAsync(TEntity entity)
+        public async Task<ActionResult<ServiceResult<TEntity>>> AddAsync(TEntity entity)
         {
             try
             {
                 await _repository.InsertAsync(entity);
                 await _repository.SaveChangesAsync();
-                return StatusCode(statusCode: 201);
+                var res = ServiceResult<TEntity>.Success(entity, 201);
+                return StatusCode(res.Status, res);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                var result = ServiceResult<TEntity>.Failure(ex.Message, 500);
+                return StatusCode(result.Status, result);
             }
         }
 
@@ -69,14 +86,26 @@ namespace EnterpriseAutomation.Api.Controllers.BaseController
         }
 
         [HttpPost("Update")]
-        public async Task<IActionResult> UpdateByIdAsync(TEntity updateEntity)
+        public async Task<ActionResult<ServiceResult<TEntity>>> UpdateAsync(TEntity updateEntity)
         {
-            if (updateEntity == null) return NotFound();
+            try
+            {
+                if (updateEntity == null)
+                {
+                    var resultFailure = ServiceResult<TEntity>.Failure("Invalid input", 501);
+                    return StatusCode(resultFailure.Status, resultFailure);
+                }
 
-            _repository.UpdateEntity(updateEntity);
-            await _repository.SaveChangesAsync();
-
-            return Ok();
+                _repository.UpdateEntity(updateEntity);
+                await _repository.SaveChangesAsync();
+                var resultSuccess = ServiceResult<TEntity>.Success(updateEntity, 204);
+                return StatusCode(resultSuccess.Status, resultSuccess);
+            }
+            catch (Exception ex)
+            {
+                var resultException = ServiceResult<TEntity>.Failure(ex.Message, 500, ex.StackTrace);
+                return StatusCode(resultException.Status, resultException);
+            }
         }
 
     }

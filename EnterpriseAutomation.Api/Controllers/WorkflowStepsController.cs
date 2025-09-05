@@ -21,6 +21,12 @@ namespace EnterpriseAutomation.Api.Controllers
         {
             _stepsService = stepsService;
         }
+        [HttpGet("GetAllWorkflowSteps/{pageIndex}/{pageSize}")]
+        public async Task<ActionResult<ServiceResult<WorkflowStep>>> GetAllWorkflowSteps(int pageIndex=1,int pageSize=10)
+        {
+            var result = await _stepsService.GetAllWorkflowSteps(pageIndex,pageSize);
+            return StatusCode(result.Status, result);
+        }
 
         [HttpPost("UpsertWorkflowStep")]
         public async Task<ActionResult<ServiceResult<WorkflowStepsCreatDto>>> UpsertWorkflowStep(int? id, WorkflowStepsCreatDto workflowstepDto)

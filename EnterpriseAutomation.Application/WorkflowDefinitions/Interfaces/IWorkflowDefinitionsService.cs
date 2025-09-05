@@ -13,7 +13,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces
     {
         public Task<IEnumerable<WorkflowDefinitionGetDto>> GetAllWorkflowDefinitionsAsync();
 
-        public Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync();
+        public Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync(int pageIndex,int pageSize,string searchString);
 
         public Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetById(int id);
 

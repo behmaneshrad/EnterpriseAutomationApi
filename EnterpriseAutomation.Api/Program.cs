@@ -1,8 +1,8 @@
 ﻿using EnterpriseAutomation.Api.Middelware.AuthorizeMIddelware;
 using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.Logger.ElasticServices;
-using EnterpriseAutomation.Application.Logger.WorkflowLogger;
+//using EnterpriseAutomation.Application.Logger.ElasticServices;
+//using EnterpriseAutomation.Application.Logger.WorkflowLogger;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
@@ -48,10 +48,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
+              //.AllowCredentials();
     });
 });
 
@@ -68,8 +68,8 @@ builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionServic
 // Register Elasticsearch client
 builder.Services.AddSingleton<IElasticClient>(new ElasticClient(settings));
 // Logger for workflow actions
-builder.Services.AddSingleton<IElasticWorkflowIndexService, ElasticWorkflowIndexService>();
-builder.Services.AddScoped<IWorkflowLogService, WorkflowLogService>();
+//builder.Services.AddSingleton<IElasticWorkflowIndexService, ElasticWorkflowIndexService>();
+//builder.Services.AddScoped<IWorkflowLogService, WorkflowLogService>();
 // Generic Repository
 builder.Services.AddScoped(typeof(EnterpriseAutomation.Application.IRepository.IRepository<>), typeof(Repository<>));
 
@@ -264,10 +264,10 @@ app.UseMiddleware<AuthorizeMessageMW>();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var workflowIndexService = scope.ServiceProvider.GetRequiredService<IElasticWorkflowIndexService>();
-    await workflowIndexService.EnsureWorkflowIndexExistsAsync();
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var workflowIndexService = scope.ServiceProvider.GetRequiredService<IElasticWorkflowIndexService>();
+//    await workflowIndexService.EnsureWorkflowIndexExistsAsync();
+//}
 app.Run();
 

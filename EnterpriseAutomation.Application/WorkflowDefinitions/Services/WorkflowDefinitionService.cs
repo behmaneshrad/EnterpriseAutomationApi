@@ -1,9 +1,11 @@
-﻿using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.Logger.WorkflowLogger;
+﻿using Aqua.EnumerableExtensions;
+using EnterpriseAutomation.Application.IRepository;
+//using EnterpriseAutomation.Application.Logger.WorkflowLogger;
 using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,13 +20,12 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
     public class WorkflowDefinitionService : IWorkflowDefinitionsService
     {
         private readonly IRepository<WorkflowDefinition> _repository;
-        private readonly IWorkflowLogService _workflowLogService;
+
         private readonly ILogger<WorkflowDefinition> _logger;
 
-        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository, IWorkflowLogService workflowLogService, ILogger<WorkflowDefinition> logger)
+        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository, ILogger<WorkflowDefinition> logger)
         {
             _repository = repository;
-            _workflowLogService = workflowLogService;
             _logger = logger;
         }
         public async Task<ServiceResult<WorkflowDefinitionCreateDto>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
@@ -59,7 +60,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             throw new NotImplementedException();
         }
 
-        public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync()
+        public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync(int pageIndex,int pageSize,string? serchString)
         {
 
             var result = await _repository.GetAllAsync(
@@ -71,7 +72,11 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                 _logger.LogWarning("Action: GetAllWorkflowDefinitionsWithStepsAsync Failure list empty");
                 return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Failure("list is empty", 400);
             }
-
+            if (!serchString.IsNullOrEmpty())
+            {
+                result = result.Where(c => c.Name.Contains(serchString)).ToList();
+            }
+           
             var wtf = result.Select(c => new WorkflowDefinitionAndWorkflowStepDto
             {
                 WorkflowDefinitionId = c.WorkflowDefinitionId,
@@ -91,8 +96,11 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                     Editable = w.Editable
                 }).ToList()
             });
+            var p =PaginatedList<WorkflowDefinitionAndWorkflowStepDto>
+                .Create(wtf.AsQueryable(), pageIndex, pageSize);
+
             _logger.LogInformation("GetAllWorkflowDefinitionsWithStepsAsync success");
-            return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.SuccessList(wtf, 200, "Restore all workflows and related steps.");
+            return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.SuccessPaginated(p, 200, "Restore all workflows and related steps.");
         }
 
         public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetById(int id)
@@ -121,34 +129,35 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
             if (result == null)
             {
-                await _workflowLogService.LogAsync(log: new WorkflowLog
-                {
-                    WorkflowId = 0,
-                    RequestId = 0,
-                    StepId = 0,
-                    UserId = Guid.NewGuid(),
-                    UserName="",
-                    Description = "WorkflowDefinition not found",
-                    CreatedAt = DateTime.UtcNow,
-                    ActionType = "GetById"
-                });
-                _logger.LogError("WorkflowDefinition not found");
+                //var log = new WorkflowLog()
+                //{
+                //    WorkflowId = 0,
+                //    RequestId = 0,
+                //    StepId = 0,
+                //    UserId = Guid.NewGuid(),
+                //    UserName = "",
+                //    Description = "WorkflowDefinition not found",
+                //    CreatedAt = DateTime.UtcNow,
+                //    ActionType = "GetById"
+                //}.To();
+
+                _logger.LogError($"WorkflowDefinition not found");
                 return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>
                     .Failure("Not found result", 404);
             }
 
-            await _workflowLogService.LogAsync(log: new WorkflowLog
+            var log = new WorkflowLog()
             {
-                WorkflowId = id,
+                WorkflowId = 0,
                 RequestId = 0,
                 StepId = 0,
                 UserId = Guid.NewGuid(),
-                UserName="",
-                Description = "WorkflowDefinition fetched successfully",
+                UserName = "",
+                Description = "WorkflowDefinition not found",
                 CreatedAt = DateTime.UtcNow,
                 ActionType = "GetById"
-            });
-            _logger.LogInformation("WorkflowDefinition fetched successfully");
+            }.ToString();
+            _logger.LogInformation($"WorkflowDefinition fetched successfully {log}");
             return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.Success(result, 200);
         }
 
@@ -175,7 +184,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             _repository.UpdateEntity(workflowdef);
             await _repository.SaveChangesAsync();
 
-            return ServiceResult<WorkflowDefinitionCreateDto>.Success(wfDto, 204,$"Update workflow: {wfDto.Name}");
+            return ServiceResult<WorkflowDefinitionCreateDto>.Success(wfDto, 204, $"Update workflow: {wfDto.Name}");
         }
 
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)

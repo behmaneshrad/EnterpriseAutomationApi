@@ -32,7 +32,7 @@ namespace EnterpriseAutomation.Api.Controllers
             {
                 return StatusCode(result.Status, result);
             }
-            return StatusCode(result.Status,result);
+            return StatusCode(result.Status, result);
         }
 
         [HttpGet("GetWorkflowDefinitionsAndStepById/{id}")]
@@ -50,9 +50,9 @@ namespace EnterpriseAutomation.Api.Controllers
 
 
         [HttpGet("GetAllWorkflowDefinitionsWithSteps")]
-        public async Task<ActionResult<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>>> GetAllWorkflowDefinitionsWithSteps()
+        public async Task<ActionResult<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>>> GetAllWorkflowDefinitionsWithSteps(int pageIndex = 1, int pageSize = 10,string searchString="")
         {
-            var result = await _definitionsService.GetAllWorkflowDefinitionsWithStepsAsync();
+            var result = await _definitionsService.GetAllWorkflowDefinitionsWithStepsAsync(pageIndex, pageSize,searchString);
             if (result.Error)
             {
                 return StatusCode(result.Status, result);
