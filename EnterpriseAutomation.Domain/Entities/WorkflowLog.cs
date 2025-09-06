@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using EnterpriseAutomation.Domain.Entities.Base;
 using EnterpriseAutomation.Domain.Enums;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EnterpriseAutomation.Domain.Entities
 {
@@ -40,6 +42,15 @@ namespace EnterpriseAutomation.Domain.Entities
 
         [Display(Name = "وضعیت جدید")]
         public string? NewState { get; set; }
+
+        public override string ToString()
+        {
+            return JsonSerializer.Serialize(this ,new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                PropertyNamingPolicy= JsonNamingPolicy.CamelCase
+            });
+        }
         
     }
 }

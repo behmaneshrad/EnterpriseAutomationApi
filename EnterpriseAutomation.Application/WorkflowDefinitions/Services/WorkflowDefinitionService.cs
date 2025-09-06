@@ -6,6 +6,7 @@ using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure.Utilities;
+using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             throw new NotImplementedException();
         }
 
-        public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync(int pageIndex,int pageSize,string? serchString)
+        public async Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync(int pageIndex, int pageSize, string? serchString)
         {
 
             var result = await _repository.GetAllAsync(
@@ -72,7 +73,7 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
             {
                 result = result.Where(c => c.Name.Contains(serchString)).ToList();
             }
-           
+
             var wtf = result.Select(c => new WorkflowDefinitionAndWorkflowStepDto
             {
                 WorkflowDefinitionId = c.WorkflowDefinitionId,
@@ -92,10 +93,22 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
                     Editable = w.Editable
                 }).ToList()
             });
-            var p =PaginatedList<WorkflowDefinitionAndWorkflowStepDto>
+            var p = PaginatedList<WorkflowDefinitionAndWorkflowStepDto>
                 .Create(wtf.AsQueryable(), pageIndex, pageSize);
-
-            _logger.LogInformation("GetAllWorkflowDefinitionsWithStepsAsync success");
+            var log = new WorkflowLog()
+            {
+                ActionType = "Get all workflow definitions and relation with workflowstep",
+                RequestId = 1,
+                StepId = 1,
+                WorkflowId = 1,
+                UserId = Guid.NewGuid(),
+                CreatedAt = DateTime.Now,
+                Description = "",
+                PreviousState = "",
+                NewState = "",
+                UserName = ""
+            }.ToString();
+            _logger.LogInformation($"GetAllWorkflowDefinitionsWithStepsAsync success {log}");
             return ServiceResult<WorkflowDefinitionAndWorkflowStepDto>.SuccessPaginated(p, 200, "Restore all workflows and related steps.");
         }
 
@@ -164,70 +177,116 @@ namespace EnterpriseAutomation.Application.WorkflowDefinitions.Services
 
         public async Task<ServiceResult<WorkflowDefinitionCreateDto>> UpdateWorkflowDefinition(int id, WorkflowDefinitionCreateDto wfDto)
         {
-            if (wfDto == null) throw new ArgumentException(nameof(wfDto));
-
-            var workflowdef = await _repository.GetByIdAsync(id);
-            if (workflowdef == null)
+            try
             {
-                return ServiceResult<WorkflowDefinitionCreateDto>.Failure("not found workflow", 400);
+                if (wfDto == null) throw new ArgumentException(nameof(wfDto));
+
+                var workflowdef = await _repository.GetByIdAsync(id);
+                if (workflowdef == null)
+                {
+                    return ServiceResult<WorkflowDefinitionCreateDto>.Failure("not found workflow", 400);
+                }
+
+                workflowdef.Name = wfDto.Name;
+                workflowdef.Description = wfDto.Description;
+                workflowdef.UserModifyId = 1;
+                workflowdef.UpdatedAt = DateTime.Now;
+
+                _repository.UpdateEntity(workflowdef);
+                await _repository.SaveChangesAsync();
+
+                return ServiceResult<WorkflowDefinitionCreateDto>.Success(wfDto, 204, $"Update workflow: {wfDto.Name}");
             }
-
-            workflowdef.Name = wfDto.Name;
-            workflowdef.Description = wfDto.Description;
-            workflowdef.UserModifyId = 1;
-            workflowdef.UpdatedAt = DateTime.Now;
-
-            _repository.UpdateEntity(workflowdef);
-            await _repository.SaveChangesAsync();
-
-            return ServiceResult<WorkflowDefinitionCreateDto>.Success(wfDto, 204, $"Update workflow: {wfDto.Name}");
+            catch (Exception ex)
+            {
+                _logger.LogError($"exception message: {ex.Message}");
+                return ServiceResult<WorkflowDefinitionCreateDto>.Failure("Transient Failure ...", 500);
+            }
         }
 
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
-            if ((entityDTO.Description == string.Empty) || (entityDTO.Name == string.Empty))
+            try
             {
-
-                return ServiceResult<WorkflowDefinition>.Failure("Invalid data", 400);
-            }
-
-            WorkflowDefinition entity;
-
-            if (id != null) // Update
-            {
-                entity = await _repository.GetByIdAsync((int)id);
-                if (entity == null)
+                if ((entityDTO.Description == string.Empty) || (entityDTO.Name == string.Empty))
                 {
-                    _logger.LogError("Workflow not found");
-                    return ServiceResult<WorkflowDefinition>.Failure("Workflow not found", 404);
+
+                    return ServiceResult<WorkflowDefinition>.Failure("Invalid data", 400);
                 }
 
-                entity.Description = entityDTO.Description;
-                entity.Name = entityDTO.Name;
-                entity.UpdatedAt = DateTime.Now;
-                entity.UserCreatedId = 1; // نمونه
+                WorkflowDefinition entity;
 
-                _repository.UpdateEntity(entity);
-                await _repository.SaveChangesAsync();
-
-                return ServiceResult<WorkflowDefinition>.Success(entity, 204, "Updated successfully");
-            }
-            else // Create
-            {
-                entity = new WorkflowDefinition
+                if (id != null) // Update
                 {
-                    Description = entityDTO.Description,
-                    Name = entityDTO.Name,
-                    CreatedAt = DateTime.Now,
-                    CreatedById = 1,
-                    UpdatedAt = DateTime.MinValue,
-                    UserCreatedId = 0
-                };
+                    entity = await _repository.GetByIdAsync((int)id);
+                    if (entity == null)
+                    {
+                        _logger.LogError("Workflow not found");
+                        return ServiceResult<WorkflowDefinition>.Failure("Workflow not found", 404);
+                    }
 
-                await _repository.InsertAsync(entity);
-                await _repository.SaveChangesAsync();
+                    entity.Description = entityDTO.Description;
+                    entity.Name = entityDTO.Name;
+                    entity.UpdatedAt = DateTime.Now;
+                    entity.UserCreatedId = 1; // نمونه
 
-                return ServiceResult<WorkflowDefinition>.Success(entity, 201, "Created successfully");
+                    _repository.UpdateEntity(entity);
+                    await _repository.SaveChangesAsync();
+
+                    var log = new WorkflowLog()
+                    {
+                        ActionType = "Upsert Workflow",
+                        UserId = Guid.NewGuid(),
+                        RequestId = 1,
+                        StepId = 1,
+                        WorkflowId = 1,
+                        UserName = "hossein",
+                        Description = entityDTO.Description,
+                        CreatedAt = entity.CreatedAt,
+                        UpdatedAt = entity.UpdatedAt,
+                        NewState = "",
+                        PreviousState = ""
+                    }.ToString();
+                    _logger.LogInformation($"Update workflow logger: {log}");
+                    return ServiceResult<WorkflowDefinition>.Success(entity, 204, "Updated successfully");
+                }
+                else // Create
+                {
+                    entity = new WorkflowDefinition
+                    {
+                        Description = entityDTO.Description,
+                        Name = entityDTO.Name,
+                        CreatedAt = DateTime.Now,
+                        CreatedById = 1,
+                        UpdatedAt = DateTime.MinValue,
+                        UserCreatedId = 0
+                    };
+
+                    await _repository.InsertAsync(entity);
+                    await _repository.SaveChangesAsync();
+
+                    var log = new WorkflowLog()
+                    {
+                        ActionType = "Upsert Workflow",
+                        UserId = Guid.NewGuid(),
+                        RequestId = 1,
+                        StepId = 1,
+                        WorkflowId = 1,
+                        UserName = "hossein",
+                        Description = entityDTO.Description,
+                        CreatedAt = entity.CreatedAt,
+                        UpdatedAt = entity.UpdatedAt,
+                        NewState = "",
+                        PreviousState = ""
+                    }.ToString();
+                    _logger.LogInformation($"Created workflow logger: {log}");
+                    return ServiceResult<WorkflowDefinition>.Success(entity, 201, "Created successfully");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception:{ex.Message}");
+                return ServiceResult<WorkflowDefinition>.Failure(ex.Message, 500);
             }
         }
     }
