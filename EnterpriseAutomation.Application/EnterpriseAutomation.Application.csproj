@@ -23,10 +23,6 @@
   <ItemGroup>
     <ProjectReference Include="..\EnterpriseAutomation.Domain\EnterpriseAutomation.Domain.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Logger\ElasticServices\" />
-    <Folder Include="Logger\SystemLog\" />
-  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
