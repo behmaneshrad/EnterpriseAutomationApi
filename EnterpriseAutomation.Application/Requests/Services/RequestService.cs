@@ -10,6 +10,8 @@ using System.Security.Claims;
 using System;
 using System.Linq;
 using EnterpriseAutomation.Domain.Enums;
+using EnterpriseAutomation.Infrastructure.Utilities;
+using EnterpriseAutomation.Application.ServiceResult;
 
 namespace EnterpriseAutomation.Application.Requests.Services
 {
@@ -33,33 +35,6 @@ namespace EnterpriseAutomation.Application.Requests.Services
             _approvalStepRepository = approvalStepRepository; // اضافه شد
             _workflowLogRepository = workflowLogRepository;
             _httpContextAccessor = httpContextAccessor;
-        }
-
-        public async Task<IEnumerable<Request>> GetFilteredRequestsAsync(string? status, string? role, Guid? createdBy)
-        {
-            var user = _httpContextAccessor.HttpContext?.User;
-            if (user == null || !user.Identity!.IsAuthenticated)
-                throw new UnauthorizedAccessException("توکن معتبر نیست یا کاربر لاگین نشده است.");
-            Guid.TryParse(user.FindFirst("sub")?.Value, out var currentUserGuid);
-
-            var query = _repository.GetQueryable(
-                include: q => q.Include(r => r.ApprovalSteps),
-                asNoTracking: true
-            );
-
-            if (user.IsInRole("employee") && currentUserGuid != Guid.Empty)
-            {
-                query = query.Where(r => r.CreatedByUserId == currentUserGuid);
-            }
-
-            if (status != null)
-                query = query.Where(r => r.CurrentStatus == status);
-
-
-            if (createdBy.HasValue)
-                query = query.Where(r => r.CreatedByUserId == createdBy.Value);
-
-            return await query.ToListAsync();
         }
 
 
@@ -231,7 +206,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
             var prevState = currentStep.Status.ToString();
 
             currentStep.Status = isApproved ? ApprovalStatus.Approved : ApprovalStatus.Rejected;
-            currentStep.ApproverUserId = approverGuid;  
+            currentStep.ApproverUserId = approverGuid;
             currentStep.ApprovedAt = DateTime.UtcNow;
 
             // تغییر وضعیت درخواست
@@ -241,16 +216,16 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 if (request.CurrentStep < maxStep)
                 {
                     request.CurrentStep++;
-                    request.CurrentStatus = RequestStatus.InProgress;  
+                    request.CurrentStatus = RequestStatus.InProgress;
                 }
                 else
                 {
-                    request.CurrentStatus = RequestStatus.Completed;   
+                    request.CurrentStatus = RequestStatus.Completed;
                 }
             }
             else
             {
-                request.CurrentStatus = RequestStatus.Rejected;       
+                request.CurrentStatus = RequestStatus.Rejected;
             }
 
             request.UpdatedAt = DateTime.UtcNow;
@@ -261,7 +236,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
             {
                 WorkflowId = request.WorkflowDefinitionId,
                 StepId = currentStep.StepId,
-                UserId = approverGuid,                          
+                UserId = approverGuid,
                 UserName = approverName,
                 ActionType = isApproved ? ActionType.Approve : ActionType.Reject,
                 Description = comment,
@@ -277,5 +252,38 @@ namespace EnterpriseAutomation.Application.Requests.Services
             await _workflowLogRepository.SaveChangesAsync();
         }
 
+        public Task<IEnumerable<RequestDto>> RequestListFilter(string CurrentStatus, Guid createdBy)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ServiceResult<Request>> GetFilteredRequestsAsync(string? status, string? role, Guid? createdBy, int pageIndex, int pageSize)
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null || !user.Identity!.IsAuthenticated)
+                ServiceResult<Request>.Failure("Authenticated Failure ", 401);
+            Guid.TryParse(user.FindFirst("sub")?.Value, out var currentUserGuid);
+
+            var query = _repository.GetQueryable(
+                include: q => q.Include(r => r.ApprovalSteps),
+                asNoTracking: true
+            );
+
+            if (user.IsInRole("employee") && currentUserGuid != Guid.Empty)
+            {
+                query = query.Where(r => r.CreatedByUserId == currentUserGuid);
+            }
+
+            if (status != null)
+                query = query.Where(r => r.CurrentStatus == status);
+
+
+            if (createdBy.HasValue)
+                query = query.Where(r => r.CreatedByUserId == createdBy.Value);
+
+            var p = await PaginatedList<Request>.CreateAsync(query, pageIndex, pageSize);
+
+            return ServiceResult<Request>.SuccessPaginated(p,200,"Request with Filter");
+        }
     }
 }

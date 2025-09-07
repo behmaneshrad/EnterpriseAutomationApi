@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using EnterpriseAutomation.Domain.Entities.Enums;
 using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Domain.Entities.Policy;
+using EnterpriseAutomation.Application.ServiceResult;
 
 namespace EnterpriseAutomation.API.Controllers
 {
@@ -25,6 +26,13 @@ namespace EnterpriseAutomation.API.Controllers
           
         {
             _requestService = requestService;
+        }
+
+
+        [HttpGet("RequestList/{status}/{createdBy}")]
+        public Task<ActionResult<ServiceResult<T>>> RequestListFilter(string? currentStatus,Guid? createdBy)
+        {
+            return ServiceResult<T>.Success();
         }
 
         // 3. ایجاد یک Request جدید (POST)
