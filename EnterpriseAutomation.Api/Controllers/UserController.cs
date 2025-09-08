@@ -58,7 +58,7 @@ namespace EnterpriseAutomation.WebApi.Controllers
             {
                 Username = dto.Username,
                 PasswordHash = passwordHasher.HashPassword(null, dto.Password),
-                Role = "user"
+                Role = 0
             };
 
             await _userService.CreateUserAsync(user);

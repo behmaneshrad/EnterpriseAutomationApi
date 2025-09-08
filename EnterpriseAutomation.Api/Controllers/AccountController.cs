@@ -138,7 +138,7 @@ namespace EnterpriseAutomation.API.Controllers
                 {
                     Username = model.Username,
                     RefreshToken = string.Empty, 
-                    Role = "User", 
+                    Role = 0, 
                     PasswordHash = string.Empty, 
                     
                 };
