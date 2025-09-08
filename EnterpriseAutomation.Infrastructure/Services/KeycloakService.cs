@@ -30,7 +30,6 @@ namespace EnterpriseAutomation.Infrastructure.Services
         private readonly KeycloakOptions _opt;
         private readonly ILogger<KeycloakService>? _logger;
 
-        // Very simple admin token cache
         private string? _adminToken;
         private DateTimeOffset _adminTokenExpiresAt = DateTimeOffset.MinValue;
 
@@ -53,23 +52,28 @@ namespace EnterpriseAutomation.Infrastructure.Services
             _logger = logger;
             _roleRepo = roleRepo;
 
-            if (!string.IsNullOrWhiteSpace(_opt.Authority))
-            {
-                _http.BaseAddress = new Uri(_opt.Authority.TrimEnd('/') + "/");
-            }
+            if (string.IsNullOrWhiteSpace(_opt.Authority))
+                throw new InvalidOperationException("Keycloak 'Authority' must be set in configuration.");
+
+            _http.BaseAddress = new Uri(_opt.Authority.TrimEnd('/') + "/");
+
+            if (string.IsNullOrWhiteSpace(_opt.Realm))
+                throw new InvalidOperationException("Keycloak 'Realm' must be set in configuration.");
         }
 
-        // ====== Helpers ======
         private static Exception HttpError(string action, HttpResponseMessage resp, string body) =>
             new($"Keycloak {action} failed: {(int)resp.StatusCode} {resp.ReasonPhrase} - {body}");
 
         private static string Combine(params string[] parts)
         {
-            // Safe URL join for relative paths
-            return string.Join("/", parts.Select(p => p.Trim('/')));
+            if (parts == null)
+                return string.Empty;
+
+            return string.Join("/", parts
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(p => p.Trim('/')));
         }
 
-        // ====== Admin Token (Client Credentials) ======
         private async Task<string> GetAdminAccessTokenAsync(CancellationToken ct = default)
         {
             if (!string.IsNullOrEmpty(_adminToken) && DateTimeOffset.UtcNow < _adminTokenExpiresAt.AddSeconds(-30))
@@ -83,6 +87,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
                 ["client_id"] = _opt.AdminClientId ?? _opt.ClientId,
                 ["client_secret"] = _opt.AdminClientSecret ?? _opt.ClientSecret
             });
+
             var resp = await _http.PostAsync(tokenUrl, form, ct);
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("Token (admin)", resp, body);
@@ -97,7 +102,12 @@ namespace EnterpriseAutomation.Infrastructure.Services
         private async Task<HttpRequestMessage> AuthedAdminRequestAsync(HttpMethod method, string relativeUrl, HttpContent? content = null, CancellationToken ct = default)
         {
             var token = await GetAdminAccessTokenAsync(ct);
-            var req = new HttpRequestMessage(method, relativeUrl);
+
+            Uri requestUri = Uri.TryCreate(relativeUrl, UriKind.Absolute, out var absUri)
+                ? absUri
+                : new Uri(_http.BaseAddress!, relativeUrl);
+
+            var req = new HttpRequestMessage(method, requestUri);
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             if (content != null) req.Content = content;
             return req;
@@ -139,16 +149,13 @@ namespace EnterpriseAutomation.Infrastructure.Services
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("CreateUser", resp, body);
 
-            // userId from Location header
             string? userId = resp.Headers.Location?.Segments.LastOrDefault()?.Trim('/');
             if (string.IsNullOrEmpty(userId))
             {
-                // Fallback: search by username
                 userId = await GetUserIdByUsernameAsync(username, ct);
                 if (string.IsNullOrEmpty(userId)) throw new("User created but ID could not be resolved.");
             }
 
-            // Optional: assign a default realm role
             if (!string.IsNullOrWhiteSpace(defaultRealmRoleToAssign))
             {
                 await AssignRealmRoleToUserAsync(userId, defaultRealmRoleToAssign, ct);
@@ -183,7 +190,7 @@ namespace EnterpriseAutomation.Infrastructure.Services
             return null;
         }
 
-        // ====== ROLES (Realm) ======
+        // ====== ROLES ======
         public async Task<string> GetRolesAsync(CancellationToken ct = default)
         {
             var url = Combine("admin/realms", _opt.Realm, "roles");
@@ -196,17 +203,11 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
         public async Task<bool> AssignRealmRoleToUserAsync(string userId, string roleName, CancellationToken ct = default)
         {
-            // 1) Get realm role
-            var role = await GetRealmRoleAsync(roleName, ct)
-                ?? throw new($"Realm role '{roleName}' not found.");
-
-            // 2) Assign to user
+            var role = await GetRealmRoleAsync(roleName, ct) ?? throw new($"Realm role '{roleName}' not found.");
             var url = Combine("admin/realms", _opt.Realm, "users", userId, "role-mappings/realm");
             var payload = JsonSerializer.Serialize(new[] { role }, JsonOpts);
 
-            var req = await AuthedAdminRequestAsync(HttpMethod.Post, url,
-                new StringContent(payload, Encoding.UTF8, "application/json"), ct);
-
+            var req = await AuthedAdminRequestAsync(HttpMethod.Post, url, new StringContent(payload, Encoding.UTF8, "application/json"), ct);
             var resp = await _http.SendAsync(req, ct);
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("AssignRealmRole", resp, body);
@@ -214,21 +215,9 @@ namespace EnterpriseAutomation.Infrastructure.Services
             return true;
         }
 
-        public async Task CheckUserRealmRolesAsync(string userId, CancellationToken ct = default)
-        {
-            var url = Combine("admin/realms", _opt.Realm, "users", userId, "role-mappings/realm");
-            var req = await AuthedAdminRequestAsync(HttpMethod.Get, url, null, ct);
-            var resp = await _http.SendAsync(req, ct);
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            if (!resp.IsSuccessStatusCode) throw HttpError("GetUserRealmRoles", resp, body);
-            _logger?.LogInformation("User {UserId} realm roles: {Body}", userId, body);
-        }
         private async Task<RoleDto?> GetRealmRoleAsync(string roleName, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(roleName))
-                throw new ArgumentException("Role name is required.", nameof(roleName));
-            if (string.IsNullOrWhiteSpace(_opt?.Realm))
-                throw new InvalidOperationException("Keycloak 'Realm' is not configured.");
+            if (string.IsNullOrWhiteSpace(roleName)) throw new ArgumentException("Role name is required.", nameof(roleName));
 
             var safeName = Uri.EscapeDataString(roleName);
             var url = Combine("admin/realms", _opt.Realm, "roles", safeName);
@@ -255,7 +244,6 @@ namespace EnterpriseAutomation.Infrastructure.Services
             }
         }
 
-        // ====== LOGIN (Resource Owner Password) ======
         public async Task<string> LoginUserAsync(string username, string password, CancellationToken ct = default)
         {
             var tokenUrl = Combine("realms", _opt.Realm, "protocol/openid-connect/token");
@@ -273,36 +261,26 @@ namespace EnterpriseAutomation.Infrastructure.Services
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode) throw HttpError("Login", resp, body);
 
-            return body; // contains access_token, refresh_token, ...
+            return body;
         }
-        /// <summary>
-        /// Create a Keycloak realm role; then ensure it exists in local DB (idempotent in both).
-        /// </summary>
+
         public async Task CreateRealmRoleAsync(string name, string? description, CancellationToken ct)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Role name is required.", nameof(name));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Role name is required.", nameof(name));
 
             var trimmedName = name.Trim();
-            var trimmedDesc = string.IsNullOrWhiteSpace(description) ? null : description!.Trim();
+            var trimmedDesc = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
 
-            // 1) If role already exists in Keycloak, ensure DB persistence and return
             var existing = await GetRealmRoleAsync(trimmedName, ct);
             if (existing is not null)
             {
-                _logger?.LogInformation("Realm role '{Role}' already exists in Keycloak. Ensuring DB persistence.", trimmedName);
+                _logger?.LogInformation("Realm role '{Role}' already exists. Ensuring DB persistence.", trimmedName);
                 await EnsureRolePersistedAsync(trimmedName);
                 return;
             }
 
-            // 2) Create role in Keycloak
             var url = Combine("admin/realms", _opt.Realm, "roles");
-            var payloadObj = new
-            {
-                name = trimmedName,
-                description = trimmedDesc
-            };
-
+            var payloadObj = new { name = trimmedName, description = trimmedDesc };
             var content = new StringContent(JsonSerializer.Serialize(payloadObj, JsonOpts), Encoding.UTF8, "application/json");
             var req = await AuthedAdminRequestAsync(HttpMethod.Post, url, content, ct);
             var resp = await _http.SendAsync(req, ct);
@@ -310,52 +288,40 @@ namespace EnterpriseAutomation.Infrastructure.Services
 
             if (resp.IsSuccessStatusCode)
             {
-                _logger?.LogInformation("Realm role '{Role}' created successfully in Keycloak. Persisting to DB...", trimmedName);
+                _logger?.LogInformation("Realm role '{Role}' created in Keycloak. Persisting to DB...", trimmedName);
                 await EnsureRolePersistedAsync(trimmedName);
                 return;
             }
 
-            // 3) If 409 (already exists, race), still persist in DB
             if ((int)resp.StatusCode == 409)
             {
-                _logger?.LogWarning("Realm role '{Role}' creation returned 409. Treating as success and ensuring DB persistence.", trimmedName);
+                _logger?.LogWarning("Realm role '{Role}' creation returned 409. Treating as success.", trimmedName);
                 await EnsureRolePersistedAsync(trimmedName);
                 return;
             }
 
-            // 4) Other errors
             throw HttpError("CreateRealmRole", resp, body);
         }
 
-        /// <summary>
-        /// Idempotent local DB persistence for Role.
-        /// Uses IRepository contracts: GetFirstOrDefaultAsync / InsertAsync / SaveChangesAsync
-        /// </summary>
         private async Task EnsureRolePersistedAsync(string roleName)
         {
-            // Check existence
             var exists = await _roleRepo.GetFirstOrDefaultAsync(r => r.RoleName == roleName);
             if (exists is not null) return;
 
-            var entity = new Role
-            {
-                RoleName = roleName
-            };
-
+            var entity = new Role { RoleName = roleName };
             await _roleRepo.InsertAsync(entity);
             await _roleRepo.SaveChangesAsync();
         }
 
         public async Task CreateClientRoleAsync(string clientId, string name, string? description, CancellationToken ct)
         {
-            // TODO: implement if needed
             throw new NotImplementedException();
         }
     }
+
     public class RoleDto
     {
         public required string Id { get; set; }
         public required string Name { get; set; }
     }
-
 }

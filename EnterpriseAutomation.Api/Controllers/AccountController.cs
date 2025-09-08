@@ -24,7 +24,7 @@ namespace EnterpriseAutomation.API.Controllers
             _logger = logger;
             _context = context; // Inject DbContext
         }
-
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {

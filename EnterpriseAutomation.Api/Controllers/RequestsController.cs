@@ -30,10 +30,24 @@ namespace EnterpriseAutomation.API.Controllers
 
 
         [HttpGet("RequestList/{status}/{createdBy}")]
-        public Task<ActionResult<ServiceResult<T>>> RequestListFilter(string? currentStatus,Guid? createdBy)
+        public async Task<ActionResult<ServiceResult<List<RequestDto>>>> RequestListFilter(
+        string? currentStatus, Guid? createdBy)
         {
-            return ServiceResult<T>.Success();
+            var requests = await _requestService.GetFilteredRequestsAsync(currentStatus, null, createdBy, 1, 10);
+
+            var dtoList = requests.Entities.Select(r => new RequestDto
+            {
+                RequestId = r.RequestId,
+                Title = r.Title,
+                Description = r.Description,
+                CurrentStatus = r.CurrentStatus,
+                CurrentStep = r.CurrentStep,
+                UserId = r.CreatedByUserId
+            }).ToList();
+
+            return ServiceResult<List<RequestDto>>.Success(dtoList, 1, "success");
         }
+
 
         // 3. ایجاد یک Request جدید (POST)
         //[Authorize]
@@ -183,9 +197,10 @@ namespace EnterpriseAutomation.API.Controllers
         {
             try
             {
-                var requests = await _requestService.GetFilteredRequestsAsync(status, role, createdBy);
-                    
-                var result = requests.Select(r => new RequestDto
+                var requests = await _requestService.GetFilteredRequestsAsync(status, role, createdBy, 1, 10);
+
+
+                var result = requests.Entities.Select(r => new RequestDto
                 {
                     RequestId = r.RequestId,
                     Title = r.Title,

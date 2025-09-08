@@ -30,7 +30,6 @@ using System.Configuration;
 using System.Security.Claims;
 using System.Text.Json;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Elasticsearch configuration
@@ -51,13 +50,18 @@ builder.Services.AddCors(options =>
         policy.WithOrigins()
               .AllowAnyHeader()
               .AllowAnyMethod();
-              //.AllowCredentials();
+        //.AllowCredentials();
     });
 });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
+
+// *** FIX: Configure KeycloakOptions before registering KeycloakService ***
+builder.Services.Configure<KeycloakOptions>(builder.Configuration.GetSection("Keycloak"));
+
+// Register KeycloakService with HttpClient
 builder.Services.AddHttpClient<KeycloakService>();
 
 // Application services
@@ -221,8 +225,6 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -231,7 +233,6 @@ if (app.Environment.IsDevelopment())
         c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
     });
 }
-
 
 app.UseHttpsRedirection();
 
@@ -270,4 +271,3 @@ app.MapControllers();
 //    await workflowIndexService.EnsureWorkflowIndexExistsAsync();
 //}
 app.Run();
-

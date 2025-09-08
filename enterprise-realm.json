@@ -6,7 +6,8 @@
     "realm": [
       { "name": "admin" },
       { "name": "user" },
-      { "name": "approver" }
+      { "name": "approver" },
+      { "name": "NoRole"}
     ]
   },
   "clients": [
@@ -118,12 +119,21 @@
       "serviceAccountClientId": "enterprise-api",
       "clientRoles": {
         "realm-management": [
+          "realm-admin",
           "view-realm",
           "view-users",
           "view-clients",
           "query-users",
           "query-clients",
-          "query-realms"
+          "query-realms",
+          "manage-users",
+          "create-client",
+          "manage-clients",
+          "manage-realm",
+          "view-events",
+          "view-identity-providers",
+          "manage-identity-providers",
+          "impersonation"
         ]
       },
       "realmRoles": [
