@@ -1,4 +1,5 @@
-﻿using EnterpriseAutomation.Api.Middelware.AuthorizeMIddelware;
+﻿using EnterpriseAutomation.Api.Middelware;
+using EnterpriseAutomation.Api.Middelware.AuthorizeMIddelware;
 using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Application.IRepository;
 //using EnterpriseAutomation.Application.Logger.ElasticServices;
@@ -6,6 +7,8 @@ using EnterpriseAutomation.Application.IRepository;
 // Request Services
 using EnterpriseAutomation.Application.Requests.Interfaces;
 using EnterpriseAutomation.Application.Requests.Services;
+using EnterpriseAutomation.Application.Services;
+using EnterpriseAutomation.Application.Services.Interfaces;
 using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Application.Users.Services;
 using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
@@ -31,6 +34,14 @@ using System.Security.Claims;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Keycloak Authentication
+var keycloakSettings = builder.Configuration.GetSection("KeycloakSettings").Get<KeycloakSettings>();
+
+if (keycloakSettings == null)
+{
+    throw new Exception("KeycloakSettings section is missing in appsettings.json");
+}
 
 // Elasticsearch configuration
 var elasticUri = builder.Configuration["ElasticConfiguration:Uri"];
@@ -69,6 +80,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
+
+
+builder.Services.Configure<KeycloakSettings>(builder.Configuration.GetSection("KeycloakSettings"));
+builder.Services.AddScoped<IKeycloakService2, KeycloakService2>();
 // Register Elasticsearch client
 builder.Services.AddSingleton<IElasticClient>(new ElasticClient(settings));
 // Logger for workflow actions
@@ -86,117 +101,75 @@ builder.Services.AddScoped<AppDbContextFactory>();
 builder.Services.AddScoped<PermissionPolicyProvider>();
 builder.Services.AddScoped<PermissionHandler>();
 
-// ===== Authorization Policies (مطابق جدول) =====
-builder.Services.AddAuthorization(options =>
-{
-    // AccountsController
-    options.AddPolicy("Accounts.GetRoles", p => p.RequireRole("admin"));
-    options.AddPolicy("Accounts.GetUsers", p => p.RequireRole("admin"));
-
-    // RequestsController
-    options.AddPolicy("Requests.CreateRequest", p => p.RequireRole("user"));
-    options.AddPolicy("Requests.GetAllRequests", p => p.RequireRole("admin"));
-    options.AddPolicy("Requests.GetRequestById", p => p.RequireRole("admin", "approver")); // OR
-    options.AddPolicy("Requests.GetWorkflowSteps", p => p.RequireRole("admin"));
-    options.AddPolicy("Requests.GetFilteredRequests", p => p.RequireRole("admin", "approver")); // OR
-
-    // WorkflowDefinitionsController
-    options.AddPolicy("WorkflowDefinitions.Get", p => p.RequireRole("admin"));
-
-    // همه‌ی اکشن‌ها به‌صورت پیش‌فرض نیاز به احراز هویت دارند
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
 
 // ===== JWT (Keycloak) =====
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.Authority = "http://localhost:8080/realms/EnterpriseRealm";
-    options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services
+    .AddAuthentication(options =>
     {
-        ValidateAudience = true,
-        ValidAudience = "enterprise-api",
-        ValidateIssuer = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        RoleClaimType = ClaimTypes.Role,
-        NameClaimType = ClaimTypes.NameIdentifier
-    };
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"{keycloakSettings.AuthServerUrl}/realms/{keycloakSettings.Realm}";
+        options.RequireHttpsMetadata = true;
 
-    options.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = context =>
+        //  چند Audience مجاز
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var claimsIdentity = context.Principal?.Identity as ClaimsIdentity;
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidAudiences = new[] { "account", keycloakSettings.ClientId }, // هر دو معتبر
+            NameClaimType = "preferred_username",
+            RoleClaimType = ClaimTypes.Role
+        };
 
-            // sub -> NameIdentifier
-            var subClaim = claimsIdentity?.FindFirst("sub");
-            if (subClaim != null && !claimsIdentity.HasClaim(ClaimTypes.NameIdentifier, subClaim.Value))
-                claimsIdentity?.AddClaim(new Claim(ClaimTypes.NameIdentifier, subClaim.Value));
-
-            // preferred_username -> Name
-            var usernameClaim = claimsIdentity?.FindFirst("preferred_username");
-            if (usernameClaim != null && !claimsIdentity.HasClaim(ClaimTypes.Name, usernameClaim.Value))
-                claimsIdentity?.AddClaim(new Claim(ClaimTypes.Name, usernameClaim.Value));
-
-            // realm_access.roles -> Role
-            var realmAccessClaim = claimsIdentity?.FindFirst("realm_access");
-            if (realmAccessClaim != null)
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
             {
-                try
-                {
-                    using var doc = JsonDocument.Parse(realmAccessClaim.Value);
-                    if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
-                    {
-                        foreach (var role in rolesElement.EnumerateArray())
-                        {
-                            var roleValue = role.GetString();
-                            if (!string.IsNullOrWhiteSpace(roleValue) &&
-                                !claimsIdentity!.HasClaim(ClaimTypes.Role, roleValue))
-                            {
-                                claimsIdentity!.AddClaim(new Claim(ClaimTypes.Role, roleValue));
-                            }
-                        }
-                    }
-                }
-                catch { /* ignore parse errors */ }
-            }
+                var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
 
-            // resource_access.enterprise-api.roles -> Role
-            var resourceAccessClaim = claimsIdentity?.FindFirst("resource_access");
-            if (resourceAccessClaim != null)
+                //  اضافه کردن userId از توکن
+                var userId = context.Principal.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    claimsIdentity.AddClaim(new Claim("userId", userId));
+                }
+
+                //  اگر userId نبود، از sub استفاده می‌کنیم
+                var sub = context.Principal.FindFirst("sub")?.Value;
+                if (!string.IsNullOrEmpty(sub) && !claimsIdentity.HasClaim(c => c.Type == "userId"))
+                {
+                    claimsIdentity.AddClaim(new Claim("userId", sub));
+                }
+
+                //  مپ کردن نقش‌ها از realm_access.roles
+                var realmRoles = context.Principal.FindAll("realm_access.roles");
+                foreach (var role in realmRoles)
+                {
+                    claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, role.Value));
+                }
+
+                //  مپ کردن نقش‌ها از resource_access.{client}.roles
+                var resourceRoles = context.Principal.FindAll("resource_access.PartakCRMClient.roles");
+                foreach (var role in resourceRoles)
+                {
+                    claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, role.Value));
+                }
+
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
             {
-                try
+                if (context.Exception is SecurityTokenExpiredException)
                 {
-                    using var doc = JsonDocument.Parse(resourceAccessClaim.Value);
-                    if (doc.RootElement.TryGetProperty("enterprise-api", out var enterpriseApi) &&
-                        enterpriseApi.TryGetProperty("roles", out var resourceRoles))
-                    {
-                        foreach (var role in resourceRoles.EnumerateArray())
-                        {
-                            var roleValue = role.GetString();
-                            if (!string.IsNullOrWhiteSpace(roleValue) &&
-                                !claimsIdentity!.HasClaim(ClaimTypes.Role, roleValue))
-                            {
-                                claimsIdentity!.AddClaim(new Claim(ClaimTypes.Role, roleValue));
-                            }
-                        }
-                    }
+                    context.Response.Headers.Add("Token-Expired", "true");
                 }
-                catch { /* ignore parse errors */ }
+                return Task.CompletedTask;
             }
-
-            return Task.CompletedTask;
-        }
-    };
-});
+        };
+    });
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>
@@ -223,6 +196,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// ثبت مدیریت کننده سفارشی خطاهای احراز هویت
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -241,24 +217,7 @@ app.UseCors("FrontPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// پیام‌های خطای 401/403 یکدست
-app.Use(async (context, next) =>
-{
-    await next();
-    if (!context.Response.HasStarted)
-    {
-        if (context.Response.StatusCode == 401)
-        {
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"دسترسی غیرمجاز - لطفاً وارد شوید.\"}");
-        }
-        else if (context.Response.StatusCode == 403)
-        {
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"error\":\"Forbidden\",\"message\":\"شما مجوز دسترسی به این بخش را ندارید.\"}");
-        }
-    }
-});
+
 
 // اگر لازم است پیام‌ میانی خودت اجرا شود
 app.UseMiddleware<AuthorizeMessageMW>();

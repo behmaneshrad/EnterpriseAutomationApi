@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EnterpriseAutomation.Api.Controllers
 {
-    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkflowStepsController : BaseController<WorkflowStep>

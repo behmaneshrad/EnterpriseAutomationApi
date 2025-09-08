@@ -88,6 +88,19 @@ namespace EnterpriseAutomation.Application.Users.Services
                 Role = user.Role
             };
         }
+
+        public async Task<UserDto> GetUserByIdAsync(int userId)
+        {           
+
+            var user = await _userRepository.GetFirstOrDefaultAsync(x => x.UserId == userId);
+
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Username = user.Username                
+            };
+        }
+
         public async Task<IEnumerable<UserDto>> GetAllUserAsync()
         {
             var users = await _userRepository.GetAllAsync();

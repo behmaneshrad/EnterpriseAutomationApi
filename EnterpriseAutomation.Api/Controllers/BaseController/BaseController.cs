@@ -5,11 +5,13 @@ using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities.Base;
 using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnterpriseAutomation.Api.Controllers.BaseController
 {
+    [Authorize(Policy = "AutoPermission")]
     [ApiController]
     [Route("api/[controller]")]
     public abstract class BaseController<TEntity> : ControllerBase

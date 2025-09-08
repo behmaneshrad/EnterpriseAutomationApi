@@ -12,6 +12,8 @@ namespace EnterpriseAutomation.Application.Users.Interfaces
 
         Task CreateUserAsync(User user);
 
+        Task<UserDto> GetUserByIdAsync(int userId);
+
         Task<UserDto> GetUserByUserNameAsync(string userName); // ✅ بازگشت به UserDto مطابق UserService فعلی
 
         //Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);
