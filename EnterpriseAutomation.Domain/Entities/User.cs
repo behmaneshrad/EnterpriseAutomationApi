@@ -28,4 +28,6 @@ public class User : BaseEntity
     public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];
 
     public virtual ICollection<Role> Roles { get; set; } = [];
+
+    public virtual ICollection<UserRole> UserRoles { get; set; } = [];
 }

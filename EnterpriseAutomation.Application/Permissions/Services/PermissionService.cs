@@ -1,6 +1,6 @@
-﻿using EnterpriseAutomation.Application.Permissions.DTOs;
+﻿using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Application.Permissions.Interfaces;
-using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.Permissions.Models;
 using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +9,69 @@ namespace EnterpriseAutomation.Application.Permissions.Services
     public class PermissionService : IPermissionService
     {
         private readonly IRepository<Permission> _permRepo;
-        private readonly IRepository<Role> _roleRepo; // فرض می‌کنیم جدول Role وجود دارد
+        private readonly IRepository<Role> _roleRepo; // فرض می‌کنیم جدول Role وجود دارد       
 
         public PermissionService(IRepository<Permission> permRepo, IRepository<Role> roleRepo)
         {
             _permRepo = permRepo;
             _roleRepo = roleRepo;
+            
         }
+
+
+        public async Task<PermissionDto> GetSingleAsync(string PermissionName)
+        {
+
+            var permission = _permRepo.GetSingleAsync(x => x.Equals(PermissionName)).Result;
+
+            return new PermissionDto
+            {
+                Name = permission?.Name ?? "",
+                Key = permission?.Key ?? "",
+                Description = permission?.Description ?? "",
+                IsActive = permission?.IsActive ?? true 
+            };
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         public async Task<PermissionListItemDto> UpsertAsync(PermissionUpsertDto dto, CancellationToken ct = default)
         {

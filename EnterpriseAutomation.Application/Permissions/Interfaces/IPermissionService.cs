@@ -1,4 +1,4 @@
-﻿using EnterpriseAutomation.Application.Permissions.DTOs;
+﻿using EnterpriseAutomation.Application.Permissions.Models;
 
 namespace EnterpriseAutomation.Application.Permissions.Interfaces
 {

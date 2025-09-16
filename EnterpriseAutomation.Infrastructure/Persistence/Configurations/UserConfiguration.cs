@@ -13,6 +13,8 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
+            builder.ToTable("Users", "Auth");
+
             builder.Property(u => u.Username)
                 .IsRequired()
                 .HasMaxLength(100);

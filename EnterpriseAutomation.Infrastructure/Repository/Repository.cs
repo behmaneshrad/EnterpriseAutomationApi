@@ -98,6 +98,11 @@ namespace EnterpriseAutomation.Infrastructure.Repository
             return await _dbSet.FirstOrDefaultAsync(predicate);
         }
 
+        public async Task<TEntity?> GetSingleAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await _dbSet.SingleAsync(predicate);
+        }
+
         public IQueryable<TEntity> GetQueryable(
             Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
             bool asNoTracking = false)

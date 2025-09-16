@@ -6,7 +6,7 @@ public class RolePermissionsConfiguration : IEntityTypeConfiguration<RolePermiss
 {
     public void Configure(EntityTypeBuilder<RolePermissions> builder)
     {
-        builder.ToTable("RolesPermissions");
+        builder.ToTable("RolesPermissions","Auth");
 
         // کلید اصلی
         builder.HasKey(rp => rp.RolePermissionsId);

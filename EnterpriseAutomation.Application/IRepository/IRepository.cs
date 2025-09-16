@@ -25,6 +25,7 @@ namespace EnterpriseAutomation.Application.IRepository
         bool asNoTracking = false);
 
         Task<TEntity?> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity?> GetSingleAsync(Expression<Func<TEntity, bool>> predicate);
 
         Task<IEnumerable<TEntity?>> GetWhereAsync(Expression<Func<TEntity, bool>> predicate);
 
