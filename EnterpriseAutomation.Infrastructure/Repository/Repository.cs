@@ -35,7 +35,7 @@ namespace EnterpriseAutomation.Infrastructure.Repository
             if (include != null)
                 query = include(query);
 
-            return await PaginatedList<TEntity>.CreateAsync(query, padeIndex, pageSize);
+            return await PaginatedList<TEntity?>.CreateAsync(query, padeIndex, pageSize);
         }
 
 

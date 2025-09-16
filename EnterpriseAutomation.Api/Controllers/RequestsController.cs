@@ -1,8 +1,6 @@
 ﻿using EnterpriseAutomation.Api.Controllers;
 using EnterpriseAutomation.Api.Controllers.BaseController;
 using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.Requests.Interfaces;
-using EnterpriseAutomation.Application.Requests.Models;
 using EnterpriseAutomation.Application.Requests.Services;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure.Repository;
@@ -13,6 +11,8 @@ using EnterpriseAutomation.Domain.Entities.Enums;
 using EnterpriseAutomation.Api.Security;
 using EnterpriseAutomation.Domain.Entities.Policy;
 using EnterpriseAutomation.Application.ServiceResult;
+using EnterpriseAutomation.Application.Services.Interfaces;
+using EnterpriseAutomation.Application.Models.Requests;
 
 namespace EnterpriseAutomation.API.Controllers
 {

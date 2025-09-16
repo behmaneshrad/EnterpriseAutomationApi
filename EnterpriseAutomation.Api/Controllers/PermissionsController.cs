@@ -1,5 +1,5 @@
 ﻿using EnterpriseAutomation.Application.Permissions.DTOs;
-using EnterpriseAutomation.Application.Permissions.Interfaces;
+using EnterpriseAutomation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

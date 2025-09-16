@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using System.Text.RegularExpressions;
-using EnterpriseAutomation.Application.Permissions.Interfaces;
+using EnterpriseAutomation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;

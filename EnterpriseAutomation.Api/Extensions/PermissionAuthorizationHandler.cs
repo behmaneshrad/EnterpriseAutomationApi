@@ -1,6 +1,4 @@
-﻿using EnterpriseAutomation.Application.Permissions.Interfaces;
-using EnterpriseAutomation.Application.Services.Interfaces;
-using EnterpriseAutomation.Application.Users.Interfaces;
+﻿using EnterpriseAutomation.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 

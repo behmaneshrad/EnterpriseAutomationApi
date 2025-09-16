@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
-using EnterpriseAutomation.Application.Users.Models;
-using EnterpriseAutomation.Application.Users.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Application;
 using EnterpriseAutomation.Infrastructure.Services;
+using EnterpriseAutomation.Application.Services.Interfaces;
+using EnterpriseAutomation.Application.Models.Users;
 
 namespace EnterpriseAutomation.WebApi.Controllers
 {

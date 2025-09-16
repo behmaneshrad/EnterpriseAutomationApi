@@ -5,15 +5,8 @@ using EnterpriseAutomation.Application.IRepository;
 //using EnterpriseAutomation.Application.Logger.ElasticServices;
 //using EnterpriseAutomation.Application.Logger.WorkflowLogger;
 // Request Services
-using EnterpriseAutomation.Application.Requests.Interfaces;
-using EnterpriseAutomation.Application.Requests.Services;
 using EnterpriseAutomation.Application.Services;
 using EnterpriseAutomation.Application.Services.Interfaces;
-using EnterpriseAutomation.Application.Users.Interfaces;
-using EnterpriseAutomation.Application.Users.Services;
-using EnterpriseAutomation.Application.WorkflowDefinitions.Interfaces;
-using EnterpriseAutomation.Application.WorkflowDefinitions.Services;
-using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
 using EnterpriseAutomation.Application.WorkflowSteps.Services;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure;
@@ -83,7 +76,7 @@ builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionServic
 
 
 builder.Services.Configure<KeycloakSettings>(builder.Configuration.GetSection("KeycloakSettings"));
-builder.Services.AddScoped<IKeycloakService2, KeycloakService2>();
+builder.Services.AddScoped<IKeycloakService, KeycloakService2>();
 // Register Elasticsearch client
 builder.Services.AddSingleton<IElasticClient>(new ElasticClient(settings));
 // Logger for workflow actions

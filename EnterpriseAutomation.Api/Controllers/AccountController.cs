@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using EnterpriseAutomation.Application.Users.Models;
 using EnterpriseAutomation.Infrastructure.Services;
 using Newtonsoft.Json;
 using EnterpriseAutomation.Application.Externals;
@@ -7,6 +6,7 @@ using EnterpriseAutomation.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using EnterpriseAutomation.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
+using EnterpriseAutomation.Application.Models.Users;
 
 namespace EnterpriseAutomation.API.Controllers
 {

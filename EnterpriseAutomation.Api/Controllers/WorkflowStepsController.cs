@@ -1,8 +1,8 @@
 ﻿using EnterpriseAutomation.Api.Controllers.BaseController;
 using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.Models.WorkflowSteps;
 using EnterpriseAutomation.Application.ServiceResult;
-using EnterpriseAutomation.Application.WorkflowSteps.Interfaces;
-using EnterpriseAutomation.Application.WorkflowSteps.Models;
+using EnterpriseAutomation.Application.Services.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

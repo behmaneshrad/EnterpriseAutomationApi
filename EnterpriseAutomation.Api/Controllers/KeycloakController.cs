@@ -10,9 +10,9 @@ namespace EnterpriseAutomation.Api.Controllers
     [ApiController]
     public class KeycloakController : ControllerBase
     {
-        private readonly IKeycloakService2 _keycloakService;
+        private readonly IKeycloakService _keycloakService;
 
-        public KeycloakController(IKeycloakService2 keycloakService)
+        public KeycloakController(IKeycloakService keycloakService)
         {
             _keycloakService = keycloakService;
         }
