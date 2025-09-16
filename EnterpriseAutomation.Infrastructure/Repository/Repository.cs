@@ -4,13 +4,7 @@ using EnterpriseAutomation.Infrastructure.Persistence;
 using EnterpriseAutomation.Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EnterpriseAutomation.Infrastructure.Repository
 {

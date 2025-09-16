@@ -1,10 +1,6 @@
-﻿using System;
-using System.ComponentModel;
+﻿using EnterpriseAutomation.Domain.Entities.Base;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using EnterpriseAutomation.Domain.Entities.Base;
-using EnterpriseAutomation.Domain.Enums;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EnterpriseAutomation.Domain.Entities
 {
@@ -14,7 +10,6 @@ namespace EnterpriseAutomation.Domain.Entities
         [Key]
         [Display(Name = "آی دی لاگ")]
         public int Id { get; set; }
-
 
         [Display(Name = "آی دی گردش کار")]
         public required int WorkflowId { get; set; }

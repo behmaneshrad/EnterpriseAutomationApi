@@ -15,7 +15,6 @@ namespace EnterpriseAutomation.Application.Services
         {
             _permRepo = permRepo;
             _roleRepo = roleRepo;
-            
         }
 
 
