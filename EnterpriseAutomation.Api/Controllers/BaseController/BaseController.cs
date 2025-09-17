@@ -1,7 +1,6 @@
 ﻿using Aqua.EnumerableExtensions;
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Application.ServiceResult;
-using EnterpriseAutomation.Application.WorkflowDefinitions.Models;
 using EnterpriseAutomation.Domain.Entities.Base;
 using EnterpriseAutomation.Infrastructure.Repository;
 using EnterpriseAutomation.Infrastructure.Utilities;

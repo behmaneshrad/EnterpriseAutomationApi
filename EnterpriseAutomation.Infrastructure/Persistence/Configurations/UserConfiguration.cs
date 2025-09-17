@@ -26,24 +26,13 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
             builder.Property(u => u.RefreshToken)
                 .HasMaxLength(2000);
 
-            // Relation to Requests model
+            builder.Property(x => x.KeycloakId).HasMaxLength(50).HasColumnType("nvarchar").IsRequired(false);
 
-            //builder.HasMany(r => r.Requests)
-            //    .WithOne(u => u.CreatedByUser)
-            //    .HasForeignKey(r => r.CreatedByUserId)
-            //    .OnDelete(DeleteBehavior.Restrict);
-
-            // Relation to  WorkflowDefinition
+          
             builder.HasMany(r => r.WorkflowDefinitions)
                 .WithOne(u => u.User)
                 .HasForeignKey(r => r.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            //// Relation To Approval
-            //builder.HasMany(x=>x.ApprovalSteps)
-            //    .WithOne(u => u.ApproverUser)
-            //    .HasForeignKey(x=>x.ApproverUserId)
-            //    .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.Roles)
                 .WithMany(x => x.Users)

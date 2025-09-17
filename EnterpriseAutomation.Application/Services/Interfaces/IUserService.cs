@@ -14,6 +14,8 @@ namespace EnterpriseAutomation.Application.Services.Interfaces
 
         Task<UserDto> GetUserByIdAsync(int userId);
 
+        Task<UserDto> GetByKeycloakId(string keycloackId);
+
         Task<UserDto> GetUserByUserNameAsync(string userName); // ✅ بازگشت به UserDto مطابق UserService فعلی
 
         //Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);

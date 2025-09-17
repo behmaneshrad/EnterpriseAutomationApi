@@ -10,9 +10,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
     {
         builder.ToTable("Roles","Auth");
 
-        // کلید اصلی
-        builder.HasKey(r => r.RoleId);
-
+       
         // خصوصیات
         builder.Property(r => r.RoleName)
                .IsRequired()

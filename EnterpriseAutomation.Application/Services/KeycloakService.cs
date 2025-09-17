@@ -9,23 +9,28 @@ using LoginRequest = EnterpriseAutomation.Application.Models.LoginRequest;
 using RegisterRequest = EnterpriseAutomation.Application.Models.RegisterRequest;
 
 namespace EnterpriseAutomation.Application.Services
-{
+{   
+
     public class KeycloakService : IKeycloakService
     {
         private readonly HttpClient _httpClient;
         private readonly KeycloakSettings _settings;
 
-        public KeycloakService(IOptions<KeycloakSettings> settings)
+        public KeycloakService(IHttpClientFactory httpClientFactory, IOptions<KeycloakSettings> settings)
         {
-            _settings = settings.Value;
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri($"{_settings.AuthServerUrl}/realms/{_settings.Realm}/protocol/openid-connect/")
-            };
+            _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
+            _httpClient = httpClientFactory.CreateClient();
+            _httpClient.BaseAddress = new Uri($"{_settings.AuthServerUrl}/realms/{_settings.Realm}/protocol/openid-connect/");
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
         }
 
         public async Task<KeycloakResponse> LoginAsync(LoginRequest request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+            {
+                throw new ArgumentException("Invalid login request parameters");
+            }
+
             var parameters = new Dictionary<string, string>
             {
                 { "client_id", _settings.ClientId },
@@ -41,20 +46,27 @@ namespace EnterpriseAutomation.Application.Services
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Keycloak login failed: {error}");
+                throw new HttpRequestException($"Keycloak login failed with status {response.StatusCode}: {error}");
             }
 
             var tokenResponse = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<KeycloakResponse>(tokenResponse)
-                ?? throw new Exception("Failed to deserialize token response");
+            var result = JsonSerializer.Deserialize<KeycloakResponse>(tokenResponse)
+                ?? throw new InvalidOperationException("Failed to deserialize token response");
+
+            return result;
         }
 
         public async Task<KeycloakResponse> RegisterAsync(RegisterRequest request)
         {
-            // Get admin token first
+            if (request == null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Email))
+            {
+                throw new ArgumentException("Invalid register request parameters");
+            }
+
+            // 1. گرفتن توکن ادمین
             var adminToken = await GetAdminToken();
 
-            // Create user in Keycloak
+            // 2. آماده کردن کاربر
             var userJson = JsonSerializer.Serialize(new
             {
                 username = request.Username,
@@ -74,10 +86,10 @@ namespace EnterpriseAutomation.Application.Services
             });
 
             var content = new StringContent(userJson, Encoding.UTF8, "application/json");
-            var adminClient = new HttpClient();
-            adminClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
 
-            var response = await adminClient.PostAsync(
+            // 3. ایجاد کاربر
+            var response = await _httpClient.PostAsync(
                 $"{_settings.AuthServerUrl}/admin/realms/{_settings.Realm}/users",
                 content
             );
@@ -85,15 +97,22 @@ namespace EnterpriseAutomation.Application.Services
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Failed to create user: {error}");
+                throw new HttpRequestException($"Failed to create user with status {response.StatusCode}: {error}");
             }
 
-            // Login the new user
-            return await LoginAsync(new LoginRequest
+            // 4. گرفتن KeycloakId
+            var keycloakId = await GetUserIdByUsername(request.Username, adminToken);
+
+            // 5. ورود کاربر جدید
+            _httpClient.DefaultRequestHeaders.Authorization = null; // حذف توکن ادمین
+            var loginResponse = await LoginAsync(new LoginRequest
             {
                 Username = request.Username,
                 Password = request.Password
             });
+
+            loginResponse.KeycloakId = keycloakId;
+            return loginResponse;
         }
 
         private async Task<string> GetAdminToken()
@@ -110,12 +129,38 @@ namespace EnterpriseAutomation.Application.Services
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception("Failed to get admin token");
+                var error = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to get admin token with status {response.StatusCode}: {error}");
             }
 
             var tokenResponse = await response.Content.ReadAsStringAsync();
-            var token = JsonSerializer.Deserialize<KeycloakResponse>(tokenResponse);
-            return token?.AccessToken ?? throw new Exception("Admin token is null");
+            var token = JsonSerializer.Deserialize<KeycloakResponse>(tokenResponse)
+                ?? throw new InvalidOperationException("Failed to deserialize admin token response");
+
+            return token.AccessToken ?? throw new InvalidOperationException("Admin token is null");
+        }
+
+        private async Task<string> GetUserIdByUsername(string username, string adminToken)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+            var response = await _httpClient.GetAsync(
+                $"{_settings.AuthServerUrl}/admin/realms/{_settings.Realm}/users?username={username}"
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Failed to get user ID with status {response.StatusCode}: {error}");
+            }
+
+            var users = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(await response.Content.ReadAsStringAsync())
+                ?? throw new InvalidOperationException("Failed to deserialize users response");
+
+            var user = users.FirstOrDefault(u => u.ContainsKey("username") && u["username"].ToString() == username)
+                ?? throw new InvalidOperationException($"User with username {username} not found");
+
+            return user["id"]?.ToString() ?? throw new InvalidOperationException("User ID not found");
         }
     }
 }

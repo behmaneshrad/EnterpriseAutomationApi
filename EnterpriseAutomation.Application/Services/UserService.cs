@@ -58,8 +58,7 @@ namespace EnterpriseAutomation.Application.Services
 
             return new UserDto
             {
-                Username = user.Username,
-                Role = user.Role
+                Username = user.Username               
             };
         }
         #endregion
@@ -79,8 +78,8 @@ namespace EnterpriseAutomation.Application.Services
 
             return new UserDto
             {
-                Username = user.Username,
-                Role = user.Role
+                Username = user.Username
+                
             };
         }
 
@@ -96,6 +95,18 @@ namespace EnterpriseAutomation.Application.Services
             };
         }
 
+        public async Task<UserDto> GetByKeycloakId(string keycloackId)
+        {
+
+            var user = await _userRepository.GetFirstOrDefaultAsync(x => x.KeycloakId == keycloackId);
+
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Username = user.Username
+            };
+        }
+
         public async Task<IEnumerable<UserDto>> GetAllUserAsync()
         {
             var users = await _userRepository.GetAllAsync();
@@ -103,8 +114,7 @@ namespace EnterpriseAutomation.Application.Services
             var res = users.Select(a => new UserDto
             {
                 Email = "",
-                Username = a.Username,
-                Role = a.Role
+                Username = a.Username                
             });
 
             return res;

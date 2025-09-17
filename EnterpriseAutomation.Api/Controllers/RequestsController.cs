@@ -1,7 +1,6 @@
 ﻿using EnterpriseAutomation.Api.Controllers;
 using EnterpriseAutomation.Api.Controllers.BaseController;
 using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Application.Requests.Services;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure.Repository;
 using Microsoft.AspNetCore.Mvc;

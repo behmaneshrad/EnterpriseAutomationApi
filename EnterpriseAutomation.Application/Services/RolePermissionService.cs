@@ -13,6 +13,21 @@ namespace EnterpriseAutomation.Application.Services
             _repository = repository;   
         }
 
+        public async Task<IEnumerable<RolePermissions?>> GetAllAsync()
+        {
+            return await _repository.GetAllAsync();
+        }
+
+        public async Task<IEnumerable<RolePermissions?>> GetByPermissionId(int permissionId)
+        {
+            return await _repository.GetWhereAsync(x => x.PermissionId == permissionId);
+        }
+
+        public async Task<IEnumerable<RolePermissions?>> GetByRoleId(int roleId)
+        {
+            return await _repository.GetWhereAsync(x => x.RoleId == roleId);
+        }
+
 
     }
 }

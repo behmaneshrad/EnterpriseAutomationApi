@@ -32,5 +32,8 @@ namespace EnterpriseAutomation.Application.Models
 
         [JsonPropertyName("scope")]
         public string Scope { get; set; } = string.Empty;
+
+        [JsonPropertyName("id")]
+        public string KeycloakId { get; set; } = string.Empty;
     }
 }

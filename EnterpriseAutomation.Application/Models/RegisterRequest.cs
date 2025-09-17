@@ -24,7 +24,6 @@ namespace EnterpriseAutomation.Application.Models
 
         [Required]
         public string LastName { get; set; } = string.Empty;
-
-        public int UserId { get; set; } = 0;
+       
     }
 }

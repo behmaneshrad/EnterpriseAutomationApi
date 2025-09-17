@@ -25,25 +25,29 @@ namespace EnterpriseAutomation.Api.Extensions
                 context.Fail();
                 return;
             }
+
             if (!int.TryParse(userIdClaim, out int userId))
             {
                 context.Fail();
                 return;
             }
+
             var user = await _userService.GetUserByIdAsync(userId);
             if (user == null || user.UserRoles == null)
             {
                 context.Fail();
                 return;
             }
+
             var userRoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList();
-            var permission = await _permissionService.GetSingleAsync(p => p.Name == requirement.PermissionName);
+            var permission = await _permissionService.GetSingleAsync(requirement.PermissionName);
             if (permission == null)
             {
                 context.Fail();
                 return;
             }
-            var allowedRoleIds = (await _rolePermissionService.GetAllAsync(rp => rp.PermissionId == permission.PermissionId)).Select(rp => rp.RoleId);
+
+            var allowedRoleIds = (await _rolePermissionService.GetByPermissionId(permission.PermissionId)).Select(rp => rp.RoleId);
             if (userRoleIds.Intersect(allowedRoleIds).Any())
             {
                 context.Succeed(requirement);

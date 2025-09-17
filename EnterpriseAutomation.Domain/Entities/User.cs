@@ -23,6 +23,9 @@ public class User : BaseEntity
     [Display(Name = "پسورد هش")]
     public string PasswordHash { get; set; } = string.Empty;
 
+    [Display(Name = "شناسه کی‌کلاک")]
+    public string? KeycloakId { get; set; }
+
     public virtual ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; } = [];
     public virtual ICollection<Request> Requests { get; set; } = [];
     public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];
