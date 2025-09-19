@@ -84,7 +84,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -94,10 +95,12 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.Property<string>("Key")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -110,7 +113,9 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("PermissionId");
 
-                    b.ToTable("Permissions");
+                    b.HasIndex("Key", "IsActive");
+
+                    b.ToTable("Permissions", "Auth");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Request", b =>
@@ -186,7 +191,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -199,7 +205,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("RoleId");
 
-                    b.ToTable("Roles");
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Roles", "Auth");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.RolePermissions", b =>
@@ -233,11 +242,12 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("RolePermissionsId");
 
-                    b.HasIndex("PermissionId");
-
                     b.HasIndex("RoleId");
 
-                    b.ToTable("RolePermissions");
+                    b.HasIndex("PermissionId", "RoleId")
+                        .IsUnique();
+
+                    b.ToTable("RolesPermissions", "Auth");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>
@@ -254,6 +264,10 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("KeycloakId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -264,9 +278,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -284,7 +297,45 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", "Auth");
+                });
+
+            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<int>("UserRoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserRoleId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UserCreatedId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserModifyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserRoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRoles", "Auth");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", b =>
@@ -385,7 +436,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.ToTable("WorkflowSteps", (string)null);
                 });
 
-            modelBuilder.Entity("UserRole", b =>
+            modelBuilder.Entity("RoleUser", b =>
                 {
                     b.Property<int>("RolesRoleId")
                         .HasColumnType("int");
@@ -397,7 +448,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasIndex("UsersUserId");
 
-                    b.ToTable("UserRole");
+                    b.ToTable("RoleUser", "Auth");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.ApprovalStep", b =>
@@ -449,6 +500,25 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EnterpriseAutomation.Domain.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowDefinition", b =>
                 {
                     b.HasOne("EnterpriseAutomation.Domain.Entities.User", "User")
@@ -471,7 +541,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Navigation("WorkflowDefinition");
                 });
 
-            modelBuilder.Entity("UserRole", b =>
+            modelBuilder.Entity("RoleUser", b =>
                 {
                     b.HasOne("EnterpriseAutomation.Domain.Entities.Role", null)
                         .WithMany()
@@ -499,6 +569,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Role", b =>
                 {
                     b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.User", b =>
@@ -506,6 +578,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     b.Navigation("ApprovalSteps");
 
                     b.Navigation("Requests");
+
+                    b.Navigation("UserRoles");
 
                     b.Navigation("WorkflowDefinitions");
                 });
