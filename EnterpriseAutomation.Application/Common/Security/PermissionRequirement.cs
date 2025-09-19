@@ -8,7 +8,7 @@ public sealed class PermissionRequirement : IAuthorizationRequirement
     public string Scope { get; }
     public PermissionRequirement(string resource, string scope)
     {
-        Resource = resource;
-        Scope = scope;
+        this.Resource = resource;
+        this.Scope = scope;
     }
 }
