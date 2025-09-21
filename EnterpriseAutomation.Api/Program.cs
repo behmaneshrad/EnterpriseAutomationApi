@@ -282,7 +282,7 @@ builder.Services.AddSwaggerGen(options =>
 // ثبت مدیریت کننده سفارشی خطاهای احراز هویت
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
 
-var app = builder.Build();
+
 
 using (var scope = builder.Services.BuildServiceProvider().CreateScope())
 {
@@ -299,6 +299,8 @@ using (var scope = builder.Services.BuildServiceProvider().CreateScope())
     });
 }
 
+var app = builder.Build();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -309,9 +311,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("FrontPolicy");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
