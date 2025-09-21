@@ -13,6 +13,11 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Request> builder)
         {
+            builder.ToTable("Requests", "Workflow");
+
+            builder.HasKey(x => x.RequestId); //
+
+
             builder.Property(x => x.Title)
                 .IsRequired()
                 .HasMaxLength(200);

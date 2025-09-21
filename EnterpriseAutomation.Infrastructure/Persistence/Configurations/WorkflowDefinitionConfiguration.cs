@@ -8,11 +8,16 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<WorkflowDefinition> builder)
         {
+            builder.ToTable("WorkflowDefinitions", "Workflow");
+
+            builder.HasKey(t => t.WorkflowDefinitionId);
+
             builder.Property(t => t.Name)
                 .IsRequired();
 
             builder.Property(t => t.Description)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(1000);
 
             // Relation to user 
             builder.HasOne(t => t.User)

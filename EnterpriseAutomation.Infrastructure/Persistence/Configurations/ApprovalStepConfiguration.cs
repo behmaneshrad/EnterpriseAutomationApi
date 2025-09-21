@@ -8,6 +8,9 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ApprovalStep> builder)
         {
+            // Table mapping (optional schema: workflow)
+            builder.ToTable("ApprovalSteps", "workflow");
+
             builder.HasKey(x => x.ApprovalStepId);
 
             builder.Property(x => x.StepId)

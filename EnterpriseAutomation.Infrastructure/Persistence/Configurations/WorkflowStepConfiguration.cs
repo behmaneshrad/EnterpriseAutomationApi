@@ -8,6 +8,9 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<WorkflowStep> builder)
         {
+
+            builder.ToTable("WorkflowSteps", "Workflow");
+
             // Primary Key
             builder.HasKey(x => x.WorkflowStepId);
 
