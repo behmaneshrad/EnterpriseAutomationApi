@@ -37,7 +37,7 @@ builder.Services
     .AddJwtBearer(options =>
     {
         options.Authority = $"{keycloakSettings.AuthServerUrl}/realms/{keycloakSettings.Realm}";
-        options.RequireHttpsMetadata = true;
+        options.RequireHttpsMetadata = false;
 
         //  چند Audience مجاز
         options.TokenValidationParameters = new TokenValidationParameters
