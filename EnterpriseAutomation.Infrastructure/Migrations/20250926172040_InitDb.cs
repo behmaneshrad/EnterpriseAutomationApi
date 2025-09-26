@@ -1,17 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initDb : Migration
+    public partial class InitDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
+                name: "workflow");
+
+            migrationBuilder.EnsureSchema(
                 name: "Auth");
+
+            migrationBuilder.EnsureSchema(
+                name: "Workflow");
 
             migrationBuilder.CreateTable(
                 name: "Permissions",
@@ -174,12 +181,13 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             migrationBuilder.CreateTable(
                 name: "WorkflowDefinitions",
+                schema: "Workflow",
                 columns: table => new
                 {
                     WorkflowDefinitionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     CreatedById = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -201,6 +209,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Requests",
+                schema: "Workflow",
                 columns: table => new
                 {
                     RequestId = table.Column<int>(type: "int", nullable: false)
@@ -230,6 +239,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_Requests_WorkflowDefinitions_WorkflowDefinitionId",
                         column: x => x.WorkflowDefinitionId,
+                        principalSchema: "Workflow",
                         principalTable: "WorkflowDefinitions",
                         principalColumn: "WorkflowDefinitionId",
                         onDelete: ReferentialAction.Restrict);
@@ -258,6 +268,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_WorkflowSteps_WorkflowDefinitions_WorkflowDefinitionId",
                         column: x => x.WorkflowDefinitionId,
+                        principalSchema: "Workflow",
                         principalTable: "WorkflowDefinitions",
                         principalColumn: "WorkflowDefinitionId",
                         onDelete: ReferentialAction.Restrict);
@@ -265,6 +276,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             migrationBuilder.CreateTable(
                 name: "ApprovalSteps",
+                schema: "workflow",
                 columns: table => new
                 {
                     ApprovalStepId = table.Column<int>(type: "int", nullable: false)
@@ -287,6 +299,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_ApprovalSteps_Requests_RequestId",
                         column: x => x.RequestId,
+                        principalSchema: "Workflow",
                         principalTable: "Requests",
                         principalColumn: "RequestId",
                         onDelete: ReferentialAction.Restrict);
@@ -300,11 +313,13 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_ApprovalSteps_RequestId",
+                schema: "workflow",
                 table: "ApprovalSteps",
                 column: "RequestId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ApprovalSteps_UserId",
+                schema: "workflow",
                 table: "ApprovalSteps",
                 column: "UserId");
 
@@ -316,11 +331,13 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Requests_UserId",
+                schema: "Workflow",
                 table: "Requests",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Requests_WorkflowDefinitionId",
+                schema: "Workflow",
                 table: "Requests",
                 column: "WorkflowDefinitionId");
 
@@ -364,6 +381,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_WorkflowDefinitions_CreatedById",
+                schema: "Workflow",
                 table: "WorkflowDefinitions",
                 column: "CreatedById");
 
@@ -382,7 +400,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ApprovalSteps");
+                name: "ApprovalSteps",
+                schema: "workflow");
 
             migrationBuilder.DropTable(
                 name: "RolesPermissions",
@@ -400,7 +419,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 name: "WorkflowSteps");
 
             migrationBuilder.DropTable(
-                name: "Requests");
+                name: "Requests",
+                schema: "Workflow");
 
             migrationBuilder.DropTable(
                 name: "Permissions",
@@ -411,7 +431,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
                 schema: "Auth");
 
             migrationBuilder.DropTable(
-                name: "WorkflowDefinitions");
+                name: "WorkflowDefinitions",
+                schema: "Workflow");
 
             migrationBuilder.DropTable(
                 name: "Users",

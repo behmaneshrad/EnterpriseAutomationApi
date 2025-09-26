@@ -212,6 +212,8 @@ builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
 
+builder.Services.AddScoped<ITestServiceMeet8, TestServiceMeet8>();
+
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 
 builder.Services.Configure<KeycloakSettings>(builder.Configuration.GetSection("KeycloakSettings"));

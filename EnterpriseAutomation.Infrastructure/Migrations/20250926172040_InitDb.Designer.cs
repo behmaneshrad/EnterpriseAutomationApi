@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseAutomation.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250919094839_initDb")]
-    partial class initDb
+    [Migration("20250926172040_InitDb")]
+    partial class InitDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -72,7 +72,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ApprovalSteps");
+                    b.ToTable("ApprovalSteps", "workflow");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Permission", b =>
@@ -175,7 +175,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasIndex("WorkflowDefinitionId");
 
-                    b.ToTable("Requests");
+                    b.ToTable("Requests", "Workflow");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.Role", b =>
@@ -357,7 +357,8 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -379,7 +380,7 @@ namespace EnterpriseAutomation.Infrastructure.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("WorkflowDefinitions");
+                    b.ToTable("WorkflowDefinitions", "Workflow");
                 });
 
             modelBuilder.Entity("EnterpriseAutomation.Domain.Entities.WorkflowStep", b =>

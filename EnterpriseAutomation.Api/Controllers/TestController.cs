@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Common.Security;
+using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Application.Services.Interfaces;
 
 namespace Api.Controllers
 {
@@ -10,9 +13,11 @@ namespace Api.Controllers
     public class TestController : ControllerBase
     {
         private readonly ILogger<TestController> _logger;
-        public TestController(ILogger<TestController> logger)
+        private readonly ITestServiceMeet8 _ts;
+        public TestController(ILogger<TestController> logger,ITestServiceMeet8 ts)
         {
             _logger = logger;
+            _ts = ts;
         }
         [AllowAnonymous]
         [HttpPost("cors")]
@@ -26,6 +31,13 @@ namespace Api.Controllers
             return Ok("check elastic");
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult Get(int id) 
+        {
+            var res=_ts.Get(id);
+            return Ok(res);
+        }
 
         //[HttpGet("public")]
         //public IActionResult Public() => Ok("عمومی: بدون توکن");
