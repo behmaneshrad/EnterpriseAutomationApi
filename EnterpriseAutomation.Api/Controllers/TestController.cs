@@ -32,7 +32,7 @@ namespace Api.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet]
+        [HttpGet("ITestServiceMeet8")]
         public IActionResult Get(int id) 
         {
             var res=_ts.Get(id);

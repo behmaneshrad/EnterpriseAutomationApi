@@ -213,7 +213,7 @@ namespace EnterpriseAutomation.Application.Services
                     entity.Description = entityDTO.Description;
                     entity.Name = entityDTO.Name;
                     entity.UpdatedAt = DateTime.Now;
-                    entity.UserCreatedId = 1; // نمونه
+                    entity.UserCreatedId = 3; // نمونه
 
                     _repository.UpdateEntity(entity);
                     await _repository.SaveChangesAsync();
@@ -242,9 +242,9 @@ namespace EnterpriseAutomation.Application.Services
                         Description = entityDTO.Description,
                         Name = entityDTO.Name,
                         CreatedAt = DateTime.Now,
-                        CreatedById = 1,
+                        CreatedById = 3,
                         UpdatedAt = DateTime.MinValue,
-                        UserCreatedId = 0
+                        UserCreatedId = 3
                     };
 
                     await _repository.InsertAsync(entity);

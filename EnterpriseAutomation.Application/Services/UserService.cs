@@ -33,8 +33,6 @@ namespace EnterpriseAutomation.Application.Services
 
         public async Task CreateUserAsync(User user)
         {
-            //_context.Users.Add(user);
-            //await _context.SaveChangesAsync();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));

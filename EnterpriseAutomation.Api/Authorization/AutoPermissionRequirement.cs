@@ -6,6 +6,22 @@ namespace EnterpriseAutomation.Api.Authorization
 {
     public class AutoPermissionRequirement : IAuthorizationRequirement
     {
+        public string? CustomPermissionName { get; }
+        public bool UseControllerActionFormat { get; }
+
+        // Constructor پیش‌فرض - از فرمت Controller.Action استفاده می‌کند
+        public AutoPermissionRequirement()
+        {
+            UseControllerActionFormat = true;
+            CustomPermissionName = null;
+        }
+
+        // Constructor برای پرمیشن خاص
+        public AutoPermissionRequirement(string permissionName)
+        {
+            CustomPermissionName = permissionName;
+            UseControllerActionFormat = false;
+        }
     }
 
     public class AutoPermissionAuthorizationHandler : AuthorizationHandler<AutoPermissionRequirement>

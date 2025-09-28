@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EnterpriseAutomation.Api.Controllers.BaseController
 {
-    [Authorize(Policy = "AutoPermission")]
+    //[Authorize(Policy = "AutoPermission")]
     [ApiController]
     [Route("api/[controller]")]
     public abstract class BaseController<TEntity> : ControllerBase
