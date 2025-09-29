@@ -11,9 +11,6 @@ public class WorkflowLogConfiguration : IEntityTypeConfiguration<WorkflowLog>
         // جدول + شِما
         builder.ToTable("WorkflowLogs", "Workflow");
 
-        // کلید اصلی
-        builder.HasKey(x => x.Id);
-
         // پراپرتی‌ها
         builder.Property(x => x.WorkflowId)
             .IsRequired();

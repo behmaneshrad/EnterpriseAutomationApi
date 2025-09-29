@@ -1,15 +1,22 @@
 ﻿using EnterpriseAutomation.Domain.Entities.Base;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace EnterpriseAutomation.Domain.Entities
 {
     [Display(Name = "لاگ گردش کار")]
     public class WorkflowLog : BaseEntity
     {
-        [Key]
-        [Display(Name = "آی دی لاگ")]
-        public int Id { get; set; }
+        //[Key]
+        //[Display(Name = "آی دی لاگ")]
+        //public int Id { get; set; }
+
+        [Display(Name = "آی دی مونگو")]
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? _MongoId { get; set; }
 
         [Display(Name = "آی دی گردش کار")]
         public required int WorkflowId { get; set; }
@@ -38,6 +45,9 @@ namespace EnterpriseAutomation.Domain.Entities
         [Display(Name = "وضعیت جدید")]
         public string? NewState { get; set; }
 
+        [Display(Name = "تاریخ ثبت لاگ")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
         public override string ToString()
         {
             return JsonSerializer.Serialize(this ,new JsonSerializerOptions
