@@ -11,7 +11,7 @@ public class RolePermissions : BaseEntity
     public int RolePermissionsId { get; set; }
 
     [Display(Name = "اسم نقش")]
-    public int RoleId { get; set; } = default!;
+    public int RoleId { get; set; }
 
     [Display(Name = "آیدی دسترسی")]
     public int PermissionId { get; set; }

@@ -34,18 +34,18 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 
         // Permission فعّال مربوط به این PolicyKey
         var permission = await _db.Permissions
-            .Include(p => p.Roles)
+            .Include(p => p.RolePermissions)
             .Where(p => p.Name == requirement.PolicyKey)
             .FirstOrDefaultAsync();
 
-        if (permission is null || permission.Roles.Count == 0)
+        if (permission is null || permission.RolePermissions.Count == 0)
         {
             // اگر Policy تعریف نشده است، به‌صورت پیش‌فرض رد می‌کنیم (امن‌تر است)
             context.Fail();
             return;
         }
 
-        var allowed = permission.Roles.Select(r => r.Role.RoleName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var allowed = permission.RolePermissions.Select(r => r.Role.RoleName).ToHashSet(StringComparer.OrdinalIgnoreCase);
         bool any = userRoles.Overlaps(allowed);
 
         if (any) context.Succeed(requirement);

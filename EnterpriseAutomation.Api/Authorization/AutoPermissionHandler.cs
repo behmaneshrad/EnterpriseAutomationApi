@@ -13,15 +13,18 @@ namespace EnterpriseAutomation.Api.Authorization
         private readonly IUserRoleService _userRoleService;
         private readonly IUserService _userService;
         private readonly IRolePermissionService _rolePermissionService;
+        private readonly IPermissionService _permissionService;
 
         public AutoPermissionAuthorizationHandler(
             IUserRoleService userRoleService,
             IUserService userService,
-            IRolePermissionService rolePermissionService)
+            IRolePermissionService rolePermissionService,
+            IPermissionService permissionService)
         {
             _userRoleService = userRoleService;
             _userService = userService;
             _rolePermissionService = rolePermissionService;
+            _permissionService = permissionService;
         }
 
         protected override async Task HandleRequirementAsync(
@@ -78,10 +81,14 @@ namespace EnterpriseAutomation.Api.Authorization
             foreach (var userRole in userRoles)
             {
                 var rolePermissions = await _rolePermissionService.GetByRoleId(userRole.RoleId);
+                var permissions =  _permissionService.GetAllAsync().Result;
+
                 foreach (var rolePermission in rolePermissions)
-                {
-                    if (rolePermission.Permission?.Name != null &&
-                        rolePermission.Permission.Name.Equals(permissionName, StringComparison.OrdinalIgnoreCase))
+                {                   
+                    var permission = (permissions.Any())? permissions.FirstOrDefault(x => x.PermissionId == rolePermission.PermissionId)?.Name ?? "" : "";
+
+                    if (!string.IsNullOrEmpty(permission) &&
+                        permission.Equals(permission, StringComparison.OrdinalIgnoreCase))
                     {
                         context.Succeed(requirement);
                         return;

@@ -14,5 +14,5 @@ public class Permission : BaseEntity
     [Display(Name = "اسم اکشن")]
     public string? Name { get; set; }
 
-    public ICollection<RolePermissions> Roles { get; set; } = [];
+    public virtual ICollection<RolePermissions> RolePermissions { get; set; } = [];
 }

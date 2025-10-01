@@ -8,16 +8,8 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
 {
     public void Configure(EntityTypeBuilder<Permission> builder)
     {
-        builder.ToTable("Permissions","Auth");
+        builder.ToTable("Permissions", "Auth");
 
-        builder.HasKey(p => p.PermissionId);      
-
-        builder.Property(p => p.Name)
-               .HasMaxLength(200);       
-
-        builder.HasMany(p => p.Roles)
-               .WithOne(r => r.Permission)
-               .HasForeignKey(r => r.PermissionId)
-               .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.Name).HasMaxLength(500).HasColumnType("nvarchar").IsRequired();
     }
 }
