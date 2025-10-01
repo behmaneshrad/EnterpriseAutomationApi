@@ -105,6 +105,19 @@ builder.Host.UseSerilog((ctx, cfg) =>
 builder.Services.AddScoped<IAuthorizationHandler, AutoPermissionAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
 
+builder.Services.AddAuthorization(options =>
+{
+    // تنظیم پیام‌های پیش‌فرض
+    //options.FallbackPolicy = new AuthorizationPolicyBuilder()
+    //    .RequireAuthenticatedUser()
+    //    .Build();
+
+    // ثبت Policy برای تشخیص خودکار دسترسی‌ها
+    options.AddPolicy("AutoPermission", policy =>
+        policy.Requirements.Add(new AutoPermissionRequirement()));
+});
+
+
 // ==============================
 // CORS
 // ==============================
@@ -122,9 +135,7 @@ builder.Services.AddCors(options =>
 // ==============================
 // Controllers / Swagger / HttpContext
 // ==============================
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddHttpContextAccessor();
+
 
 if (builder.Configuration.GetValue<bool>("Swagger:Enabled", true))
 {
@@ -194,20 +205,25 @@ builder.Services.AddScoped<PermissionHandler>();
 // ==============================
 // Dynamic Policies from DB
 // ==============================
-using (var scope = builder.Services.BuildServiceProvider().CreateScope())
-{
-    var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    var dbPermissions = permissionService.GetAllAsync().GetAwaiter().GetResult();
 
-    builder.Services.AddAuthorization(options =>
+// ثبت Policyهای داینامیک بعد از ثبت همه سرویس‌ها
+var dbPermissions = builder.Services.BuildServiceProvider()
+    .CreateScope().ServiceProvider
+    .GetRequiredService<IPermissionService>()
+    .GetAllAsync().GetAwaiter().GetResult();
+
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var permission in dbPermissions)
     {
-        foreach (var permission in dbPermissions)
-        {
-            options.AddPolicy(permission.Name, policy =>
-                policy.Requirements.Add(new PermissionRequirement(permission.Name)));
-        }
-    });
-}
+        options.AddPolicy(permission.Name, policy =>
+            policy.Requirements.Add(new PermissionRequirement(permission.Name)));
+    }
+});
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddMongoWorkflowLogging(builder.Configuration);
 
@@ -228,7 +244,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // پیام‌میانی سفارشی احراز مجوز (اگر لازم است)
-app.UseMiddleware<AuthorizeMessageMW>();
+//app.UseMiddleware<AuthorizeMessageMW>();
 
 app.MapControllers();
 app.Run();

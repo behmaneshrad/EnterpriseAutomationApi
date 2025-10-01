@@ -10,23 +10,10 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
     {
         builder.ToTable("Permissions","Auth");
 
-        builder.HasKey(p => p.PermissionId);
-
-        builder.Property(p => p.Key)
-               .IsRequired()
-               .HasMaxLength(200);
+        builder.HasKey(p => p.PermissionId);      
 
         builder.Property(p => p.Name)
-               .HasMaxLength(200);
-
-        builder.Property(p => p.Description)
-               .HasMaxLength(1000);
-
-
-        builder.Property(p => p.IsActive)
-               .IsRequired();
-
-        builder.HasIndex(p => new { p.Key, p.IsActive });
+               .HasMaxLength(200);       
 
         builder.HasMany(p => p.Roles)
                .WithOne(r => r.Permission)

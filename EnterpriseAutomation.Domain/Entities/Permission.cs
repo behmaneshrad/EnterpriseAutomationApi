@@ -9,19 +9,10 @@ public class Permission : BaseEntity
 {
     [Key]
     [Display(Name = "آیدی")]
-    public int PermissionId { get; set; }
-
-    [Display(Name = "اسم api")]
-    public string Key { get; set; } = default!;
+    public int PermissionId { get; set; }   
 
     [Display(Name = "اسم اکشن")]
     public string? Name { get; set; }
-
-    [Display(Name = "توضیحات")]
-    public string? Description { get; set; }
-
-    [Display(Name = "فعال بودن")]
-    public bool IsActive { get; set; } = true;
 
     public ICollection<RolePermissions> Roles { get; set; } = [];
 }

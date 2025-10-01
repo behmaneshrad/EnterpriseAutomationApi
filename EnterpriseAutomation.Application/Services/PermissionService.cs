@@ -30,10 +30,8 @@ namespace EnterpriseAutomation.Application.Services
 
             return new PermissionDto
             {
-                Name = permission?.Name ?? "",
-                Key = permission?.Key ?? "",
-                Description = permission?.Description ?? "",
-                IsActive = permission?.IsActive ?? true 
+                PermissionId = permission?.PermissionId ?? 0,
+                Name = permission?.Name ?? ""               
             };
         }
 

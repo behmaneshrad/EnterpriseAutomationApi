@@ -35,7 +35,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         // Permission فعّال مربوط به این PolicyKey
         var permission = await _db.Permissions
             .Include(p => p.Roles)
-            .Where(p => p.Key == requirement.PolicyKey && p.IsActive)
+            .Where(p => p.Name == requirement.PolicyKey)
             .FirstOrDefaultAsync();
 
         if (permission is null || permission.Roles.Count == 0)

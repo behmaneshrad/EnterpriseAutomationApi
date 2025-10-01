@@ -17,18 +17,19 @@ namespace EnterpriseAutomation.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RequestsController : ControllerBase
+    public class RequestsController : BaseController<Request>
     {
         private readonly IRequestService _requestService;
 
-        public RequestsController(IRequestService requestService)
-          
+        public RequestsController(IRepository<Request> repository,
+             IRequestService _requestService) : base(repository)
         {
-            _requestService = requestService;
-        }
+
+            this._requestService = _requestService;
+        }         
 
 
-        [HttpGet("RequestList/{status}/{createdBy}")]
+       [HttpGet("RequestList/{status}/{createdBy}")]
         public async Task<ActionResult<ServiceResult<List<RequestDto>>>> RequestListFilter(
         string? currentStatus, Guid? createdBy)
         {
@@ -68,8 +69,7 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
-        [HttpGet]
-        [Authorize(Policy = Policies.Requests_GetAllRequests)]
+        [HttpGet]        
         public async Task<IActionResult> GetAllRequests()
         {
             try
@@ -108,10 +108,8 @@ namespace EnterpriseAutomation.API.Controllers
         }
 
         // 4. ارسال درخواست توسط کارمند (POST)
-        [Authorize]
-        [RequiresPermission("requests", "submit")]
+       
         [HttpPost("submit")] 
-
         public async Task<IActionResult> SubmitRequest([FromBody] SubmitRequestDto dto)
         {
             if (!ModelState.IsValid)
@@ -222,8 +220,8 @@ namespace EnterpriseAutomation.API.Controllers
             }
         }
 
-        [Authorize]
-        [RequiresPermission("requests", "approve")]
+  
+        
         [HttpPost("{id:int}/approve")]
         public async Task<IActionResult> ApproveRequest(int id, [FromBody] ApproveRequestDto dto)
         {

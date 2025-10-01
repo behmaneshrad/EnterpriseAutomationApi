@@ -4,6 +4,7 @@ using EnterpriseAutomation.Infrastructure.Persistence;
 using EnterpriseAutomation.Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using SharpCompress.Common;
 using System.Linq.Expressions;
 
 namespace EnterpriseAutomation.Infrastructure.Repository
@@ -66,6 +67,44 @@ namespace EnterpriseAutomation.Infrastructure.Repository
 
             return await query.ToListAsync();
         }
+
+        public async Task<List<TEntity>> GetAll(
+         Expression<Func<TEntity, bool>>? predicate = null,
+         Expression<Func<TEntity, object>>? orderBy = null,
+         bool ascending = true,
+         int? page = null,
+         int? pageSize = null,
+         Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null)
+        {
+            IQueryable<TEntity> query = _dbSet;
+
+            // اعمال Include اگر وجود داشته باشد
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            // اعمال فیلتر
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            // اعمال مرتب‌سازی
+            if (orderBy != null)
+            {
+                query = ascending ? query.OrderBy(orderBy) : query.OrderByDescending(orderBy);
+            }
+
+            // اعمال صفحه‌بندی
+            if (page.HasValue && pageSize.HasValue)
+            {
+                query = query.Skip((page.Value - 1) * pageSize.Value).Take(pageSize.Value);
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<TEntity?> GetFirstWithInclude(Expression<Func<TEntity, bool>> predicate,
         Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
         bool asNoTracking = false)

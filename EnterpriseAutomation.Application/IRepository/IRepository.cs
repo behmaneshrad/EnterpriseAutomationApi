@@ -16,6 +16,14 @@ namespace EnterpriseAutomation.Application.IRepository
         public Task<IEnumerable<TEntity?>> GetAllAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
             bool asNoTracking = false);
 
+        public Task<List<TEntity>> GetAll(
+         Expression<Func<TEntity, bool>>? predicate = null,
+         Expression<Func<TEntity, object>>? orderBy = null,
+         bool ascending = true,
+         int? page = null,
+         int? pageSize = null,
+         Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null);
+
         public Task<PaginatedList<TEntity?>> GetAllPaginationAsync(int padeIndex,int pageSize,
             Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
             bool asNoTracking = false);
