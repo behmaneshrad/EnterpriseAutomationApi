@@ -26,6 +26,7 @@ public class User : BaseEntity
     [Display(Name = "شناسه کی‌کلاک")]
     public string? KeycloakId { get; set; }
 
+    public Guid ExternalGuid { get; set; }
     public virtual ICollection<WorkflowDefinition> WorkflowDefinitions { get; set; } = [];
     public virtual ICollection<Request> Requests { get; set; } = [];
     public virtual ICollection<ApprovalStep> ApprovalSteps { get; set; } = [];

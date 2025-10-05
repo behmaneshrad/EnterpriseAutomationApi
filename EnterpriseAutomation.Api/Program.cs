@@ -22,7 +22,8 @@ using EnterpriseAutomation.Infrastructure.Repository;
 
 // +++ اضافه برای Mongo (لایه Infrastructure) +++
 using EnterpriseAutomation.Infrastructure.Mongo;
-using EnterpriseAutomation.Domain.Entities; // << AddMongoWorkflowLogging extension
+using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Application.Requests.Services; // << AddMongoWorkflowLogging extension
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -189,6 +190,7 @@ builder.Services.AddScoped<IWorkflowStepsService, WorkflowStepsService>();
 builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionService>();
 builder.Services.AddScoped<ITestServiceMeet8, TestServiceMeet8>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IApprovalService, ApprovalService>();
 
 // Generic Repository
 builder.Services.AddScoped(typeof(EnterpriseAutomation.Application.IRepository.IRepository<>), typeof(Repository<>));

@@ -8,34 +8,39 @@ namespace EnterpriseAutomation.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ApprovalStep> builder)
         {
-            // Table mapping (optional schema: workflow)
             builder.ToTable("ApprovalSteps", "workflow");
 
             builder.HasKey(x => x.ApprovalStepId);
 
-            builder.Property(x => x.StepId)
-                .IsRequired();
-
-            builder.Property(x => x.RequestId)
-                .IsRequired();
+            builder.Property(x => x.StepId).IsRequired();
+            builder.Property(x => x.RequestId).IsRequired();
 
             builder.Property(x => x.Status)
-                .IsRequired();
+                   .IsRequired()
+                   .HasConversion<int>(); // شفاف‌سازی ذخیره‌ی enum
 
-            builder.Property(x => x.ApprovedAt)
-                .IsRequired(false); // nullable - زمانی که هنوز تایید نشده
+            builder.Property(x => x.ApprovedAt).IsRequired(false);
 
-            // Relation to Request
+            // ایندکس‌ها
+            builder.HasIndex(x => x.RequestId);
+            builder.HasIndex(x => x.ApproverUserId);
+
+            // جلوگری از تکرار شماره مرحله برای یک درخواست
+            builder.HasIndex(x => new { x.RequestId, x.StepId })
+                   .IsUnique();
+
+            // Request ↔ ApprovalSteps
             builder.HasOne(x => x.Request)
-                .WithMany(r => r.ApprovalSteps)
-                .HasForeignKey(x => x.RequestId)
-                .OnDelete(DeleteBehavior.Restrict);
+                   .WithMany(r => r.ApprovalSteps)
+                   .HasForeignKey(x => x.RequestId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
-            //// Relation to User (Approver)
-            //builder.HasOne(x => x.ApproverUser)
-            //    .WithMany(u => u.ApprovalSteps)
-            //    .HasForeignKey(x => x.ApproverUserId)
-            //    .OnDelete(DeleteBehavior.Restrict);
+            // ApproverUser ↔ ApprovalSteps  (FK: int? → Users.UserId)
+            builder.HasOne(x => x.ApproverUser)
+                   .WithMany(u => u.ApprovalSteps)
+                   .HasForeignKey(x => x.ApproverUserId)
+                   .OnDelete(DeleteBehavior.Restrict); // یا SetNull
+                                                       // .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

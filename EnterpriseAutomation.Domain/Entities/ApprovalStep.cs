@@ -22,7 +22,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public int RequestId { get; set; } = default!;
 
         [Display(Name = "آی دی کاربر تایید کننده")]
-        public Guid? ApproverUserId { get; set; }
+        public int? ApproverUserId { get; set; }
 
         [Display(Name = "وضعیت")]
         public ApprovalStatus Status { get; set; } = ApprovalStatus.Pending;
@@ -31,5 +31,7 @@ namespace EnterpriseAutomation.Domain.Entities
         public DateTime? ApprovedAt { get; set; }
 
         public virtual Request? Request { get; set; }
+        public virtual User? ApproverUser { get; set; }
+
     }
 }
