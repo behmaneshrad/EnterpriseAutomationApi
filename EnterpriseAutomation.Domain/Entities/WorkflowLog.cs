@@ -56,6 +56,7 @@ namespace EnterpriseAutomation.Domain.Entities
                 PropertyNamingPolicy= JsonNamingPolicy.CamelCase
             });
         }
+
         
     }
 }
