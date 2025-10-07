@@ -1,5 +1,8 @@
-﻿using EnterpriseAutomation.Application.Models;
+﻿using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.Models;
+using EnterpriseAutomation.Application.Models.Users;
 using EnterpriseAutomation.Application.Services.Interfaces;
+using EnterpriseAutomation.Application.Utilities;
 using EnterpriseAutomation.Domain.Entities;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
@@ -15,13 +18,16 @@ namespace EnterpriseAutomation.Application.Services
     {
         private readonly HttpClient _httpClient;
         private readonly KeycloakSettings _settings;
+        private readonly IRepository<User> _userRepository;
 
-        public KeycloakService(IHttpClientFactory httpClientFactory, IOptions<KeycloakSettings> settings)
+        public KeycloakService(IHttpClientFactory httpClientFactory, 
+            IOptions<KeycloakSettings> settings,IRepository<User> userRepository)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _httpClient = httpClientFactory.CreateClient();
             _httpClient.BaseAddress = new Uri($"{_settings.AuthServerUrl}/realms/{_settings.Realm}/protocol/openid-connect/");
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
+            _userRepository = userRepository;
         }
 
         public async Task<KeycloakResponse> LoginAsync(LoginRequest request)
@@ -103,7 +109,21 @@ namespace EnterpriseAutomation.Application.Services
             // 4. گرفتن KeycloakId
             var keycloakId = await GetUserIdByUsername(request.Username, adminToken);
 
-            // 5. ورود کاربر جدید
+            //5. ثبت در دیتابیس SQL
+            var newUser = new User
+            {
+                Username=request.Username,
+                PasswordHash=PasswordGenerator.HashGenerator(request.Password),
+                KeycloakId=keycloakId,
+                RefreshToken=adminToken,
+                CreatedAt=DateTime.Now,
+                Role= 2,
+                UpdatedAt=DateTime.MinValue
+            };
+            await _userRepository.InsertAsync(newUser);
+            await _userRepository.SaveChangesAsync();
+
+            // 6. ورود کاربر جدید
             _httpClient.DefaultRequestHeaders.Authorization = null; // حذف توکن ادمین
             var loginResponse = await LoginAsync(new LoginRequest
             {

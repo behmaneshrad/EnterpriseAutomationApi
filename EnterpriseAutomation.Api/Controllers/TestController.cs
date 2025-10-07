@@ -4,6 +4,7 @@ using Application.Common.Security;
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Application.Services.Interfaces;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -14,10 +15,12 @@ namespace Api.Controllers
     {
         private readonly ILogger<TestController> _logger;
         private readonly ITestServiceMeet8 _ts;
-        public TestController(ILogger<TestController> logger,ITestServiceMeet8 ts)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public TestController(ILogger<TestController> logger, ITestServiceMeet8 ts, IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _ts = ts;
+            _httpContextAccessor = httpContextAccessor;
         }
         [AllowAnonymous]
         [HttpPost("cors")]
@@ -25,7 +28,7 @@ namespace Api.Controllers
 
         [AllowAnonymous]
         [HttpGet("get")]
-        public IActionResult Get() 
+        public IActionResult Get()
         {
             _logger.LogInformation("Test log from TestController at {time}", DateTime.UtcNow);
             return Ok("check elastic");
@@ -33,10 +36,21 @@ namespace Api.Controllers
 
         [AllowAnonymous]
         [HttpGet("ITestServiceMeet8")]
-        public IActionResult Get(int id) 
+        public IActionResult Get(int id)
         {
-            var res=_ts.Get(id);
+            var res = _ts.Get(id);
             return Ok(res);
+        }
+
+        [HttpGet("CurrentUser")]
+        public IActionResult GetCurrentUser()
+        {
+            var cc = _httpContextAccessor.HttpContext?.User.FindFirst("email")?.Value;
+            var user = new userTestDto
+            {
+                userID = cc
+            };
+            return Ok(user);
         }
 
         //[HttpGet("public")]
@@ -63,5 +77,9 @@ namespace Api.Controllers
 
         //    return Ok(roles);
         //}
+    }
+    class userTestDto
+    {
+        public string? userID { get; set; }
     }
 }
