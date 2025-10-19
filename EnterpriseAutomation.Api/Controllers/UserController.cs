@@ -27,9 +27,9 @@ namespace EnterpriseAutomation.WebApi.Controllers
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
-            //var userDto = await _userService.GetCurrentUserAsync(User);
-            //if (userDto == null)
-            //    return Unauthorized();
+            var userDto = await _userService.GetCurrentUserAsync(User);
+            if (userDto == null)
+                return Unauthorized();
             return Ok("userDto");
         }
 

@@ -44,21 +44,32 @@ namespace EnterpriseAutomation.Application.Services
         #region Get User Login
         public async Task<UserDto?> GetCurrentUserAsync(ClaimsPrincipal userClaims)
         {
-            var username = userClaims.Identity?.Name;
+            if (userClaims?.Identity == null || !userClaims.Identity.IsAuthenticated)
+                return null;
+
+            
+            var username = userClaims.FindFirst(ClaimTypes.Name)?.Value
+             ?? userClaims.FindFirst("username")?.Value
+             ?? userClaims.FindFirst("unique_name")?.Value
+             ?? userClaims.FindFirst("preferred_username")?.Value
+             ?? userClaims.FindFirst("name")?.Value
+             ?? userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
 
             if (string.IsNullOrEmpty(username))
                 return null;
 
             var user = await _userRepository.GetFirstOrDefaultAsync(x => x.Username == username);
-
             if (user == null)
                 return null;
 
             return new UserDto
             {
-                Username = user.Username               
+                Username = user.Username
             };
         }
+
+
         #endregion
 
         #region Test Get user

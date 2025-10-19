@@ -18,7 +18,7 @@ namespace EnterpriseAutomation.Application.Services.Interfaces
 
         Task<UserDto> GetUserByUserNameAsync(string userName); // ✅ بازگشت به UserDto مطابق UserService فعلی
 
-        //Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);
+        Task<UserDto?> GetCurrentUserAsync(System.Security.Claims.ClaimsPrincipal user);
         //Task<User?> ValidateUserAsync(string username, string password);
 
     }
