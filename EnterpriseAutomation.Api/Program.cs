@@ -178,6 +178,8 @@ builder.Services.AddSingleton<IElasticClient>(new ElasticClient(connectionSettin
 // ==============================
 // Application Services
 // ==============================
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddHttpClient<KeycloakService>();
 builder.Services.Configure<KeycloakSettings>(builder.Configuration.GetSection("KeycloakSettings"));
 
@@ -191,6 +193,7 @@ builder.Services.AddScoped<IWorkflowDefinitionsService, WorkflowDefinitionServic
 builder.Services.AddScoped<ITestServiceMeet8, TestServiceMeet8>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IApprovalService, ApprovalService>();
+
 
 // Generic Repository
 builder.Services.AddScoped(typeof(EnterpriseAutomation.Application.IRepository.IRepository<>), typeof(Repository<>));

@@ -1,27 +1,50 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Application.Common.Security;
+﻿using Application.Common.Security;
 using EnterpriseAutomation.Application.IRepository;
-using EnterpriseAutomation.Domain.Entities;
+using EnterpriseAutomation.Application.Services;
 using EnterpriseAutomation.Application.Services.Interfaces;
+using EnterpriseAutomation.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Nest;
 using System.Security.Claims;
 
 namespace Api.Controllers
 {
-    [AllowAnonymous]
+
     [ApiController]
     [Route("api/[controller]")]
     public class TestController : ControllerBase
     {
         private readonly ILogger<TestController> _logger;
         private readonly ITestServiceMeet8 _ts;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        public TestController(ILogger<TestController> logger, ITestServiceMeet8 ts, IHttpContextAccessor httpContextAccessor)
+
+        public TestController(ILogger<TestController> logger, ITestServiceMeet8 ts,
+            IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _ts = ts;
-            _httpContextAccessor = httpContextAccessor;
+
         }
+
+        [HttpGet("CurrentUser")]
+        public IActionResult GetCurrentUser()
+        {
+            var claimp = ClaimsPrincipal.Claims.ToDictionary<string, string?>(static c => c.Type, c => c.Value);
+            if (User.Identity.IsAuthenticated)
+            {
+                var keycloakId = User.FindFirst("Keycloak_id")?.Value;
+                if (keycloakId == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(keycloakId);
+            }
+            var keycloakId2 = User.FindFirst("sub")?.Value;
+            return Ok(keycloakId2 == string.Empty ? $"{keycloakId2}" : "is null");
+        }
+
+
         [AllowAnonymous]
         [HttpPost("cors")]
         public IActionResult Post([FromBody] object body) => Ok(new { msg = "CORS OK (POST)", body });
@@ -42,16 +65,7 @@ namespace Api.Controllers
             return Ok(res);
         }
 
-        [HttpGet("CurrentUser")]
-        public IActionResult GetCurrentUser()
-        {
-            var cc = _httpContextAccessor.HttpContext?.User.FindFirst("email")?.Value;
-            var user = new userTestDto
-            {
-                userID = cc
-            };
-            return Ok(user);
-        }
+
 
         //[HttpGet("public")]
         //public IActionResult Public() => Ok("عمومی: بدون توکن");

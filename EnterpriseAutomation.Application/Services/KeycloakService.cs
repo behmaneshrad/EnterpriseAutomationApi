@@ -4,15 +4,18 @@ using EnterpriseAutomation.Application.Models.Users;
 using EnterpriseAutomation.Application.Services.Interfaces;
 using EnterpriseAutomation.Application.Utilities;
 using EnterpriseAutomation.Domain.Entities;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using LoginRequest = EnterpriseAutomation.Application.Models.LoginRequest;
 using RegisterRequest = EnterpriseAutomation.Application.Models.RegisterRequest;
 
 namespace EnterpriseAutomation.Application.Services
-{   
+{
 
     public class KeycloakService : IKeycloakService
     {
@@ -20,8 +23,10 @@ namespace EnterpriseAutomation.Application.Services
         private readonly KeycloakSettings _settings;
         private readonly IRepository<User> _userRepository;
 
-        public KeycloakService(IHttpClientFactory httpClientFactory, 
-            IOptions<KeycloakSettings> settings,IRepository<User> userRepository)
+
+        public KeycloakService(IHttpClientFactory httpClientFactory,
+            IOptions<KeycloakSettings> settings, IRepository<User> userRepository
+           )
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _httpClient = httpClientFactory.CreateClient();
@@ -49,6 +54,17 @@ namespace EnterpriseAutomation.Application.Services
             var content = new FormUrlEncodedContent(parameters);
             var response = await _httpClient.PostAsync("token", content);
 
+            var adminToken = await GetAdminToken();
+
+            var keycloakId = await GetUserIdByUsername(request.Username, adminToken);
+
+            var claims=new List<Claim>()
+            {
+                new Claim("Keycloak_id",keycloakId)
+            };
+
+
+
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
@@ -58,6 +74,10 @@ namespace EnterpriseAutomation.Application.Services
             var tokenResponse = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<KeycloakResponse>(tokenResponse)
                 ?? throw new InvalidOperationException("Failed to deserialize token response");
+
+            result.KeycloakId = keycloakId;
+
+
 
             return result;
         }
@@ -109,16 +129,20 @@ namespace EnterpriseAutomation.Application.Services
             // 4. گرفتن KeycloakId
             var keycloakId = await GetUserIdByUsername(request.Username, adminToken);
 
+
+
+
+
             //5. ثبت در دیتابیس SQL
             var newUser = new User
             {
-                Username=request.Username,
-                PasswordHash=PasswordGenerator.HashGenerator(request.Password),
-                KeycloakId=keycloakId,
-                RefreshToken=adminToken,
-                CreatedAt=DateTime.Now,
-                Role= 2,
-                UpdatedAt=DateTime.MinValue
+                Username = request.Username,
+                PasswordHash = PasswordGenerator.HashGenerator(request.Password),
+                KeycloakId = keycloakId,
+                RefreshToken = adminToken,
+                CreatedAt = DateTime.Now,
+                Role = 2,
+                UpdatedAt = DateTime.MinValue
             };
             await _userRepository.InsertAsync(newUser);
             await _userRepository.SaveChangesAsync();
@@ -182,5 +206,6 @@ namespace EnterpriseAutomation.Application.Services
 
             return user["id"]?.ToString() ?? throw new InvalidOperationException("User ID not found");
         }
+
     }
 }
