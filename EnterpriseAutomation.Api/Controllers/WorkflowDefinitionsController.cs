@@ -1,4 +1,5 @@
 ﻿using EnterpriseAutomation.Api.Controllers.BaseController;
+using EnterpriseAutomation.Api.Extensions;
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Application.Models.WorkflowDefinitions;
 using EnterpriseAutomation.Application.ServiceResult;
@@ -17,16 +18,20 @@ namespace EnterpriseAutomation.Api.Controllers
         BaseController<WorkflowDefinition>
     {
         private readonly IWorkflowDefinitionsService _definitionsService;
+        private readonly IUserService userService;
+
         public WorkflowDefinitionsController(IRepository<WorkflowDefinition> repository,
-            IWorkflowDefinitionsService definitionsService)
+            IWorkflowDefinitionsService definitionsService, IUserService userService)
             : base(repository)
         {
             _definitionsService = definitionsService;
+            this.userService = userService;
         }
 
         [HttpPost("UpsertWorkflow")]
         public async Task<ActionResult<ServiceResult<WorkflowDefinitionCreateDto>>> UpsertWorkflow(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
+            entityDTO.userId = ClaimPrincipalExtensions.GetUserIdAsync(User,userService).Result;
             var result = await _definitionsService.UpsertWorkflowDefinition(id, entityDTO);
             if (result.Error)
             {

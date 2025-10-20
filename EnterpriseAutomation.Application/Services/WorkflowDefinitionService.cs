@@ -1,10 +1,12 @@
 ﻿using Aqua.EnumerableExtensions;
+using EnterpriseAutomation.Application.Extentions;
 using EnterpriseAutomation.Application.IRepository;
 using EnterpriseAutomation.Application.Models.WorkflowDefinitions;
 using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.Services.Interfaces;
 using EnterpriseAutomation.Domain.Entities;
 using EnterpriseAutomation.Infrastructure.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -14,13 +16,16 @@ namespace EnterpriseAutomation.Application.Services
     public class WorkflowDefinitionService : IWorkflowDefinitionsService
     {
         private readonly IRepository<WorkflowDefinition> _repository;
-
         private readonly ILogger<WorkflowDefinition> _logger;
+        private readonly IUserService userService;
+        private AuthorizationHandlerContext auth;
 
-        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository, ILogger<WorkflowDefinition> logger)
+        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository, ILogger<WorkflowDefinition> logger, IUserService userService)
         {
             _repository = repository;
             _logger = logger;
+            this.userService = userService;
+           
         }
         public async Task<ServiceResult<WorkflowDefinitionCreateDto>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
         {
@@ -192,12 +197,7 @@ namespace EnterpriseAutomation.Application.Services
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
             try
-            {
-                if (entityDTO.Description == string.Empty || entityDTO.Name == string.Empty)
-                {
-
-                    return ServiceResult<WorkflowDefinition>.Failure("Invalid data", 400);
-                }
+            {               
 
                 WorkflowDefinition? entity;
 
@@ -242,9 +242,9 @@ namespace EnterpriseAutomation.Application.Services
                         Description = entityDTO.Description,
                         Name = entityDTO.Name,
                         CreatedAt = DateTime.Now,
-                        CreatedById = 3,
+                        CreatedById = entityDTO.userId,
                         UpdatedAt = DateTime.MinValue,
-                        UserCreatedId = 3
+                        UserCreatedId = entityDTO.userId,
                     };
 
                     await _repository.InsertAsync(entity);

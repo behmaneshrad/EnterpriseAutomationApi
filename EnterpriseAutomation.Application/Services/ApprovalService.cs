@@ -46,10 +46,10 @@ namespace EnterpriseAutomation.Application.Requests.Services
 
             //  یافتن کاربر تأییدکننده با چند حالت
             User? approver = null;
-            if (!string.IsNullOrWhiteSpace(nameId) && Guid.TryParse(nameId, out var externalGuid))
+            if (!string.IsNullOrEmpty(nameId))
             {
                 // حالت رایج: NameIdentifier به‌صورت GUID (Keycloak/ExternalGuid)
-                approver = await _userRepository.GetFirstOrDefaultAsync(u => u.ExternalGuid == externalGuid);
+                approver = await _userRepository.GetFirstOrDefaultAsync(u => u.KeycloakId == nameId);
             }
             if (approver == null && !string.IsNullOrWhiteSpace(nameId))
             {
@@ -131,7 +131,7 @@ namespace EnterpriseAutomation.Application.Requests.Services
                 {
                     WorkflowId = request.WorkflowDefinitionId,
                     StepId = currentStep.StepId,          // شماره مرحله  ApprovalStepId
-                    UserId = approver.ExternalGuid,   
+                    UserId = Guid.NewGuid(),   
                     UserName = approverName,
                     ActionType = dto.IsApproved ? "Approve" : "Reject",
                     Description = dto.Comment,

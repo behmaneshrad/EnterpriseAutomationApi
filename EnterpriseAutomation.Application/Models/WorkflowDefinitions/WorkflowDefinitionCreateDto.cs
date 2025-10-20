@@ -9,8 +9,8 @@ namespace EnterpriseAutomation.Application.Models.WorkflowDefinitions
     public class WorkflowDefinitionCreateDto
     {
         public string Name { get; set; }
-
         public string Description { get; set; }
+        public int userId { get; set; } = 0;
 
     }
 }
