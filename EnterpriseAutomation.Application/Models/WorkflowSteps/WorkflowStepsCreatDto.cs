@@ -2,6 +2,8 @@
 {
     public class WorkflowStepsCreatDto
     {
+        public int UserId { get; set; } = 0;
+
         public int WorkflowDefinitionId { get; set; } = default!;
 
         public int Order { get; set; } = default!;

@@ -95,7 +95,7 @@ namespace EnterpriseAutomation.Application.Services
                     Role = dto.Role,
                     Editable = dto.Editable,
                     CreatedAt = DateTime.Now,
-                    UserCreatedId = 1 // نمونه
+                    UserCreatedId = dto.UserId
                 };
                 await _repository.InsertAsync(entity);
                 await _repository.SaveChangesAsync();
