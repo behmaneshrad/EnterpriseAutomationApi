@@ -45,7 +45,7 @@ services:
 
  
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    image: elasticsearch:8.19.6
     container_name: enterprise-elasticsearch
     environment:
       - discovery.type=single-node
@@ -64,7 +64,7 @@ services:
       - backend-net
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.3
+    image: kibana:8.19.6
     container_name: enterprise-kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://enterprise-elasticsearch:9200
