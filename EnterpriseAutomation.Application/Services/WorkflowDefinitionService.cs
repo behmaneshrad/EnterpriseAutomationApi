@@ -1,6 +1,7 @@
 ﻿using Aqua.EnumerableExtensions;
 using EnterpriseAutomation.Application.Extentions;
 using EnterpriseAutomation.Application.IRepository;
+using EnterpriseAutomation.Application.Models.Requests;
 using EnterpriseAutomation.Application.Models.WorkflowDefinitions;
 using EnterpriseAutomation.Application.ServiceResult;
 using EnterpriseAutomation.Application.Services.Interfaces;
@@ -18,15 +19,47 @@ namespace EnterpriseAutomation.Application.Services
         private readonly IRepository<WorkflowDefinition> _repository;
         private readonly ILogger<WorkflowDefinition> _logger;
         private readonly IUserService userService;
-        private AuthorizationHandlerContext auth;
 
-        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository, ILogger<WorkflowDefinition> logger, IUserService userService)
+        public WorkflowDefinitionService(IRepository<WorkflowDefinition> repository,
+            ILogger<WorkflowDefinition> logger, IUserService userService)
         {
             _repository = repository;
             _logger = logger;
             this.userService = userService;
-           
+
         }
+        public async Task<ServiceResult<WorkflowRequestDto>> GetWorkflowAndRequestById(int id, int pageIndex, int pageSize)
+        {
+            var result = await _repository.GetAllAsync(
+                p => p.Include(c => c.Requests),
+                asNoTracking: false);
+            if (result == null)
+            {
+                _logger.LogWarning("Action: GetAllWorkflowDefinitionsWithStepsAsync Failure list empty");
+                return ServiceResult<WorkflowRequestDto>.Failure("list is empty", 400);
+            }
+            var wtf = result.Select(c => new WorkflowRequestDto
+            {
+                CreatedById = 1,
+                Description = c.Description,
+                WorkflowDefinitionId = c.WorkflowDefinitionId,
+                CreatedAt = c.CreatedAt,
+                Name = c.Name,
+                Requests = c.Requests.Select(f => new RequestDto
+                {
+                    Description = f.Description,
+                    CurrentStatus = f.CurrentStatus,
+                    CurrentStep = f.CurrentStep,
+                    RequestId = f.RequestId,
+                    Title = f.Title,
+                    UserId = f.UserCreatedId
+                }).ToList()
+            });
+            var p = PaginatedList<WorkflowRequestDto>.Create(wtf.AsQueryable(), pageIndex, pageSize);
+
+            return ServiceResult<WorkflowRequestDto>.SuccessPaginated(p,200,"sucess");
+        }
+
         public async Task<ServiceResult<WorkflowDefinitionCreateDto>> AddWorkflowDefinition(WorkflowDefinitionCreateDto wfDto)
         {
             if (wfDto == null)
@@ -197,7 +230,7 @@ namespace EnterpriseAutomation.Application.Services
         public async Task<ServiceResult<WorkflowDefinition>> UpsertWorkflowDefinition(int? id, WorkflowDefinitionCreateDto entityDTO)
         {
             try
-            {               
+            {
 
                 WorkflowDefinition? entity;
 

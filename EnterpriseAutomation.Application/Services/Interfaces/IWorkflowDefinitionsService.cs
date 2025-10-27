@@ -11,6 +11,7 @@ namespace EnterpriseAutomation.Application.Services.Interfaces
 {
     public interface IWorkflowDefinitionsService
     {
+        public Task<ServiceResult<WorkflowRequestDto>> GetWorkflowAndRequestById(int id, int pageIndex, int pageSize);
         public Task<IEnumerable<WorkflowDefinitionGetDto>> GetAllWorkflowDefinitionsAsync();
 
         public Task<ServiceResult<WorkflowDefinitionAndWorkflowStepDto>> GetAllWorkflowDefinitionsWithStepsAsync(int pageIndex,int pageSize,string searchString);

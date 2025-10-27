@@ -64,5 +64,17 @@ namespace EnterpriseAutomation.Api.Controllers
             }
             return StatusCode(result.Status, result);
         }
+
+
+        [HttpGet("GetWorkflowRequest/{id}")]
+        public async Task<ActionResult<ServiceResult<WorkflowRequestDto>>> GetWorkflowAndRequestById(int id,int pageIndex=1,int pageSize=10)
+        {
+            var result=await _definitionsService.GetWorkflowAndRequestById(id,pageIndex,pageSize);
+            if (result.Error)
+            {
+                return StatusCode(result.Status, result);
+            }
+            return StatusCode(result.Status, result);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace EnterpriseAutomation.Application.Models.Requests
         public string CurrentStatus { get; set; }
         public int CurrentStep { get; set; }
 
-        public Guid UserId { get; set; }
+        public int? UserId { get; set; }
         public string? Username { get; set; }
     }
 }
